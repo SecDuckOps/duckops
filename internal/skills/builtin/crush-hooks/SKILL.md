@@ -51,13 +51,13 @@ the input/output contract is identical regardless of language.
 
 | Variable                     | Description                              |
 | ---------------------------- | ---------------------------------------- |
-| `CRUSH_EVENT`                | Event name (e.g. `PreToolUse`)           |
-| `CRUSH_TOOL_NAME`            | Tool being called (e.g. `bash`)          |
-| `CRUSH_SESSION_ID`           | Current session ID                       |
-| `CRUSH_CWD`                  | Working directory                        |
-| `CRUSH_PROJECT_DIR`          | Project root directory                   |
-| `CRUSH_TOOL_INPUT_COMMAND`   | For `bash` calls: the shell command      |
-| `CRUSH_TOOL_INPUT_FILE_PATH` | For file tools: the target file path     |
+| `DUCKOPS_EVENT`              | Event name (e.g. `PreToolUse`)           |
+| `DUCKOPS_TOOL_NAME`          | Tool being called (e.g. `bash`)          |
+| `DUCKOPS_SESSION_ID`         | Current session ID                       |
+| `DUCKOPS_CWD`                  | Working directory                        |
+| `DUCKOPS_PROJECT_DIR`          | Project root directory                   |
+| `DUCKOPS_TOOL_INPUT_COMMAND`   | For `bash` calls: the shell command      |
+| `DUCKOPS_TOOL_INPUT_FILE_PATH` | For file tools: the target file path     |
 
 **JSON on stdin:**
 
@@ -129,7 +129,7 @@ Composed in **config order**:
 #!/usr/bin/env bash
 set -euo pipefail
 
-if echo "$CRUSH_TOOL_INPUT_COMMAND" | grep -qE 'rm\s+-(rf|fr)\s+/'; then
+if echo "$DUCKOPS_TOOL_INPUT_COMMAND" | grep -qE 'rm\s+-(rf|fr)\s+/'; then
   echo "Refusing to run rm -rf against root" >&2
   exit 2
 fi
@@ -153,7 +153,7 @@ Emit only `context` — omit `decision` so the normal permission flow still runs
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ "$CRUSH_TOOL_INPUT_FILE_PATH" == *.go ]]; then
+if [[ "$DUCKOPS_TOOL_INPUT_FILE_PATH" == *.go ]]; then
   echo '{"context": "Remember: run gofumpt after editing Go files."}'
 else
   echo '{}'

@@ -1777,6 +1777,11 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 				}
 				return true
 			}
+		case key.Matches(msg, m.keyMap.ToggleSidebar):
+			if cmd := m.toggleCompactMode(); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			return true
 		case key.Matches(msg, m.keyMap.Suspend):
 			if m.isAgentBusy() {
 				cmds = append(cmds, util.ReportWarn("Agent is busy, please wait..."))
@@ -2301,6 +2306,7 @@ func (m *UI) ShortHelp() []key.Binding {
 			tab,
 			commands,
 			k.Models,
+			k.ToggleSidebar,
 		)
 
 		switch m.focus {
@@ -2383,6 +2389,7 @@ func (m *UI) FullHelp() [][]key.Binding {
 			commands,
 			k.Models,
 			k.Sessions,
+			k.ToggleSidebar,
 		)
 		if hasSession {
 			mainBinds = append(mainBinds, k.Chat.NewSession)
