@@ -247,6 +247,9 @@ type UI struct {
 	// forceCompactMode tracks whether compact mode is forced by user toggle
 	forceCompactMode bool
 
+	// forceSidebarCollapsed tracks whether the sidebar is forced collapsed by user toggle
+	forceSidebarCollapsed bool
+
 	// isCompact tracks whether we're currently in compact layout mode (either
 	// by user toggle or auto-switch based on window size)
 	isCompact bool
@@ -1393,7 +1396,7 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		cmds = append(cmds, m.openEditor(m.textarea.Value()))
 		m.dialog.CloseDialog(dialog.CommandsID)
 	case dialog.ActionToggleCompactMode:
-		cmds = append(cmds, m.toggleCompactMode())
+		cmds = append(cmds, m.toggleSidebar())
 		m.dialog.CloseDialog(dialog.CommandsID)
 	case dialog.ActionTogglePills:
 		if cmd := m.togglePillsExpanded(); cmd != nil {
@@ -1778,7 +1781,7 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 				return true
 			}
 		case key.Matches(msg, m.keyMap.ToggleSidebar):
-			if cmd := m.toggleCompactMode(); cmd != nil {
+			if cmd := m.toggleSidebar(); cmd != nil {
 				cmds = append(cmds, cmd)
 			}
 			return true
@@ -2494,13 +2497,19 @@ func (m *UI) currentModelSupportsImages() bool {
 	return model != nil && model.SupportsImages
 }
 
-// toggleCompactMode toggles compact mode between uiChat and uiChatCompact states.
-func (m *UI) toggleCompactMode() tea.Cmd {
-	m.forceCompactMode = !m.forceCompactMode
-
-	err := m.com.Workspace.SetCompactMode(config.ScopeGlobal, m.forceCompactMode)
-	if err != nil {
-		return util.ReportError(err)
+// toggleSidebar toggles the sidebar visibility. It toggles between compact mode
+// and sidebar mode. If already in compact mode, it toggles sidebar collapse.
+func (m *UI) toggleSidebar() tea.Cmd {
+	if m.isCompact && !m.forceCompactMode {
+		// If we are auto-compacted, toggle collapse instead
+		m.forceSidebarCollapsed = !m.forceSidebarCollapsed
+	} else {
+		m.forceCompactMode = !m.forceCompactMode
+		// Sync with config
+		err := m.com.Workspace.SetCompactMode(config.ScopeGlobal, m.forceCompactMode)
+		if err != nil {
+			return util.ReportError(err)
+		}
 	}
 
 	m.updateLayoutAndSize()
@@ -2512,7 +2521,7 @@ func (m *UI) toggleCompactMode() tea.Cmd {
 func (m *UI) updateLayoutAndSize() {
 	// Determine if we should be in compact mode
 	if m.state == uiChat {
-		if m.forceCompactMode {
+		if m.forceCompactMode || m.forceSidebarCollapsed {
 			m.isCompact = true
 		} else if m.width < compactModeWidthBreakpoint || m.height < compactModeHeightBreakpoint {
 			m.isCompact = true
@@ -2593,6 +2602,9 @@ func (m *UI) generateLayout(w, h int) uiLayout {
 	editorHeight := m.textarea.Height() + editorHeightMargin
 	// The sidebar width
 	sidebarWidth := 30
+	if m.isCompact {
+		sidebarWidth = 0
+	}
 	// The header height
 	const landingHeaderHeight = 4
 
@@ -3040,6 +3052,16 @@ func (m *UI) isAgentBusy() bool {
 // hasSession returns true if there is an active session with a valid ID.
 func (m *UI) hasSession() bool {
 	return m.session != nil && m.session.ID != ""
+}
+
+// isSidebarExpanded returns true if the sidebar should be visible.
+func (m *UI) isSidebarExpanded() bool {
+	return !m.isCompact && !m.forceSidebarCollapsed
+}
+
+// sidebarExpanded is a convenience for isSidebarExpanded.
+func (m *UI) sidebarExpanded() bool {
+	return m.isSidebarExpanded()
 }
 
 // mimeOf detects the MIME type of the given content.

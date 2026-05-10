@@ -138,7 +138,7 @@ func TestConfigStore_RuntimeOverrides_MutableViaPointer(t *testing.T) {
 
 func TestGlobalWorkspaceDir(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("CRUSH_GLOBAL_DATA", dir)
+	t.Setenv("DUCKOPS_GLOBAL_DATA", dir)
 
 	wsDir := GlobalWorkspaceDir()
 	globalData := GlobalConfigData()

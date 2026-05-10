@@ -1,5 +1,5 @@
 {
-  "$schema": "https://secduckops.ai/duck.json",
+  "$schema": "https://secduckops.dev/duck.json",
   "lsp": {
     "gopls": {
       "options": {

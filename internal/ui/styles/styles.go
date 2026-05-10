@@ -25,21 +25,21 @@ const (
 
 	ArrowRightIcon string = "→"
 
-	ToolPending string = "●"
-	ToolSuccess string = "✓"
-	ToolError   string = "×"
+	ToolPending string = "◌"
+	ToolSuccess string = "✔"
+	ToolError   string = "✘"
 
 	RadioOn  string = "◉"
 	RadioOff string = "○"
 
 	BorderThin  string = "│"
-	BorderThick string = "▌"
+	BorderThick string = "█"
 
-	SectionSeparator string = "─"
+	SectionSeparator string = "━"
 
-	TodoCompletedIcon  string = "✓"
-	TodoPendingIcon    string = "•"
-	TodoInProgressIcon string = "→"
+	TodoCompletedIcon  string = "✔"
+	TodoPendingIcon    string = "○"
+	TodoInProgressIcon string = "▶"
 
 	ImageIcon string = "■"
 	TextIcon  string = "≡"

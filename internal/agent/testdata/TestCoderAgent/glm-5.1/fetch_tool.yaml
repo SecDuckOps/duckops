@@ -15,7 +15,7 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - Charm-DuckOps/devel (https://charm.land/crush)
+      - Charm-DuckOps/devel (https://github.com/SecDuckOps/duckops)
     url: https://hyper.charm.land/v1/chat/completions
     method: POST
   response:
@@ -207,7 +207,7 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - Charm-DuckOps/devel (https://charm.land/crush)
+      - Charm-DuckOps/devel (https://github.com/SecDuckOps/duckops)
     url: https://hyper.charm.land/v1/chat/completions
     method: POST
   response:
@@ -360,7 +360,7 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - Charm-DuckOps/devel (https://charm.land/crush)
+      - Charm-DuckOps/devel (https://github.com/SecDuckOps/duckops)
     url: https://hyper.charm.land/v1/chat/completions
     method: POST
   response:

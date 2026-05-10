@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	githubApiUrl = "https://api.github.com/repos/duckops/releases/latest"
+	githubApiUrl = "https://api.github.com/repos/SecDuckOps/duck/releases/latest"
 	userAgent    = "duckops/1.0"
 )
 

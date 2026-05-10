@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"context"
-	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -22,12 +21,19 @@ import (
 	fang "charm.land/fang/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/colorprofile"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/x/exp/charmtone"
+	xstrings "github.com/charmbracelet/x/exp/strings"
+	"github.com/charmbracelet/x/term"
+	"github.com/spf13/cobra"
+
 	"github.com/SecDuckOps/duckops/internal/app"
 	"github.com/SecDuckOps/duckops/internal/client"
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/db"
 	"github.com/SecDuckOps/duckops/internal/event"
-	crushlog "github.com/SecDuckOps/duckops/internal/log"
+	duckopslog "github.com/SecDuckOps/duckops/internal/log"
 	"github.com/SecDuckOps/duckops/internal/projects"
 	"github.com/SecDuckOps/duckops/internal/proto"
 	"github.com/SecDuckOps/duckops/internal/server"
@@ -36,12 +42,8 @@ import (
 	ui "github.com/SecDuckOps/duckops/internal/ui/model"
 	"github.com/SecDuckOps/duckops/internal/version"
 	"github.com/SecDuckOps/duckops/internal/workspace"
-	uv "github.com/charmbracelet/ultraviolet"
-	"github.com/charmbracelet/x/ansi"
-	"github.com/charmbracelet/x/exp/charmtone"
-	xstrings "github.com/charmbracelet/x/exp/strings"
-	"github.com/charmbracelet/x/term"
-	"github.com/spf13/cobra"
+
+	_ "embed"
 )
 
 var clientHost string
@@ -65,7 +67,6 @@ func init() {
 		logsCmd,
 		schemaCmd,
 		loginCmd,
-		statsCmd,
 		sessionCmd,
 	)
 }
@@ -134,24 +135,19 @@ duckops --continue
 		if _, err := program.Run(); err != nil {
 			event.Error(err)
 			slog.Error("TUI run error", "error", err)
-			return errors.New("DuckOps crashed. If metrics are enabled, we were notified about it. If you'd like to report it, please copy the stacktrace above and open an issue at https://github.com/charmbracelet/crush/issues/new?template=bug.yml") //nolint:staticcheck
+			return errors.New("DuckOps crashed. If metrics are enabled, we were notified about it. If you'd like to report it, please copy the stacktrace above and open an issue at https://github.com/SecDuckOps/duck/issues/new?template=bug.yml") //nolint:staticcheck
 		}
 		return nil
 	},
 }
 
-var heartbit = lipgloss.NewStyle().Foreground(charmtone.Dolly).SetString(`
-    ▄▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄
-  ███████████  ███████████
-████████████████████████████
-████████████████████████████
-██████████▀██████▀██████████
-██████████ ██████ ██████████
-▀▀██████▄████▄▄████▄██████▀▀
-  ████████████████████████
-    ████████████████████
-       ▀▀██████████▀▀
-           ▀▀▀▀▀▀
+var duckopsbit = lipgloss.NewStyle().Foreground(charmtone.Dolly).SetString(`
+██████╗ ██╗   ██╗██████╗ ██╗  ██╗ ██████╗ ██████╗ ███████╗
+██╔══██╗██║   ██║██╔════╝██║ ██╔╝██╔═══██╗██╔══██╗██╔════╝
+██║  ██║██║   ██║██║     █████╔╝ ██║   ██║██████╔╝███████╗
+██║  ██║██║   ██║██║     ██╔═██╗ ██║   ██║██╔═══╝ ╚════██║
+██████╔╝╚██████╔╝╚██████╗██║  ██╗╚██████╔╝██║     ███████║
+╚═════╝  ╚═════╝  ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚══════╝
 `)
 
 // copied from cobra:
@@ -179,7 +175,7 @@ func Execute() {
 		var b bytes.Buffer
 		w := colorprofile.NewWriter(os.Stdout, os.Environ())
 		w.Forward = &b
-		_, _ = w.WriteString(heartbit.String())
+		_, _ = w.WriteString(duckopsbit.String())
 		rootCmd.SetVersionTemplate(b.String() + "\n" + defaultVersionTemplate)
 	}
 	if err := fang.Execute(
@@ -205,9 +201,9 @@ func supportsProgressBar() bool {
 }
 
 // useClientServer returns true when the client/server architecture is
-// enabled via the CRUSH_CLIENT_SERVER environment variable.
+// enabled via the DUCKOPS_CLIENT_SERVER environment variable.
 func useClientServer() bool {
-	v, _ := strconv.ParseBool(os.Getenv("CRUSH_CLIENT_SERVER"))
+	v, _ := strconv.ParseBool(os.Getenv("DUCKOPS_CLIENT_SERVER"))
 	return v
 }
 
@@ -229,7 +225,7 @@ func setupWorkspaceWithProgressBar(cmd *cobra.Command) (workspace.Workspace, fun
 }
 
 // setupWorkspace returns a Workspace and cleanup function. When
-// CRUSH_CLIENT_SERVER=1, it connects to a server process and returns a
+// DUCKOPS_CLIENT_SERVER=1, it connects to a server process and returns a
 // ClientWorkspace. Otherwise it creates an in-process app.App and
 // returns an AppWorkspace.
 func setupWorkspace(cmd *cobra.Command) (workspace.Workspace, func(), error) {
@@ -281,7 +277,7 @@ func setupLocalWorkspace(cmd *cobra.Command) (workspace.Workspace, func(), error
 	}
 
 	logFile := filepath.Join(cfg.Options.DataDirectory, "logs", "duckops.log")
-	crushlog.Setup(logFile, debug)
+	duckopslog.Setup(logFile, debug)
 
 	appInstance, err := app.New(ctx, conn, store)
 	if err != nil {
@@ -380,7 +376,7 @@ func connectToServer(cmd *cobra.Command) (*client.Client, *proto.Workspace, func
 
 	if ws.Config != nil {
 		logFile := filepath.Join(ws.Config.Options.DataDirectory, "logs", "duckops.log")
-		crushlog.Setup(logFile, debug)
+		duckopslog.Setup(logFile, debug)
 	}
 
 	cleanup := func() { _ = c.DeleteWorkspace(context.Background(), ws.ID) }
@@ -516,7 +512,7 @@ func startDetachedServer(cmd *cobra.Command) error {
 }
 
 func shouldEnableMetrics(cfg *config.Config) bool {
-	if v, _ := strconv.ParseBool(os.Getenv("CRUSH_DISABLE_METRICS")); v {
+	if v, _ := strconv.ParseBool(os.Getenv("DUCKOPS_DISABLE_METRICS")); v {
 		return false
 	}
 	if v, _ := strconv.ParseBool(os.Getenv("DO_NOT_TRACK")); v {
@@ -595,7 +591,7 @@ func ResolveCwd(cmd *cobra.Command) (string, error) {
 	return cwd, nil
 }
 
-func createDotCrushDir(dir string) error {
+func createDotDuckOpsDir(dir string) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("failed to create data directory: %q %w", dir, err)
 	}

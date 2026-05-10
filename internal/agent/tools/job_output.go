@@ -50,6 +50,7 @@ func NewJobOutputTool() fantasy.AgentTool {
 			}
 
 			stdout, stderr, done, err := bgShell.GetOutput()
+			status := bgShell.Status()
 
 			var outputParts []string
 			if stdout != "" {
@@ -59,14 +60,10 @@ func NewJobOutputTool() fantasy.AgentTool {
 				outputParts = append(outputParts, stderr)
 			}
 
-			status := "running"
-			if done {
-				status = "completed"
-				if err != nil {
-					exitCode := shell.ExitCode(err)
-					if exitCode != 0 {
-						outputParts = append(outputParts, fmt.Sprintf("Exit code %d", exitCode))
-					}
+			if done && err != nil {
+				exitCode := shell.ExitCode(err)
+				if exitCode != 0 {
+					outputParts = append(outputParts, fmt.Sprintf("Exit code %d", exitCode))
 				}
 			}
 

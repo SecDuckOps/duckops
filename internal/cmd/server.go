@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/SecDuckOps/duckops/internal/config"
-	crushlog "github.com/SecDuckOps/duckops/internal/log"
+	duckopslog "github.com/SecDuckOps/duckops/internal/log"
 	"github.com/SecDuckOps/duckops/internal/server"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
@@ -45,9 +45,9 @@ var serverCmd = &cobra.Command{
 		logFile := filepath.Join(config.GlobalCacheDir(), "server-"+safeNameRegexp.ReplaceAllString(serverHost, "_"), "duckops.log")
 
 		if term.IsTerminal(os.Stderr.Fd()) {
-			crushlog.Setup(logFile, debug, os.Stderr)
+			duckopslog.Setup(logFile, debug, os.Stderr)
 		} else {
-			crushlog.Setup(logFile, debug)
+			duckopslog.Setup(logFile, debug)
 		}
 
 		hostURL, err := server.ParseHostURL(serverHost)

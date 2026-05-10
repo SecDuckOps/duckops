@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/fsext"
 	"github.com/SecDuckOps/duckops/internal/session"
 	"github.com/SecDuckOps/duckops/internal/ui/common"
 	"github.com/SecDuckOps/duckops/internal/ui/styles"
-	uv "github.com/charmbracelet/ultraviolet"
-	"github.com/charmbracelet/x/ansi"
 )
 
 const (
@@ -45,17 +45,7 @@ func newHeader(com *common.Common) *header {
 // after the theme changes.
 func (h *header) refresh() {
 	t := h.com.Styles
-	isHyper := h.com.IsHyper()
-	charm := "Charm™"
-	if !isHyper {
-		charm = " " + charm
-	}
-	name := "DUCKOPS"
-	if isHyper {
-		name = "DUCKOPS"
-	}
-	h.compactLogo = t.Header.Charm.Render(charm) + " " +
-		styles.ApplyBoldForegroundGrad(t.Header.LogoGradCanvas, name, t.Header.LogoGradFromColor, t.Header.LogoGradToColor) + " "
+	h.compactLogo = "🦆 " + styles.ApplyBoldForegroundGrad(t.Header.LogoGradCanvas, "DUCKOPS", t.Header.LogoGradFromColor, t.Header.LogoGradToColor) + " "
 	h.width = 0
 }
 

@@ -10,7 +10,6 @@ package agent
 import (
 	"cmp"
 	"context"
-	_ "embed"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -32,6 +31,8 @@ import (
 	"charm.land/fantasy/providers/openrouter"
 	"charm.land/fantasy/providers/vercel"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/exp/charmtone"
+
 	"github.com/SecDuckOps/duckops/internal/agent/hyper"
 	"github.com/SecDuckOps/duckops/internal/agent/notify"
 	"github.com/SecDuckOps/duckops/internal/agent/tools"
@@ -43,7 +44,8 @@ import (
 	"github.com/SecDuckOps/duckops/internal/session"
 	"github.com/SecDuckOps/duckops/internal/stringext"
 	"github.com/SecDuckOps/duckops/internal/version"
-	"github.com/charmbracelet/x/exp/charmtone"
+
+	_ "embed"
 )
 
 const (
@@ -55,7 +57,7 @@ const (
 	smallContextWindowRatio     = 0.2
 )
 
-var userAgent = fmt.Sprintf("Charm-DuckOps/%s (https://charm.land/crush)", version.Version)
+var userAgent = fmt.Sprintf("DuckOps/%s (https://secduckops.com)", version.Version)
 
 //go:embed templates/title.md
 var titlePrompt []byte
@@ -760,7 +762,7 @@ func (a *sessionAgent) Summarize(ctx context.Context, sessionID string, opts fan
 }
 
 func (a *sessionAgent) getCacheControlOptions() fantasy.ProviderOptions {
-	if t, _ := strconv.ParseBool(os.Getenv("CRUSH_DISABLE_ANTHROPIC_CACHE")); t {
+	if t, _ := strconv.ParseBool(os.Getenv("DUCKOPS_DISABLE_ANTHROPIC_CACHE")); t {
 		return fantasy.ProviderOptions{}
 	}
 	return fantasy.ProviderOptions{

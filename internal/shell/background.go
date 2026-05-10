@@ -56,6 +56,7 @@ type BackgroundShell struct {
 	stderr      *syncBuffer
 	done        chan struct{}
 	exitErr     error
+	startTime   time.Time
 	completedAt atomic.Int64 // Unix timestamp when job completed (0 if still running)
 }
 
@@ -92,7 +93,7 @@ func (m *BackgroundShellManager) Start(ctx context.Context, workingDir string, b
 		return nil, fmt.Errorf("maximum number of background jobs (%d) reached. Please terminate or wait for some jobs to complete", MaxBackgroundJobs)
 	}
 
-	id := fmt.Sprintf("%03X", idCounter.Add(1))
+	id := fmt.Sprintf("job-%03x", idCounter.Add(1))
 
 	shell := NewShell(&Options{
 		WorkingDir: workingDir,
@@ -112,6 +113,7 @@ func (m *BackgroundShellManager) Start(ctx context.Context, workingDir string, b
 		stdout:      &syncBuffer{},
 		stderr:      &syncBuffer{},
 		done:        make(chan struct{}),
+		startTime:   time.Now(),
 	}
 
 	m.shells.Set(id, bgShell)
@@ -160,6 +162,7 @@ type BackgroundShellInfo struct {
 	ID          string
 	Command     string
 	Description string
+	Status      string
 }
 
 // List returns all background shell IDs.
@@ -227,6 +230,22 @@ func (bs *BackgroundShell) IsDone() bool {
 		return true
 	default:
 		return false
+	}
+}
+
+// Status returns the current status of the background shell.
+func (bs *BackgroundShell) Status() string {
+	select {
+	case <-bs.done:
+		if bs.exitErr != nil {
+			return "failed"
+		}
+		return "completed"
+	default:
+		if bs.ctx.Err() != nil {
+			return "killed"
+		}
+		return "running"
 	}
 }
 

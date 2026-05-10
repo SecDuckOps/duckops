@@ -783,7 +783,7 @@ func quickStyle(o quickStyleOpts) Styles {
 		BorderForeground(o.primary).BorderStyle(messageFocussedBorder)
 	s.Messages.AssistantBlurred = s.Messages.NoContent.PaddingLeft(2)
 	s.Messages.AssistantFocused = s.Messages.NoContent.PaddingLeft(1).BorderLeft(true).
-		BorderForeground(o.successMostSubtle).BorderStyle(messageFocussedBorder)
+		BorderForeground(o.success).BorderStyle(messageFocussedBorder)
 	s.Messages.Thinking = lipgloss.NewStyle().MaxHeight(10)
 	s.Messages.ErrorTag = lipgloss.NewStyle().Padding(0, 1).
 		Background(o.destructive).Foreground(o.onPrimary)
@@ -806,7 +806,7 @@ func quickStyle(o quickStyleOpts) Styles {
 	s.Messages.AssistantCanceled = lipgloss.NewStyle().Foreground(o.fgBase).Italic(true)
 
 	// Thinking section styles
-	s.Messages.ThinkingBox = subtle.Background(o.bgLeastVisible)
+	s.Messages.ThinkingBox = muted.Padding(0, 1).Border(lipgloss.NormalBorder(), false, false, false, true).BorderForeground(o.accent)
 	s.Messages.ThinkingTruncationHint = muted
 	s.Messages.ThinkingFooterTitle = muted
 	s.Messages.ThinkingFooterDuration = subtle

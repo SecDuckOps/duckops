@@ -1,0 +1,26 @@
+# Binaries
+duckops
+
+# Go build artifacts
+*.exe
+*.out
+*.test
+
+# Vendor directory (if any)
+vendor/
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE/editor files
+*.swp
+*~
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Dockerfile itself (optional)
+Dockerfile
