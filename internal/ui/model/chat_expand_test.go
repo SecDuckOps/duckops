@@ -3,8 +3,8 @@ package model
 import (
 	"testing"
 
-	"github.com/charmbracelet/crush/internal/message"
-	"github.com/charmbracelet/crush/internal/ui/chat"
+	"github.com/SecDuckOps/duckops/internal/message"
+	"github.com/SecDuckOps/duckops/internal/ui/chat"
 	"github.com/stretchr/testify/require"
 )
 

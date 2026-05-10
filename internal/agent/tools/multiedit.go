@@ -11,13 +11,13 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/charmbracelet/crush/internal/diff"
-	"github.com/charmbracelet/crush/internal/filepathext"
-	"github.com/charmbracelet/crush/internal/filetracker"
-	"github.com/charmbracelet/crush/internal/fsext"
-	"github.com/charmbracelet/crush/internal/history"
-	"github.com/charmbracelet/crush/internal/lsp"
-	"github.com/charmbracelet/crush/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/diff"
+	"github.com/SecDuckOps/duckops/internal/filepathext"
+	"github.com/SecDuckOps/duckops/internal/filetracker"
+	"github.com/SecDuckOps/duckops/internal/fsext"
+	"github.com/SecDuckOps/duckops/internal/history"
+	"github.com/SecDuckOps/duckops/internal/lsp"
+	"github.com/SecDuckOps/duckops/internal/permission"
 )
 
 type MultiEditOperation struct {

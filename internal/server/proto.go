@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/charmbracelet/crush/internal/backend"
-	"github.com/charmbracelet/crush/internal/proto"
-	"github.com/charmbracelet/crush/internal/session"
+	"github.com/SecDuckOps/duckops/internal/backend"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/session"
 )
 
 type controllerV1 struct {

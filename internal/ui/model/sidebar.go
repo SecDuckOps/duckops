@@ -8,8 +8,8 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/SecDuckOps/duckops/internal/ui/common"
-	uv "github.com/SecDuckOps/ultraviolet"
-	"github.com/SecDuckOps/ultraviolet/layout"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/ultraviolet/layout"
 )
 
 // modelInfo renders the current model information including reasoning

@@ -53,11 +53,11 @@ import (
 	"github.com/SecDuckOps/duckops/internal/ui/util"
 	"github.com/SecDuckOps/duckops/internal/version"
 	"github.com/SecDuckOps/duckops/internal/workspace"
-	uv "github.com/SecDuckOps/ultraviolet"
-	"github.com/SecDuckOps/ultraviolet/layout"
-	"github.com/SecDuckOps/ultraviolet/screen"
-	"github.com/SecDuckOps/x/editor"
-	xstrings "github.com/SecDuckOps/x/exp/strings"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/ultraviolet/layout"
+	"github.com/charmbracelet/ultraviolet/screen"
+	"github.com/charmbracelet/x/editor"
+	xstrings "github.com/charmbracelet/x/exp/strings"
 )
 
 // MouseScrollThreshold defines how many lines to scroll the chat when a mouse

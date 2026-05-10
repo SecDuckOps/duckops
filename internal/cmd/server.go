@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/config"
-	crushlog "github.com/charmbracelet/crush/internal/log"
-	"github.com/charmbracelet/crush/internal/server"
+	"github.com/SecDuckOps/duckops/internal/config"
+	crushlog "github.com/SecDuckOps/duckops/internal/log"
+	"github.com/SecDuckOps/duckops/internal/server"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 )

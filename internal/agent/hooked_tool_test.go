@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"charm.land/fantasy"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/hooks"
-	"github.com/charmbracelet/crush/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/hooks"
+	"github.com/SecDuckOps/duckops/internal/permission"
 	"github.com/stretchr/testify/require"
 )
 

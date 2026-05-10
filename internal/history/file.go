@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/crush/internal/db"
-	"github.com/charmbracelet/crush/internal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/db"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"github.com/google/uuid"
 )
 

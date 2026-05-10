@@ -11,8 +11,8 @@ import (
 	"github.com/SecDuckOps/duckops/internal/session"
 	"github.com/SecDuckOps/duckops/internal/ui/common"
 	"github.com/SecDuckOps/duckops/internal/ui/styles"
-	uv "github.com/SecDuckOps/ultraviolet"
-	"github.com/SecDuckOps/x/ansi"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/x/ansi"
 )
 
 const (

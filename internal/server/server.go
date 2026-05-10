@@ -11,9 +11,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/charmbracelet/crush/internal/backend"
-	"github.com/charmbracelet/crush/internal/config"
-	_ "github.com/charmbracelet/crush/internal/swagger"
+	"github.com/SecDuckOps/duckops/internal/backend"
+	"github.com/SecDuckOps/duckops/internal/config"
+	_ "github.com/SecDuckOps/duckops/internal/swagger"
 	httpswagger "github.com/swaggo/http-swagger/v2"
 )
 

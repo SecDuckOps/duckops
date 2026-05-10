@@ -18,11 +18,11 @@ import (
 	"testing"
 
 	"charm.land/catwalk/pkg/catwalk"
-	"github.com/charmbracelet/crush/internal/agent/hyper"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/env"
-	"github.com/charmbracelet/crush/internal/fsext"
-	"github.com/charmbracelet/crush/internal/home"
+	"github.com/SecDuckOps/duckops/internal/agent/hyper"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/env"
+	"github.com/SecDuckOps/duckops/internal/fsext"
+	"github.com/SecDuckOps/duckops/internal/home"
 	powernapConfig "github.com/charmbracelet/x/powernap/pkg/config"
 	"github.com/qjebbs/go-jsons"
 )

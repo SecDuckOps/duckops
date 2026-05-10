@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/shell"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/shell"
 	"github.com/stretchr/testify/require"
 )
 

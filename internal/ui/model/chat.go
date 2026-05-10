@@ -13,8 +13,8 @@ import (
 	"github.com/SecDuckOps/duckops/internal/ui/chat"
 	"github.com/SecDuckOps/duckops/internal/ui/common"
 	"github.com/SecDuckOps/duckops/internal/ui/list"
-	uv "github.com/SecDuckOps/ultraviolet"
-	"github.com/SecDuckOps/x/ansi"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/x/ansi"
 )
 
 // Constants for multi-click detection.

@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/fsext"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/fsext"
 	powernapconfig "github.com/charmbracelet/x/powernap/pkg/config"
 	powernap "github.com/charmbracelet/x/powernap/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"

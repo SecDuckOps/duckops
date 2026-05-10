@@ -3,8 +3,16 @@ module github.com/SecDuckOps/duckops
 go 1.26.3
 
 require (
+	charm.land/bubbles/v2 v2.1.0
+	charm.land/bubbletea/v2 v2.0.6
+	charm.land/catwalk v0.39.8
+	charm.land/fang/v2 v2.0.1
+	charm.land/fantasy v0.23.1
+	charm.land/glamour/v2 v2.0.0
+	charm.land/lipgloss/v2 v2.0.3
+	charm.land/log/v2 v2.0.0
+	charm.land/x/vcr v0.1.1
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
-	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/alecthomas/chroma/v2 v2.24.1
@@ -13,19 +21,19 @@ require (
 	github.com/aymanbagabas/go-udiff v0.4.1
 	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/charlievieth/fastwalk v1.0.14
-	github.com/SecDuckOps/colorprofile v0.4.3
-	github.com/SecDuckOps/openai-go v0.0.0-20260319145158-d0740cc34266
-	github.com/SecDuckOps/ultraviolet v0.0.0-20260416155717-489999b90468
-	github.com/SecDuckOps/x/ansi v0.11.7
-	github.com/SecDuckOps/x/editor v0.2.0
-	github.com/SecDuckOps/x/etag v0.2.0
-	github.com/SecDuckOps/x/exp/charmtone v0.0.0-20260109001716-2fbdffcb221f
-	github.com/SecDuckOps/x/exp/golden v0.0.0-20250806222409-83e3a29d542f
-	github.com/SecDuckOps/x/exp/ordered v0.1.0
-	github.com/SecDuckOps/x/exp/slice v0.0.0-20260422141420-a6cbdff8a7e2
-	github.com/SecDuckOps/x/exp/strings v0.1.0
-	github.com/SecDuckOps/x/powernap v0.1.4
-	github.com/SecDuckOps/x/term v0.2.2
+	github.com/charmbracelet/colorprofile v0.4.3
+	github.com/charmbracelet/openai-go v0.0.0-20260319145158-d0740cc34266
+	github.com/charmbracelet/ultraviolet v0.0.0-20260416155717-489999b90468
+	github.com/charmbracelet/x/ansi v0.11.7
+	github.com/charmbracelet/x/editor v0.2.0
+	github.com/charmbracelet/x/etag v0.2.0
+	github.com/charmbracelet/x/exp/charmtone v0.0.0-20260109001716-2fbdffcb221f
+	github.com/charmbracelet/x/exp/golden v0.0.0-20250806222409-83e3a29d542f
+	github.com/charmbracelet/x/exp/ordered v0.1.0
+	github.com/charmbracelet/x/exp/slice v0.0.0-20260422141420-a6cbdff8a7e2
+	github.com/charmbracelet/x/exp/strings v0.1.0
+	github.com/charmbracelet/x/powernap v0.1.4
+	github.com/charmbracelet/x/term v0.2.2
 	github.com/clipperhouse/displaywidth v0.11.0
 	github.com/clipperhouse/uax29/v2 v2.7.0
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -67,15 +75,6 @@ require (
 	modernc.org/sqlite v1.50.0
 	mvdan.cc/sh/moreinterp v0.0.0-20250902163504-3cf4fd5717a5
 	mvdan.cc/sh/v3 v3.13.1
-	charm.land/bubbles/v2 v2.1.0
-	charm.land/bubbletea/v2 v2.0.6
-	charm.land/catwalk v0.39.8
-	charm.land/fang/v2 v2.0.1
-	charm.land/fantasy v0.23.1
-	charm.land/glamour/v2 v2.0.0
-	charm.land/lipgloss/v2 v2.0.3
-	charm.land/log/v2 v2.0.0
-	charm.land/x/vcr v0.1.1
 )
 
 require (
@@ -107,10 +106,10 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/SecDuckOps/anthropic-sdk-go v0.0.0-20260223140439-63879b0b8dab // indirect
-	github.com/SecDuckOps/x/json v0.2.0 // indirect
-	github.com/SecDuckOps/x/termios v0.1.1 // indirect
-	github.com/SecDuckOps/x/windows v0.2.2 // indirect
+	github.com/charmbracelet/anthropic-sdk-go v0.0.0-20260223140439-63879b0b8dab // indirect
+	github.com/charmbracelet/x/json v0.2.0 // indirect
+	github.com/charmbracelet/x/termios v0.1.1 // indirect
+	github.com/charmbracelet/x/windows v0.2.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dlclark/regexp2 v1.12.0 // indirect

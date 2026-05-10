@@ -15,11 +15,11 @@ import (
 	"unicode/utf8"
 
 	"charm.land/fantasy"
-	"github.com/charmbracelet/crush/internal/filepathext"
-	"github.com/charmbracelet/crush/internal/filetracker"
-	"github.com/charmbracelet/crush/internal/lsp"
-	"github.com/charmbracelet/crush/internal/permission"
-	"github.com/charmbracelet/crush/internal/skills"
+	"github.com/SecDuckOps/duckops/internal/filepathext"
+	"github.com/SecDuckOps/duckops/internal/filetracker"
+	"github.com/SecDuckOps/duckops/internal/lsp"
+	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/skills"
 )
 
 //go:embed view.md
