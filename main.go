@@ -11,25 +11,11 @@
 package main
 
 import (
-	"log/slog"
-	"net/http"
-	"os"
-
 	"github.com/SecDuckOps/duckops/internal/cmd"
 
-	_ "net/http/pprof"
 	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	if os.Getenv("DUCKOPS_PROFILE") != "" {
-		go func() {
-			slog.Info("Serving pprof at localhost:6060")
-			if httpErr := http.ListenAndServe("localhost:6060", nil); httpErr != nil {
-				slog.Error("Failed to pprof listen", "error", httpErr)
-			}
-		}()
-	}
-
 	cmd.Execute()
 }

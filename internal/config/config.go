@@ -657,6 +657,8 @@ func allToolNames() []string {
 	return []string{
 		"agent",
 		"bash",
+		"create_agent",
+		"create_vulnerability_report",
 		"duck_info",
 		"duck_logs",
 		"job_output",
@@ -678,6 +680,9 @@ func allToolNames() []string {
 		"write",
 		"list_mcp_resources",
 		"read_mcp_resource",
+		"view_agent_graph",
+		"send_message_to_agent",
+		"agent_finish",
 	}
 }
 

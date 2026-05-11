@@ -18,6 +18,18 @@ import (
 
 	"charm.land/catwalk/pkg/catwalk"
 	"charm.land/fantasy"
+	"charm.land/fantasy/providers/anthropic"
+	"charm.land/fantasy/providers/azure"
+	"charm.land/fantasy/providers/bedrock"
+	"charm.land/fantasy/providers/google"
+	"charm.land/fantasy/providers/openai"
+	"charm.land/fantasy/providers/openaicompat"
+	"charm.land/fantasy/providers/openrouter"
+	"charm.land/fantasy/providers/vercel"
+	openaisdk "github.com/charmbracelet/openai-go/option"
+	"github.com/qjebbs/go-jsons"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/SecDuckOps/duckops/internal/agent/hyper"
 	"github.com/SecDuckOps/duckops/internal/agent/notify"
 	"github.com/SecDuckOps/duckops/internal/agent/prompt"
@@ -36,18 +48,6 @@ import (
 	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"github.com/SecDuckOps/duckops/internal/session"
 	"github.com/SecDuckOps/duckops/internal/skills"
-	"golang.org/x/sync/errgroup"
-
-	"charm.land/fantasy/providers/anthropic"
-	"charm.land/fantasy/providers/azure"
-	"charm.land/fantasy/providers/bedrock"
-	"charm.land/fantasy/providers/google"
-	"charm.land/fantasy/providers/openai"
-	"charm.land/fantasy/providers/openaicompat"
-	"charm.land/fantasy/providers/openrouter"
-	"charm.land/fantasy/providers/vercel"
-	openaisdk "github.com/charmbracelet/openai-go/option"
-	"github.com/qjebbs/go-jsons"
 )
 
 // Coordinator errors.
@@ -411,7 +411,7 @@ func (c *coordinator) buildAgent(ctx context.Context, prompt *prompt.Prompt, age
 		SystemPrompt:         "",
 		IsSubAgent:           isSubAgent,
 		DisableAutoSummarize: c.cfg.Config().Options.DisableAutoSummarize,
-		IsYolo:               c.permissions.SkipRequests(),
+		Isduck:               c.permissions.SkipRequests(),
 		Sessions:             c.sessions,
 		Messages:             c.messages,
 		Tools:                nil,
@@ -457,6 +457,26 @@ func (c *coordinator) buildTools(ctx context.Context, agent config.Agent, isSubA
 		allTools = append(allTools, agenticFetchTool)
 	}
 
+	if slices.Contains(agent.AllowedTools, tools.ViewAgentGraphToolName) {
+		allTools = append(allTools, tools.NewViewAgentGraphTool(c.sessions))
+	}
+
+	if slices.Contains(agent.AllowedTools, tools.SendMessageToAgentToolName) {
+		allTools = append(allTools, tools.NewSendMessageToAgentTool(c.sessions))
+	}
+
+	if slices.Contains(agent.AllowedTools, tools.AgentFinishToolName) {
+		allTools = append(allTools, tools.NewAgentFinishTool(c.sessions))
+	}
+
+	if slices.Contains(agent.AllowedTools, "create_agent") {
+		createAgentTool, err := c.createAgentTool(ctx)
+		if err != nil {
+			return nil, err
+		}
+		allTools = append(allTools, createAgentTool)
+	}
+
 	// Get the model name for the agent
 	modelName := ""
 	if modelCfg, ok := c.cfg.Config().Models[agent.Model]; ok {
@@ -483,6 +503,7 @@ func (c *coordinator) buildTools(ctx context.Context, agent config.Agent, isSubA
 		tools.NewEditTool(c.lspManager, c.permissions, c.history, c.filetracker, c.cfg.WorkingDir()),
 		tools.NewMultiEditTool(c.lspManager, c.permissions, c.history, c.filetracker, c.cfg.WorkingDir()),
 		tools.NewFetchTool(c.permissions, c.cfg.WorkingDir(), nil),
+		tools.NewVulnerabilityReportTool(c.permissions, c.cfg.WorkingDir()),
 		tools.NewGlobTool(c.cfg.WorkingDir()),
 		tools.NewGrepTool(c.cfg.WorkingDir(), c.cfg.Config().Tools.Grep),
 		tools.NewLsTool(c.permissions, c.cfg.WorkingDir(), c.cfg.Config().Tools.Ls),
@@ -1238,3 +1259,5 @@ func logDiscoveryStats(
 		"active_names", activeNames,
 	)
 }
+
+
