@@ -54,6 +54,7 @@ func (s SelectedModelType) String() string {
 const (
 	SelectedModelTypeLarge SelectedModelType = "large"
 	SelectedModelTypeSmall SelectedModelType = "small"
+	SelectedModelTypeLocal SelectedModelType = "local"
 )
 
 const (
@@ -645,6 +646,14 @@ func (c *Config) LargeModel() *catwalk.Model {
 
 func (c *Config) SmallModel() *catwalk.Model {
 	model, ok := c.Models[SelectedModelTypeSmall]
+	if !ok {
+		return nil
+	}
+	return c.GetModel(model.Provider, model.Model)
+}
+
+func (c *Config) LocalModel() *catwalk.Model {
+	model, ok := c.Models[SelectedModelTypeLocal]
 	if !ok {
 		return nil
 	}
