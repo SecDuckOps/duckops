@@ -173,6 +173,23 @@ func (c *ProviderConfig) SetupGitHubCopilot() {
 	maps.Copy(c.ExtraHeaders, copilot.Headers())
 }
 
+func (c *Config) SetupDefaultOllama() {
+	if _, exists := c.Providers.Get("ollama"); exists {
+		return
+	}
+
+	ollamaProvider := ProviderConfig{
+		ID:       "ollama",
+		Name:     "Ollama",
+		Type:     catwalk.TypeOpenAICompat,
+		BaseURL:  "http://localhost:11434/v1",
+		ExtraHeaders: map[string]string{},
+		ExtraParams:  map[string]string{},
+		Disable:      false,
+	}
+	c.Providers.Set("ollama", ollamaProvider)
+}
+
 type MCPType string
 
 const (

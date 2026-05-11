@@ -108,6 +108,8 @@ func Load(workingDir, dataDir string, debug bool) (*ConfigStore, error) {
 		return nil, fmt.Errorf("failed to configure providers: %w", err)
 	}
 
+	cfg.SetupDefaultOllama()
+
 	if !cfg.IsConfigured() {
 		slog.Warn("No providers configured")
 		return store, nil
