@@ -360,7 +360,7 @@ func writePermissions(b *strings.Builder, cfg *config.ConfigStore) {
 	}
 	b.WriteString("[permissions]\n")
 	if overrides.SkipPermissionRequests {
-		b.WriteString("mode = yolo\n")
+		b.WriteString("mode = duck\n")
 	}
 	if c.Permissions != nil && len(c.Permissions.AllowedTools) > 0 {
 		sorted := slices.Clone(c.Permissions.AllowedTools)

@@ -12,6 +12,8 @@ import (
 	"charm.land/fantasy"
 	"charm.land/fantasy/providers/openaicompat"
 	"charm.land/x/vcr"
+	"github.com/stretchr/testify/require"
+
 	"github.com/SecDuckOps/duckops/internal/agent/prompt"
 	"github.com/SecDuckOps/duckops/internal/agent/tools"
 	"github.com/SecDuckOps/duckops/internal/config"
@@ -23,7 +25,6 @@ import (
 	"github.com/SecDuckOps/duckops/internal/message"
 	"github.com/SecDuckOps/duckops/internal/permission"
 	"github.com/SecDuckOps/duckops/internal/session"
-	"github.com/stretchr/testify/require"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -115,7 +116,7 @@ func testSessionAgent(env fakeEnv, large, small fantasy.LanguageModel, systemPro
 		LargeModel:   largeModel,
 		SmallModel:   smallModel,
 		SystemPrompt: systemPrompt,
-		IsYolo:       true,
+		Isduck:       true,
 		Sessions:     env.sessions,
 		Messages:     env.messages,
 		Tools:        tools,

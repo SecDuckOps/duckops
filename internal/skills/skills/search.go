@@ -1,13 +1,12 @@
 package skills
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 	"sync"
 	"unicode"
-
-	"github.com/SecDuckOps/shared/types"
 )
 
 var (
@@ -77,12 +76,12 @@ func (r *embeddedRegistry) SearchSkills(query string, limit int) []Skill {
 func ResolveSkill(reg Registry, query string) (*Skill, []Skill, error) {
 	reg = withDefaultRegistry(reg)
 	if reg == nil {
-		return nil, nil, types.New(types.ErrCodeInternal, "skill registry is unavailable")
+		return nil, nil, errors.New("skill registry is unavailable")
 	}
 
 	query = strings.TrimSpace(query)
 	if query == "" {
-		return nil, nil, types.New(types.ErrCodeInvalidInput, "skill name is required")
+		return nil, nil, errors.New("skill name is required")
 	}
 
 	if skill, err := reg.GetSkill(query); err == nil {
@@ -105,7 +104,7 @@ func ResolveSkill(reg Registry, query string) (*Skill, []Skill, error) {
 		}
 	}
 
-	return nil, matches, types.Newf(types.ErrCodeNotFound, "skill %q not found", query)
+	return nil, matches, fmt.Errorf("skill %q not found", query)
 }
 
 // BuildRelevantSkillsContext renders a small static-RAG section for system prompts.

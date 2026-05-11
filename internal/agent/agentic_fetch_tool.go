@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	_ "embed"
 	"errors"
 	"fmt"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"github.com/SecDuckOps/duckops/internal/agent/prompt"
 	"github.com/SecDuckOps/duckops/internal/agent/tools"
 	"github.com/SecDuckOps/duckops/internal/permission"
+
+	_ "embed"
 )
 
 //go:embed templates/agentic_fetch.md
@@ -183,7 +184,7 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 				SystemPromptPrefix:   smallProviderCfg.SystemPromptPrefix,
 				SystemPrompt:         systemPrompt,
 				DisableAutoSummarize: c.cfg.Config().Options.DisableAutoSummarize,
-				IsYolo:               c.permissions.SkipRequests(),
+				Isduck:               c.permissions.SkipRequests(),
 				Sessions:             c.sessions,
 				Messages:             c.messages,
 				Tools:                fetchTools,

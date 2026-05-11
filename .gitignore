@@ -45,14 +45,14 @@ Thumbs.db
 # Nix/direnv
 .direnv/
 
-**/.duckops/**
-
-/crush
-/tmp/
-
-manpages/
-completions/duckops.*sh
+**/crush
+**/tmp/
+**/manpages/
+**/completions/duckops.*sh
 .prettierignore
 .task
 duckops
 .exe
+.fuse_hidden0000461c00000069
+.fuse_hidden
+*.fuse_hidden*

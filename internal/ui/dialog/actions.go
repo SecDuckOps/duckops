@@ -8,6 +8,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/catwalk/pkg/catwalk"
+
 	"github.com/SecDuckOps/duckops/internal/commands"
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/message"
@@ -50,7 +51,7 @@ type (
 	ActionToggleThinking              struct{}
 	ActionTogglePills                 struct{}
 	ActionExternalEditor              struct{}
-	ActionToggleYoloMode              struct{}
+	ActionToggleduckMode              struct{}
 	ActionToggleNotifications         struct{}
 	ActionToggleTransparentBackground struct{}
 	ActionInitializeProject           struct{}

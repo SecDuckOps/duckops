@@ -13,6 +13,7 @@ import (
 	"charm.land/glamour/v2/ansi"
 	"charm.land/lipgloss/v2"
 	"github.com/alecthomas/chroma/v2"
+
 	"github.com/SecDuckOps/duckops/internal/ui/diffview"
 )
 
@@ -117,11 +118,11 @@ type Styles struct {
 		PromptNormalFocused lipgloss.Style
 		PromptNormalBlurred lipgloss.Style
 
-		// YOLO mode prompt (" ! " icon + ":::" dots).
-		PromptYoloIconFocused lipgloss.Style
-		PromptYoloIconBlurred lipgloss.Style
-		PromptYoloDotsFocused lipgloss.Style
-		PromptYoloDotsBlurred lipgloss.Style
+		// duck mode prompt (" ! " icon + ":::" dots).
+		PromptduckIconFocused lipgloss.Style
+		PromptduckIconBlurred lipgloss.Style
+		PromptduckDotsFocused lipgloss.Style
+		PromptduckDotsBlurred lipgloss.Style
 	}
 
 	// Radio

@@ -25,6 +25,11 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/catwalk/pkg/catwalk"
 	"charm.land/lipgloss/v2"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/ultraviolet/layout"
+	"github.com/charmbracelet/ultraviolet/screen"
+	"github.com/charmbracelet/x/editor"
+	xstrings "github.com/charmbracelet/x/exp/strings"
 
 	"github.com/SecDuckOps/duckops/internal/agent/hyper"
 	"github.com/SecDuckOps/duckops/internal/agent/notify"
@@ -53,11 +58,6 @@ import (
 	"github.com/SecDuckOps/duckops/internal/ui/util"
 	"github.com/SecDuckOps/duckops/internal/version"
 	"github.com/SecDuckOps/duckops/internal/workspace"
-	uv "github.com/charmbracelet/ultraviolet"
-	"github.com/charmbracelet/ultraviolet/layout"
-	"github.com/charmbracelet/ultraviolet/screen"
-	"github.com/charmbracelet/x/editor"
-	xstrings "github.com/charmbracelet/x/exp/strings"
 )
 
 // MouseScrollThreshold defines how many lines to scroll the chat when a mouse
@@ -921,7 +921,7 @@ func (m *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Placeholder = m.readyPlaceholder
 		}
 		if m.com.Workspace.PermissionSkipRequests() {
-			m.textarea.Placeholder = "Yolo mode!"
+			m.textarea.Placeholder = "duck mode!"
 		}
 	}
 
@@ -1342,10 +1342,10 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		}
 
 	// Command dialog messages.
-	case dialog.ActionToggleYoloMode:
-		yolo := !m.com.Workspace.PermissionSkipRequests()
-		m.com.Workspace.PermissionSetSkipRequests(yolo)
-		m.setEditorPrompt(yolo)
+	case dialog.ActionToggleduckMode:
+		duck := !m.com.Workspace.PermissionSkipRequests()
+		m.com.Workspace.PermissionSetSkipRequests(duck)
+		m.setEditorPrompt(duck)
 		m.dialog.CloseDialog(dialog.CommandsID)
 	case dialog.ActionToggleNotifications:
 		cfg := m.com.Config()
@@ -2853,10 +2853,10 @@ func (m *UI) openEditor(value string) tea.Cmd {
 }
 
 // setEditorPrompt configures the textarea prompt function based on whether
-// yolo mode is enabled.
-func (m *UI) setEditorPrompt(yolo bool) {
-	if yolo {
-		m.textarea.SetPromptFunc(4, m.yoloPromptFunc)
+// duck mode is enabled.
+func (m *UI) setEditorPrompt(duck bool) {
+	if duck {
+		m.textarea.SetPromptFunc(4, m.duckPromptFunc)
 		return
 	}
 	m.textarea.SetPromptFunc(4, m.normalPromptFunc)
@@ -2878,21 +2878,21 @@ func (m *UI) normalPromptFunc(info textarea.PromptInfo) string {
 	return t.Editor.PromptNormalBlurred.Render()
 }
 
-// yoloPromptFunc returns the yolo mode editor prompt style with warning icon
+// duckPromptFunc returns the duck mode editor prompt style with warning icon
 // and colored dots.
-func (m *UI) yoloPromptFunc(info textarea.PromptInfo) string {
+func (m *UI) duckPromptFunc(info textarea.PromptInfo) string {
 	t := m.com.Styles
 	if info.LineNumber == 0 {
 		if info.Focused {
-			return t.Editor.PromptYoloIconFocused.Render()
+			return t.Editor.PromptduckIconFocused.Render()
 		} else {
-			return t.Editor.PromptYoloIconBlurred.Render()
+			return t.Editor.PromptduckIconBlurred.Render()
 		}
 	}
 	if info.Focused {
-		return t.Editor.PromptYoloDotsFocused.Render()
+		return t.Editor.PromptduckDotsFocused.Render()
 	}
-	return t.Editor.PromptYoloDotsBlurred.Render()
+	return t.Editor.PromptduckDotsBlurred.Render()
 }
 
 // closeCompletions closes the completions popup and resets state.

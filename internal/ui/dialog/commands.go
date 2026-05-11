@@ -9,12 +9,13 @@ import (
 	"charm.land/bubbles/v2/spinner"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	uv "github.com/charmbracelet/ultraviolet"
+
 	"github.com/SecDuckOps/duckops/internal/commands"
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/ui/common"
 	"github.com/SecDuckOps/duckops/internal/ui/list"
 	"github.com/SecDuckOps/duckops/internal/ui/styles"
-	uv "github.com/charmbracelet/ultraviolet"
 )
 
 // CommandsID is the identifier for the commands dialog.
@@ -511,7 +512,7 @@ func (c *Commands) defaultCommands() []*CommandItem {
 	commands = append(commands, NewCommandItem(c.com.Styles, "toggle_notifications", notificationLabel, "", ActionToggleNotifications{}))
 
 	commands = append(commands,
-		NewCommandItem(c.com.Styles, "toggle_yolo", "Toggle Yolo Mode", "", ActionToggleYoloMode{}),
+		NewCommandItem(c.com.Styles, "toggle_duck", "Toggle duck Mode", "", ActionToggleduckMode{}),
 		NewCommandItem(c.com.Styles, "toggle_help", "Toggle Help", "ctrl+g", ActionToggleHelp{}),
 		NewCommandItem(c.com.Styles, "init", "Initialize Project", "", ActionInitializeProject{}),
 	)

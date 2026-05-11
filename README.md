@@ -36,31 +36,34 @@ DuckOps is an AI-powered terminal assistant that combines intelligent conversati
 ## Key Features
 
 ### AI Assistant
+
 - **Multi-Provider Support**: OpenAI, Anthropic, Google, AWS Bedrock, Vercel AI, OpenRouter
 - **Session Management**: Persistent conversations with automatic context summarization
 - **Tool Integration**: 35+ built-in tools for file operations, shell execution, web search, and diagnostics
 - **Loop Detection**: Prevents infinite agent loops
 
 ### Terminal UI
+
 - Built with [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss)
 - Syntax highlighting via [Chroma](https://github.com/alecthomas/chroma)
 - Markdown rendering with [Glamour](https://github.com/charmbracelet/glamour)
 
 ### Security Capabilities
 
-| Category | Coverage |
-|----------|----------|
-| **Injection** | SQL Injection, Command Injection, RCE, XXE |
-| **Web** | XSS, CSRF, IDOR, API Security, Open Redirect |
-| **System** | Path Traversal, SSRF, File Inclusion |
-| **Logic** | Business Logic, Race Conditions |
-| **Auth** | JWT/OIDC, Authentication Bypass, BFLA |
-| **Crypto** | Weak Algorithms, IV Reuse, Padding Oracle |
-| **Supply Chain** | Dependency Confusion, Typosquatting |
+| Category         | Coverage                                     |
+| ---------------- | -------------------------------------------- |
+| **Injection**    | SQL Injection, Command Injection, RCE, XXE   |
+| **Web**          | XSS, CSRF, IDOR, API Security, Open Redirect |
+| **System**       | Path Traversal, SSRF, File Inclusion         |
+| **Logic**        | Business Logic, Race Conditions              |
+| **Auth**         | JWT/OIDC, Authentication Bypass, BFLA        |
+| **Crypto**       | Weak Algorithms, IV Reuse, Padding Oracle    |
+| **Supply Chain** | Dependency Confusion, Typosquatting          |
 
 **Embedded Tools**: Nuclei, SQLMap, Nmap, Subfinder, FFUF, Httpx, Katana, Naabu, Semgrep
 
 ### Integration
+
 - MCP (Model Context Protocol) client/server support
 - LSP Integration (Go, with extensible architecture)
 - Hooks System for pre/post execution customization
@@ -82,6 +85,7 @@ duckops run "explain this function"
 ## Installation
 
 ### Binary
+
 ```bash
 # Linux/macOS
 curl -fsSL https://raw.githubusercontent.com/SecDuckOps/duckops/main/install.sh | bash
@@ -92,11 +96,13 @@ chmod +x /usr/local/bin/duckops
 ```
 
 ### From Source
+
 ```bash
 go install github.com/SecDuckOps/duckops@latest
 ```
 
 ### Docker
+
 ```bash
 docker build -t duckops .
 
@@ -110,6 +116,7 @@ docker run --rm -it \
 ## Configuration
 
 ### Environment Variables
+
 ```bash
 export OPENAI_API_KEY="sk-..."
 export ANTHROPIC_API_KEY="sk-ant-..."
@@ -118,7 +125,9 @@ export DUCKOPS_PROFILE=1   # Enable pprof on port 6060
 ```
 
 ### Config File
+
 Edit `~/.duckops/duckops.json`:
+
 ```json
 {
   "lsp": {
@@ -150,11 +159,12 @@ duckops session resume <id>    # Resume session
 ```
 
 ### CLI Options
+
 ```
   --debug              Enable debug logging
   --cwd <path>        Set working directory
   --data-dir <path>   Custom data directory
-  --yolo              Skip permission prompts
+  --duck              Skip permission prompts
   --no-color          Disable colored output
   --help, -h          Show help
   --version, -v       Print version

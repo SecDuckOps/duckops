@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"charm.land/catwalk/pkg/catwalk"
+
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/lsp"
 )
@@ -15,12 +16,60 @@ import (
 type Workspace struct {
 	ID      string         `json:"id"`
 	Path    string         `json:"path"`
-	YOLO    bool           `json:"yolo,omitempty"`
+	duck    bool           `json:"duck,omitempty"`
 	Debug   bool           `json:"debug,omitempty"`
 	DataDir string         `json:"data_dir,omitempty"`
 	Version string         `json:"version,omitempty"`
 	Config  *config.Config `json:"config,omitempty"`
 	Env     []string       `json:"env,omitempty"`
+}
+
+func NewWorkspace(id, path string, skipPermissions bool, opts ...WorkspaceOpt) Workspace {
+	w := Workspace{
+		ID:      id,
+		Path:    path,
+		duck:    skipPermissions,
+	}
+	for _, opt := range opts {
+		opt(&w)
+	}
+	return w
+}
+
+type WorkspaceOpt func(*Workspace)
+
+func WithDataDir(dir string) WorkspaceOpt {
+	return func(w *Workspace) {
+		w.DataDir = dir
+	}
+}
+
+func WithDebug(debug bool) WorkspaceOpt {
+	return func(w *Workspace) {
+		w.Debug = debug
+	}
+}
+
+func WithConfig(cfg *config.Config) WorkspaceOpt {
+	return func(w *Workspace) {
+		w.Config = cfg
+	}
+}
+
+func WithEnv(env []string) WorkspaceOpt {
+	return func(w *Workspace) {
+		w.Env = env
+	}
+}
+
+func WithVersion(v string) WorkspaceOpt {
+	return func(w *Workspace) {
+		w.Version = v
+	}
+}
+
+func (w Workspace) Duck() bool {
+	return w.duck
 }
 
 // Error represents an error response.

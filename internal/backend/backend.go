@@ -10,6 +10,8 @@ import (
 	"log/slog"
 	"runtime"
 
+	"github.com/google/uuid"
+
 	"github.com/SecDuckOps/duckops/internal/app"
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/csync"
@@ -17,7 +19,6 @@ import (
 	"github.com/SecDuckOps/duckops/internal/proto"
 	"github.com/SecDuckOps/duckops/internal/ui/util"
 	"github.com/SecDuckOps/duckops/internal/version"
-	"github.com/google/uuid"
 )
 
 // Common errors returned by backend operations.
@@ -95,7 +96,7 @@ func (b *Backend) CreateWorkspace(args proto.Workspace) (*Workspace, proto.Works
 		return nil, proto.Workspace{}, fmt.Errorf("failed to initialize config: %w", err)
 	}
 
-	cfg.Overrides().SkipPermissionRequests = args.YOLO
+	cfg.Overrides().SkipPermissionRequests = args.Duck()
 
 	if err := createDotDuckOpsDir(cfg.Config().Options.DataDirectory); err != nil {
 		return nil, proto.Workspace{}, fmt.Errorf("failed to create data directory: %w", err)
@@ -132,15 +133,12 @@ func (b *Backend) CreateWorkspace(args proto.Workspace) (*Workspace, proto.Works
 		)))
 	}
 
-	result := proto.Workspace{
-		ID:      id,
-		Path:    args.Path,
-		DataDir: cfg.Config().Options.DataDirectory,
-		Debug:   cfg.Config().Options.Debug,
-		YOLO:    cfg.Overrides().SkipPermissionRequests,
-		Config:  cfg.Config(),
-		Env:     args.Env,
-	}
+	result := proto.NewWorkspace(id, args.Path, cfg.Overrides().SkipPermissionRequests,
+		proto.WithDataDir(cfg.Config().Options.DataDirectory),
+		proto.WithDebug(cfg.Config().Options.Debug),
+		proto.WithConfig(cfg.Config()),
+		proto.WithEnv(args.Env),
+	)
 
 	return ws, result, nil
 }
@@ -192,13 +190,9 @@ func (b *Backend) Shutdown() {
 }
 
 func workspaceToProto(ws *Workspace) proto.Workspace {
-	cfg := ws.Cfg.Config()
-	return proto.Workspace{
-		ID:      ws.ID,
-		Path:    ws.Path,
-		YOLO:    ws.Cfg.Overrides().SkipPermissionRequests,
-		DataDir: cfg.Options.DataDirectory,
-		Debug:   cfg.Options.Debug,
-		Config:  cfg,
-	}
+	return proto.NewWorkspace(ws.ID, ws.Path, ws.Cfg.Overrides().SkipPermissionRequests,
+		proto.WithDataDir(ws.Cfg.Config().Options.DataDirectory),
+		proto.WithDebug(ws.Cfg.Config().Options.Debug),
+		proto.WithConfig(ws.Cfg.Config()),
+	)
 }

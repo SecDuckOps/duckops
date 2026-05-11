@@ -689,7 +689,7 @@ definitions:
         type: string
       version:
         type: string
-      yolo:
+      duck:
         type: boolean
     type: object
   time.Duration:

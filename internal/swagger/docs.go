@@ -3538,7 +3538,7 @@ const docTemplate = `{
                 "version": {
                     "type": "string"
                 },
-                "yolo": {
+                "duck": {
                     "type": "boolean"
                 }
             }
