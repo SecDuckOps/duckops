@@ -1,0 +1,44 @@
+# Version control
+.git
+.gitignore
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
+.coverprofile
+
+# Documentation
+README.md
+LICENSE
+CHANGELOG.md
+docs/
+
+# Docker files (don't send to build context)
+docker-compose.yml
+docker-compose.yaml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Temporary files
+tmp/
+*.log

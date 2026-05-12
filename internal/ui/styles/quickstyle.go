@@ -754,6 +754,7 @@ func quickStyle(o quickStyleOpts) Styles {
 	// Sidebar
 	s.Sidebar.SessionTitle = lipgloss.NewStyle().Foreground(o.fgMoreSubtle)
 	s.Sidebar.WorkingDir = lipgloss.NewStyle().Foreground(o.fgMoreSubtle)
+	s.Sidebar.WorkspaceContext = lipgloss.NewStyle().Foreground(o.accent)
 
 	// ModelInfo
 	s.ModelInfo.Icon = lipgloss.NewStyle().Foreground(o.fgMostSubtle)
@@ -851,7 +852,7 @@ func quickStyle(o quickStyleOpts) Styles {
 	s.Dialog.Help.FullSeparator = base.Foreground(o.separator)
 	s.Dialog.NormalItem = base.Padding(0, 1).Foreground(o.fgBase)
 	s.Dialog.SelectedItem = base.Padding(0, 1).Background(o.primary).Foreground(o.onPrimary)
-	s.Dialog.InputPrompt = base.Margin(1, 1)
+	s.Dialog.InputPrompt = base.Margin(1, 1).Border(lipgloss.NormalBorder()).BorderForeground(o.primary)
 
 	s.Dialog.List = base.Margin(0, 0, 1, 0)
 	s.Dialog.ContentPanel = base.Background(o.bgLessVisible).Foreground(o.fgBase).Padding(1, 2)

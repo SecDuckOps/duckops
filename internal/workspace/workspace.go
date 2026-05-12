@@ -141,6 +141,91 @@ type Workspace interface {
 	// Events
 	Subscribe(program *tea.Program)
 	Shutdown()
+
+	// GraphX - Security Knowledge Graph
+	GraphXInit(ctx context.Context) error
+	GraphXGetStatus() GraphXStatus
+	GraphXGetContext(query string, securityFocused bool) (*GraphXContext, error)
+	GraphXGetThreatModel() (*GraphXThreatModel, error)
+	GraphXGetBlastRadius(nodeID string) (*GraphXBlastResult, error)
+	GraphXSearchNodes(name string) []GraphXNode
+	GraphXWatch(enabled bool) error
+	GraphXShutdown()
+}
+
+type GraphXStatus struct {
+	State        string `json:"state"`
+	NodesCount   int    `json:"nodes_count"`
+	EdgesCount   int    `json:"edges_count"`
+	WatchEnabled bool   `json:"watch_enabled"`
+	LastUpdated  string `json:"last_updated"`
+}
+
+type GraphXContext struct {
+	Summary    string     `json:"summary"`
+	FilePaths  []string   `json:"file_paths"`
+	Nodes      []GraphXNode `json:"nodes"`
+	TokenCount int        `json:"token_count"`
+}
+
+type GraphXNode struct {
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"`
+	FilePath  string   `json:"file_path"`
+	RiskScore float64  `json:"risk_score"`
+	Tags      []string `json:"tags"`
+}
+
+type GraphXThreatModel struct {
+	Summary       *ThreatSummary `json:"summary"`
+	EntryPoints   []GraphXNode   `json:"entry_points"`
+	TrustBoundaries []string     `json:"trust_boundaries"`
+	AttackPaths   []AttackPath   `json:"attack_paths"`
+	ExecutionFlows []ExecutionFlow `json:"execution_flows"`
+}
+
+type ThreatSummary struct {
+	Spoofing   int `json:"spoofing"`
+	Tampering  int `json:"tampering"`
+	Repudiation int `json:"repudiation"`
+	Disclosure int `json:"disclosure"`
+	DoS        int `json:"dos"`
+	EoP        int `json:"eop"`
+	Total      int `json:"total"`
+}
+
+type AttackPath struct {
+	Source     string   `json:"source"`
+	Target     string   `json:"target"`
+	Path       []string `json:"path"`
+	Complexity string   `json:"complexity"`
+	Impact     string   `json:"impact"`
+}
+
+type ExecutionFlow struct {
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	EntryPoint    string     `json:"entry_point"`
+	Steps         []FlowStep `json:"steps"`
+	AuthRequired  bool       `json:"auth_required"`
+	HandlesPII    bool       `json:"handles_pii"`
+	RiskLevel     string     `json:"risk_level"`
+}
+
+type FlowStep struct {
+	NodeID   string `json:"node_id"`
+	NodeName string `json:"node_name"`
+	Type     string `json:"type"`
+	Action   string `json:"action"`
+}
+
+type GraphXBlastResult struct {
+	AffectedNodes  []GraphXNode `json:"affected_nodes"`
+	AuthFlows      []string     `json:"auth_flows"`
+	ImpactedAPIs   []string     `json:"impacted_apis"`
+	RiskScore      float64      `json:"risk_score"`
+	CriticalPath   []string     `json:"critical_path"`
 }
 
 // MCPResourceContents holds the contents of an MCP resource.

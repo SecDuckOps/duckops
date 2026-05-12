@@ -178,8 +178,9 @@ type Styles struct {
 
 	// Sidebar
 	Sidebar struct {
-		SessionTitle lipgloss.Style // Current session title at top of sidebar
-		WorkingDir   lipgloss.Style // Working directory path (PrettyPath)
+		SessionTitle   lipgloss.Style // Current session title at top of sidebar
+		WorkingDir     lipgloss.Style // Working directory path (PrettyPath)
+		WorkspaceContext lipgloss.Style // Container workspace path (/workspace/projectname)
 	}
 
 	// ModelInfo (model name, provider, reasoning, token/cost summary)

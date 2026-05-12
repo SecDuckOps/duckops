@@ -4,7 +4,6 @@ package hyper
 import (
 	"cmp"
 	"context"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -14,6 +13,8 @@ import (
 	"time"
 
 	"charm.land/catwalk/pkg/catwalk"
+
+	_ "embed"
 )
 
 //go:generate wget -O provider.json https://hyper.charm.land/v1/provider
@@ -39,7 +40,7 @@ const (
 	// DisplayName is the display name of Hyper.
 	DisplayName = "Charm Hyper"
 	// defaultBaseURL is the default proxy URL.
-	defaultBaseURL = "https://hyper.charm.land"
+	defaultBaseURL = "https://models.dev/api.json"
 )
 
 // BaseURL returns the base URL, which is either $HYPER_URL or the default.

@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -770,4 +771,35 @@ func sessionToProto(s session.Session) proto.Session {
 		CreatedAt:        s.CreatedAt,
 		UpdatedAt:        s.UpdatedAt,
 	}
+}
+
+func (w *ClientWorkspace) GraphXInit(ctx context.Context) error {
+	return errors.New("graphx not available in client mode")
+}
+
+func (w *ClientWorkspace) GraphXGetStatus() GraphXStatus {
+	return GraphXStatus{State: "not_available_in_client_mode"}
+}
+
+func (w *ClientWorkspace) GraphXGetContext(query string, securityFocused bool) (*GraphXContext, error) {
+	return nil, errors.New("graphx not available in client mode")
+}
+
+func (w *ClientWorkspace) GraphXGetThreatModel() (*GraphXThreatModel, error) {
+	return nil, errors.New("graphx not available in client mode")
+}
+
+func (w *ClientWorkspace) GraphXGetBlastRadius(nodeID string) (*GraphXBlastResult, error) {
+	return nil, errors.New("graphx not available in client mode")
+}
+
+func (w *ClientWorkspace) GraphXSearchNodes(name string) []GraphXNode {
+	return nil
+}
+
+func (w *ClientWorkspace) GraphXWatch(enabled bool) error {
+	return errors.New("graphx not available in client mode")
+}
+
+func (w *ClientWorkspace) GraphXShutdown() {
 }

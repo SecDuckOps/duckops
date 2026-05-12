@@ -1,0 +1,33 @@
+repository:
+    path: .
+    ignore:
+        - '**/node_modules/**'
+        - '**/vendor/**'
+        - '**/.git/**'
+    root_path: /run/media/h3ckt0r/apps/Work/duck
+graph:
+    storage: sqlite
+    path: .graphx/graph.json
+    wal_mode: true
+parser:
+    languages:
+        - python
+        - typescript
+        - go
+    parallel: 4
+analysis:
+    security:
+        enabled: true
+        sensitivity_threshold: 0.5
+    blast_radius:
+        max_depth: 10
+        weight_auth: 2
+        weight_api: 1.5
+watch:
+    enabled: true
+    debounce_ms: 500
+export:
+    formats:
+        - mermaid
+        - graphml
+        - json

@@ -61,6 +61,9 @@ func init() {
 
 	rootCmd.AddCommand(
 		runCmd,
+		threatModelCmd,
+		c4Cmd,
+		architectureReviewCmd,
 		dirsCmd,
 		projectsCmd,
 		updateProvidersCmd,

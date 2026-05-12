@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
@@ -13,6 +14,8 @@ import (
 	"github.com/SecDuckOps/duckops/internal/app"
 	"github.com/SecDuckOps/duckops/internal/commands"
 	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/graphx"
+	ctxengine "github.com/SecDuckOps/duckops/internal/graphx/engine/context"
 	"github.com/SecDuckOps/duckops/internal/history"
 	"github.com/SecDuckOps/duckops/internal/lsp"
 	"github.com/SecDuckOps/duckops/internal/message"
@@ -26,6 +29,7 @@ import (
 type AppWorkspace struct {
 	app   *app.App
 	store *config.ConfigStore
+	graphx *graphx.Engine
 }
 
 // NewAppWorkspace creates a new AppWorkspace wrapping the given app
@@ -383,6 +387,250 @@ func (w *AppWorkspace) App() *app.App {
 // Store returns the underlying config store.
 func (w *AppWorkspace) Store() *config.ConfigStore {
 	return w.store
+}
+
+func (w *AppWorkspace) initGraphX(ctx context.Context) error {
+	if w.graphx != nil {
+		return nil
+	}
+
+	repoPath := w.store.WorkingDir()
+	repoID := filepath.Base(repoPath)
+	storagePath := filepath.Join(repoPath, ".graphx", "graph.json")
+
+	cfg := graphx.Config{
+		RepoID:       repoID,
+		RepoPath:     repoPath,
+		StoragePath:  storagePath,
+		WatchEnabled: false,
+	}
+
+	engine, err := graphx.NewEngine(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err := engine.Initialize(ctx); err != nil {
+		return err
+	}
+
+	w.graphx = engine
+	return nil
+}
+
+func (w *AppWorkspace) GraphXInit(ctx context.Context) error {
+	return w.initGraphX(ctx)
+}
+
+func (w *AppWorkspace) GraphXGetStatus() GraphXStatus {
+	if w.graphx == nil {
+		return GraphXStatus{State: "not_initialized"}
+	}
+
+	status := w.graphx.GetStatus()
+	return GraphXStatus{
+		State:        status.State,
+		NodesCount:   status.NodesCount,
+		EdgesCount:   status.EdgesCount,
+		WatchEnabled: status.WatchEnabled,
+		LastUpdated:  status.LastUpdated.Format(time.RFC3339),
+	}
+}
+
+func (w *AppWorkspace) GraphXGetContext(query string, securityFocused bool) (*GraphXContext, error) {
+	if w.graphx == nil {
+		if err := w.initGraphX(context.Background()); err != nil {
+			return nil, err
+		}
+	}
+
+	req := &ctxengine.ContextRequest{
+		RepoID:          filepath.Base(w.store.WorkingDir()),
+		Query:           query,
+		SecurityFocused: securityFocused,
+		MaxFiles:        20,
+	}
+
+	resp, err := w.graphx.GetContext(req)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]GraphXNode, len(resp.Nodes))
+	for i, n := range resp.Nodes {
+		tags := []string{}
+		if n.Metadata != nil {
+			if t, ok := n.Metadata["security_tags"]; ok {
+				if ts, ok := t.([]string); ok {
+					tags = ts
+				}
+			}
+		}
+		nodes[i] = GraphXNode{
+			ID:        n.ID,
+			Name:      n.Name,
+			Type:      string(n.Type),
+			FilePath:  n.FilePath,
+			RiskScore: n.RiskScore,
+			Tags:      tags,
+		}
+	}
+
+	return &GraphXContext{
+		Summary:    resp.Summary,
+		FilePaths:  resp.FilePaths,
+		Nodes:      nodes,
+		TokenCount: resp.TokenCount,
+	}, nil
+}
+
+func (w *AppWorkspace) GraphXGetThreatModel() (*GraphXThreatModel, error) {
+	if w.graphx == nil {
+		if err := w.initGraphX(context.Background()); err != nil {
+			return nil, err
+		}
+	}
+
+	model, err := w.graphx.GetThreatModel()
+	if err != nil {
+		return nil, err
+	}
+
+	entryPoints := make([]GraphXNode, len(model.EntryPoints))
+	for i, ep := range model.EntryPoints {
+		entryPoints[i] = GraphXNode{
+			ID:       ep.ID,
+			Name:     ep.Name,
+			Type:     string(ep.Type),
+			FilePath: ep.FilePath,
+			RiskScore: ep.RiskScore,
+		}
+	}
+
+	attackPaths := make([]AttackPath, len(model.AttackPaths))
+	for i, ap := range model.AttackPaths {
+		attackPaths[i] = AttackPath{
+			Source:     ap.Source,
+			Target:     ap.Target,
+			Path:       ap.Path,
+			Complexity: ap.Complexity,
+			Impact:     ap.Impact,
+		}
+	}
+
+	executionFlows := make([]ExecutionFlow, len(model.ExecutionFlows))
+	for i, ef := range model.ExecutionFlows {
+		steps := make([]FlowStep, len(ef.Steps))
+		for j, s := range ef.Steps {
+			steps[j] = FlowStep{
+				NodeID:   s.NodeID,
+				NodeName: s.NodeName,
+				Type:     s.Type,
+				Action:   s.Action,
+			}
+		}
+		executionFlows[i] = ExecutionFlow{
+			ID:           ef.ID,
+			Name:         ef.Name,
+			EntryPoint:   ef.EntryPoint,
+			Steps:        steps,
+			AuthRequired: ef.AuthRequired,
+			HandlesPII:   ef.HandlesPII,
+			RiskLevel:    ef.RiskLevel,
+		}
+	}
+
+	var summary *ThreatSummary
+	if model.Summary != nil {
+		summary = &ThreatSummary{
+			Spoofing:   model.Summary.Spoofing,
+			Tampering:  model.Summary.Tampering,
+			Repudiation: model.Summary.Repudiation,
+			Disclosure: model.Summary.InformationDisclosure,
+			DoS:        model.Summary.DenialOfService,
+			EoP:        model.Summary.ElevationOfPrivilege,
+			Total:      model.Summary.Total,
+		}
+	}
+
+	return &GraphXThreatModel{
+		Summary:        summary,
+		EntryPoints:    entryPoints,
+		TrustBoundaries: model.TrustBoundaries,
+		AttackPaths:    attackPaths,
+		ExecutionFlows: executionFlows,
+	}, nil
+}
+
+func (w *AppWorkspace) GraphXGetBlastRadius(nodeID string) (*GraphXBlastResult, error) {
+	if w.graphx == nil {
+		if err := w.initGraphX(context.Background()); err != nil {
+			return nil, err
+		}
+	}
+
+	result, err := w.graphx.GetBlastRadius(nodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	affectedNodes := make([]GraphXNode, len(result.AffectedNodes))
+	for i, n := range result.AffectedNodes {
+		affectedNodes[i] = GraphXNode{
+			ID:        n.ID,
+			Name:      n.Name,
+			Type:      string(n.Type),
+			FilePath:  n.FilePath,
+			RiskScore: n.RiskScore,
+		}
+	}
+
+	return &GraphXBlastResult{
+		AffectedNodes: affectedNodes,
+		AuthFlows:     result.AuthFlows,
+		ImpactedAPIs:  result.ImpactedAPIs,
+		RiskScore:     result.RiskScore,
+		CriticalPath:  result.CriticalPath,
+	}, nil
+}
+
+func (w *AppWorkspace) GraphXSearchNodes(name string) []GraphXNode {
+	if w.graphx == nil {
+		return nil
+	}
+
+	nodes := w.graphx.SearchByName(name)
+	result := make([]GraphXNode, len(nodes))
+	for i, n := range nodes {
+		result[i] = GraphXNode{
+			ID:        n.ID,
+			Name:      n.Name,
+			Type:      string(n.Type),
+			FilePath:  n.FilePath,
+			RiskScore: n.RiskScore,
+		}
+	}
+	return result
+}
+
+func (w *AppWorkspace) GraphXWatch(enabled bool) error {
+	if w.graphx == nil {
+		return errors.New("graphx not initialized")
+	}
+
+	if enabled {
+		return w.graphx.EnableWatchMode(context.Background())
+	}
+
+	w.graphx.Shutdown()
+	return nil
+}
+
+func (w *AppWorkspace) GraphXShutdown() {
+	if w.graphx != nil {
+		w.graphx.Shutdown()
+		w.graphx = nil
+	}
 }
 
 // Compile-time check that AppWorkspace implements Workspace.

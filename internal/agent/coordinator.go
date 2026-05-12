@@ -495,6 +495,11 @@ func (c *coordinator) buildTools(ctx context.Context, agent config.Agent, isSubA
 
 	allTools = append(allTools,
 		tools.NewBashTool(c.permissions, c.cfg.WorkingDir(), c.cfg.Config().Options.Attribution, modelName),
+		tools.NewAnalyzeArchitectureTool(c.permissions, c.cfg.WorkingDir()),
+		tools.NewGenerateC4ModelTool(c.permissions, c.cfg.WorkingDir()),
+		tools.NewGenerateThreatModelTool(c.permissions, c.cfg.WorkingDir()),
+		tools.NewGenerateAttackPathsTool(c.permissions, c.cfg.WorkingDir()),
+		tools.NewExportSecurityReportTool(c.permissions, c.cfg.WorkingDir()),
 		tools.NewDuckInfoTool(c.cfg, c.lspManager, c.allSkills, c.activeSkills, c.skillTracker),
 		tools.NewDuckLogsTool(logFile),
 		tools.NewJobOutputTool(),

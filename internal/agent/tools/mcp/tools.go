@@ -33,11 +33,14 @@ func Tools() iter.Seq2[string, []*Tool] {
 }
 
 // RunTool runs an MCP tool with the given input parameters.
+// It translates paths according to the MCP server's path mapping before sending.
 func RunTool(ctx context.Context, cfg *config.ConfigStore, name, toolName string, input string) (ToolResult, error) {
 	var args map[string]any
 	if err := json.Unmarshal([]byte(input), &args); err != nil {
 		return ToolResult{}, fmt.Errorf("error parsing parameters: %s", err)
 	}
+
+	translatedArgs := TranslateToolPaths(name, toolName, args)
 
 	c, err := getOrRenewClient(ctx, cfg, name)
 	if err != nil {
@@ -45,7 +48,7 @@ func RunTool(ctx context.Context, cfg *config.ConfigStore, name, toolName string
 	}
 	result, err := c.CallTool(ctx, &mcp.CallToolParams{
 		Name:      toolName,
-		Arguments: args,
+		Arguments: translatedArgs,
 	})
 	if err != nil {
 		return ToolResult{}, err

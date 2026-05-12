@@ -199,21 +199,17 @@ const (
 )
 
 type MCPConfig struct {
-	Command       string            `json:"command,omitempty" jsonschema:"description=Command to execute for stdio MCP servers,example=npx"`
-	Env           map[string]string `json:"env,omitempty" jsonschema:"description=Environment variables to set for the MCP server"`
-	Args          []string          `json:"args,omitempty" jsonschema:"description=Arguments to pass to the MCP server command"`
-	Type          MCPType           `json:"type" jsonschema:"required,description=Type of MCP connection,enum=stdio,enum=sse,enum=http,default=stdio"`
-	URL           string            `json:"url,omitempty" jsonschema:"description=URL for HTTP or SSE MCP servers,format=uri,example=http://localhost:3000/mcp"`
-	Disabled      bool              `json:"disabled,omitempty" jsonschema:"description=Whether this MCP server is disabled,default=false"`
-	DisabledTools []string          `json:"disabled_tools,omitempty" jsonschema:"description=List of tools from this MCP server to disable,example=get-library-doc"`
-	Timeout       int               `json:"timeout,omitempty" jsonschema:"description=Timeout in seconds for MCP server connections,default=15,example=30,example=60,example=120"`
+	Command        string            `json:"command,omitempty" jsonschema:"description=Command to execute for stdio MCP servers,example=npx"`
+	Env            map[string]string `json:"env,omitempty" jsonschema:"description=Environment variables to set for the MCP server"`
+	Args           []string          `json:"args,omitempty" jsonschema:"description=Arguments to pass to the MCP server command"`
+	Type           MCPType           `json:"type" jsonschema:"required,description=Type of MCP connection,enum=stdio,enum=sse,enum=http,default=stdio"`
+	URL            string            `json:"url,omitempty" jsonschema:"description=URL for HTTP or SSE MCP servers,format=uri,example=http://localhost:3000/mcp"`
+	Disabled       bool              `json:"disabled,omitempty" jsonschema:"description=Whether this MCP server is disabled,default=false"`
+	DisabledTools  []string          `json:"disabled_tools,omitempty" jsonschema:"description=List of tools from this MCP server to disable,example=get-library-doc"`
+	Timeout        int               `json:"timeout,omitempty" jsonschema:"description=Timeout in seconds for MCP server connections,default=15,example=30,example=60,example=120"`
+	WorkspaceMount string            `json:"workspace_mount,omitempty" jsonschema:"description=Path inside container where workspace is mounted"`
+	PathMapping    map[string]string `json:"path_mapping,omitempty" jsonschema:"description=Host to container path mappings for MCP servers,example=/home/user:/workspace"`
 
-	// Headers are HTTP headers for HTTP/SSE MCP servers. Values run
-	// through shell expansion at MCP startup, so $VAR and $(cmd)
-	// work. A header whose value resolves to the empty string (unset
-	// bare $VAR under lenient nounset, $(echo), or literal "") is
-	// omitted from the outgoing request rather than sent as
-	// "Header:". See PLAN.md Phase 2 design decision #18.
 	Headers map[string]string `json:"headers,omitempty" jsonschema:"description=HTTP headers for HTTP/SSE MCP servers"`
 }
 
@@ -682,6 +678,7 @@ const maxRecentModelsPerType = 5
 func allToolNames() []string {
 	return []string{
 		"agent",
+		"analyze_architecture",
 		"bash",
 		"create_agent",
 		"create_vulnerability_report",
@@ -696,11 +693,15 @@ func allToolNames() []string {
 		"lsp_references",
 		"lsp_restart",
 		"fetch",
+		"generate_attack_paths",
+		"generate_c4_model",
+		"generate_threat_model",
 		"agentic_fetch",
 		"glob",
 		"grep",
 		"ls",
 		"sourcegraph",
+		"export_security_report",
 		"todos",
 		"view",
 		"write",

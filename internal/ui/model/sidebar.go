@@ -7,6 +7,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
+	"github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
 	"github.com/SecDuckOps/duckops/internal/ui/common"
 	uv "github.com/charmbracelet/ultraviolet"
 	"github.com/charmbracelet/ultraviolet/layout"
@@ -140,10 +141,18 @@ func (m *UI) drawSidebar(scr uv.Screen, area uv.Rectangle) {
 
 	title := t.Sidebar.SessionTitle.Width(width).MaxHeight(2).Render("🦆 " + m.session.Title)
 	cwd := common.PrettyPath(t, m.com.Workspace.WorkingDir(), width)
+
+	ws := mcp.GetActiveWorkspace()
+	var wsInfo string
+	if ws.ContainerProjectRoot != "" {
+		wsInfo = t.Sidebar.WorkspaceContext.Render("📁 " + ws.ContainerProjectRoot)
+	}
+
 	blocks := []string{
 		title,
 		"",
 		cwd,
+		wsInfo,
 		"",
 		m.modelInfo(width),
 		"",

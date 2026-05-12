@@ -256,7 +256,9 @@ func NewToolMessageItem(
 	case tools.LSPRestartToolName:
 		item = NewLSPRestartToolMessageItem(sty, toolCall, result, canceled)
 	default:
-		if IsDockerMCPTool(toolCall.Name) {
+		if IsArchitectureTool(toolCall.Name) {
+			item = NewArchitectureToolMessageItem(sty, toolCall, result, canceled)
+		} else if IsDockerMCPTool(toolCall.Name) {
 			item = NewDockerMCPToolMessageItem(sty, toolCall, result, canceled)
 		} else if strings.HasPrefix(toolCall.Name, "mcp_") {
 			item = NewMCPToolMessageItem(sty, toolCall, result, canceled)
