@@ -293,6 +293,8 @@ func setupLocalWorkspace(cmd *cobra.Command) (workspace.Workspace, func(), error
 		event.Init()
 	}
 
+	go EnsureToolServer()
+
 	ws := workspace.NewAppWorkspace(appInstance, store)
 	cleanup := func() { appInstance.Shutdown() }
 	return ws, cleanup, nil

@@ -87,6 +87,28 @@ func TestReadTextFileTruncatesLongLines(t *testing.T) {
 	require.Equal(t, strings.Repeat("a", MaxLineLength)+"...", content)
 }
 
+func TestViewParamsUnmarshalJSONAliases(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{name: "file_path", raw: `{"file_path":"a.go"}`, want: "a.go"},
+		{name: "path", raw: `{"path":"b.go"}`, want: "b.go"},
+		{name: "location", raw: `{"location":"duckops://skills/foo/SKILL.md"}`, want: "duckops://skills/foo/SKILL.md"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			var params ViewParams
+			require.NoError(t, json.Unmarshal([]byte(tc.raw), &params))
+			require.Equal(t, tc.want, params.FilePath)
+		})
+	}
+}
+
 func TestReadBuiltinFile(t *testing.T) {
 	t.Parallel()
 

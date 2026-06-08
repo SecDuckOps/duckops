@@ -11,16 +11,28 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/duckops ./main.go
 
 FROM alpine:3.20 AS go-tool-builder
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl unzip
 
 RUN mkdir -p /out && \
-    curl -sSfL https://github.com/OJ/gobuster/releases/download/v3.6.0/gobuster_Linux_amd64.tar.gz | tar -xzf - -C /out && \
-    curl -sSfL https://github.com/zricethezav/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar -xzf - -C /out && \
-    curl -sSfL https://github.com/aquasecurity/tfsec/releases/download/v1.28.14/tfsec-linux-amd64 -o /out/tfsec && chmod +x /out/tfsec && \
-    curl -sSfL https://github.com/securego/gosec/releases/download/v2.20.0/gosec_2.20.0_linux_amd64.tar.gz | tar -xzf - -C /out && \
-    curl -sSfL https://github.com/trufflesecurity/trufflehog/releases/download/v3.81.2/trufflehog_3.81.2_linux_amd64.tar.gz | tar -xzf - -C /out && \
-    curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /out && \
-    curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /out
+    curl -sSfL https://github.com/aquasecurity/tfsec/releases/download/v1.28.14/tfsec-linux-amd64 -o /out/tfsec && chmod +x /out/tfsec
+
+RUN curl -sSfL https://github.com/securego/gosec/releases/download/v2.25.0/gosec_2.25.0_linux_amd64.tar.gz | tar -xzf - -C /out
+
+RUN curl -sSfL https://github.com/trufflesecurity/trufflehog/releases/download/v3.92.3/trufflehog_3.92.3_linux_amd64.tar.gz | tar -xzf - -C /out
+
+RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /out
+
+RUN curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /out
+
+RUN curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_8.24.2_linux_x64.tar.gz | tar -xzf - -C /out gitleaks
+
+RUN curl -sSfL https://github.com/projectdiscovery/subfinder/releases/download/v2.6.5/subfinder_2.6.5_linux_amd64.zip -o /tmp/subfinder.zip && unzip /tmp/subfinder.zip -d /out
+
+RUN curl -sSfL https://github.com/projectdiscovery/httpx/releases/download/v1.6.10/httpx_1.6.10_linux_amd64.zip -o /tmp/httpx.zip && unzip /tmp/httpx.zip -d /out httpx
+
+RUN curl -sSfL https://github.com/projectdiscovery/katana/releases/download/v1.1.2/katana_1.1.2_linux_amd64.zip -o /tmp/katana.zip && unzip /tmp/katana.zip -d /out katana
+
+RUN curl -sSfL https://github.com/projectdiscovery/nuclei/releases/download/v3.4.4/nuclei_3.4.4_linux_amd64.zip -o /tmp/nuclei.zip && unzip /tmp/nuclei.zip -d /out nuclei
 
 FROM debian:bookworm-slim AS cert-builder
 
@@ -77,7 +89,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SEMGREP_SEND_METRICS=off \
     REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
-    PATH=/app/venv/bin:/home/duckops/.local/bin:/home/duckops/.npm-global/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    GOROOT=/usr/local/go \
+    PATH=/app/venv/bin:/home/duckops/.local/bin:/home/duckops/.npm-global/bin:/usr/local/go/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -113,8 +126,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=server-builder /out/duckops /usr/local/bin/duckops
+COPY --from=server-builder /usr/local/go /usr/local/go
 
-COPY --from=go-tool-builder /out/gobuster /usr/local/bin/gobuster
+# COPY --from=go-tool-builder /out/gobuster /usr/local/bin/gobuster
 COPY --from=go-tool-builder /out/gitleaks /usr/local/bin/gitleaks
 COPY --from=go-tool-builder /out/tfsec /usr/local/bin/tfsec
 COPY --from=go-tool-builder /out/gosec /usr/local/bin/gosec
@@ -123,8 +137,6 @@ COPY --from=go-tool-builder /out/httpx /usr/local/bin/httpx
 COPY --from=go-tool-builder /out/katana /usr/local/bin/katana
 COPY --from=go-tool-builder /out/nuclei /usr/local/bin/nuclei
 COPY --from=go-tool-builder /out/subfinder /usr/local/bin/subfinder
-COPY --from=go-tool-builder /out/naabu /usr/local/bin/naabu
-COPY --from=go-tool-builder /out/ffuf /usr/local/bin/ffuf
 COPY --from=go-tool-builder /out/trivy /usr/local/bin/trivy
 COPY --from=go-tool-builder /out/trufflehog /usr/local/bin/trufflehog
 
@@ -151,11 +163,22 @@ RUN cp /app/certs/ca.crt /usr/local/share/ca-certificates/duckops-ca.crt && \
     chmod 644 /app/certs/ca.crt && \
     chmod 600 /app/certs/ca.key /app/certs/ca.p12
 
+RUN trivy image --download-db-only --cache-dir /var/lib/duckops/trivy 2>/dev/null || true
+
+# Pre-cache semgrep rules for offline use.
+RUN mkdir -p /workspace/rules-cache && echo "package main" > /workspace/rules-cache/test.go && \
+    SEMGREP_SEND_METRICS=off semgrep --config=p/default --json /workspace/rules-cache/test.go >/dev/null 2>&1 || true && \
+    rm -rf /workspace/rules-cache
+
+# Restore ownership after any root-run commands that may have touched /var/lib/duckops.
+RUN chown -R duckops:duckops /var/lib/duckops /home/duckops
+
 COPY containers/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
 USER duckops
 WORKDIR /workspace
+ENV DUCKOPS_SANDBOX_MODE=true
 EXPOSE 48080 48081
 ENTRYPOINT ["docker-entrypoint.sh"]

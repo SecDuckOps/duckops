@@ -1,188 +1,119 @@
 ---
-name: ssdlc-phase1-requirements
-description: Phase 1 - Security requirements gathering, risk assessment, and threat modeling before development
+name: phase1-requirements
+description: Phase 1 - Security requirements gathering, OWASP ASVS mapping, data classification, and compliance mapping
 ---
 
-# Phase 1: Requirements & Threat Modeling
+# Phase 1: Requirements & Planning
 
-Define security requirements, identify assets, and model threats before development begins.
+Define security requirements, classify data, map compliance controls, and model abuse cases before development begins.
 
 ## Objectives
 
-- Identify all security requirements
-- Classify data and assets
-- Assess and prioritize risks
-- Define trust boundaries
-- Create foundation for secure development
+- Extract security requirements using OWASP ASVS levels (L1/L2/L3)
+- Define abuse cases and misuse cases for each user story
+- Map requirements to compliance controls (GDPR Art. 25/32, PCI-DSS 4.0, HIPAA §164.312, ISO 27001 Annex A)
+- Establish security acceptance criteria before the sprint starts
+- Identify and document data classification levels
 
 ## Phase Activities
 
-### 1.1 Security Requirements Gathering
+### 1.1 OWASP ASVS Mapping
 
-**Functional Security Requirements**
+Extract security requirements according to the Application Security Verification Standard (ASVS) levels:
 
-| Category | Requirements | Examples |
-|----------|--------------|----------|
-| Authentication | MFA, password policy, session management | TOTP, WebAuthn, 12+ char passwords |
-| Authorization | RBAC, ABAC, resource permissions | Least privilege, per-resource checks |
-| Data Protection | Encryption, PII handling, retention | AES-256, GDPR compliance, 90-day retention |
-| Audit Logging | What's logged, retention, tamper protection | Immutable logs, 1-year retention |
-| Input Validation | Allowlist vs blocklist, sanitization | Type coercion prevention, length limits |
-| Error Handling | Generic messages, no information disclosure | 500 on error, details server-side |
+*   **ASVS Level 1 (Opportunistic)**: Good for low-risk applications, protecting against common, easy-to-find vulnerabilities. Fully testable using automated tools.
+*   **ASVS Level 2 (Standard)**: Standard for applications handling sensitive transactions (PII, commerce). Validates key security controls (AuthN, AuthZ, input validation).
+*   **ASVS Level 3 (Advanced)**: Required for high-risk applications (financial, health, critical infra). Requires design modularity, strong cryptography, and active defense.
 
-**Compliance Requirements**
+| ASVS Section | Verification Level | Key Control Focus |
+|--------------|--------------------|-------------------|
+| V1: Architecture, Design | L1/L2/L3 | Trust boundary validation, threat modeling |
+| V2: Authentication | L2/L3 | MFA, credential strength, session security |
+| V3: Session Management | L2/L3 | Cookie flags, timeout limits, token entropy |
+| V4: Access Control | L2/L3 | Deny-by-default, least-privilege role validation |
+| V5: Validation, Sanitization | L1/L2/L3 | Parameterized queries, context-aware escaping |
+| V8: Data Protection | L2/L3 | TLS in transit, AES-256 at rest, key separation |
 
-| Framework | Key Requirements | Data Handling |
-|-----------|-----------------|---------------|
-| GDPR | Consent, right to erasure, data minimization | PII encryption, access controls |
-| HIPAA | PHI protection, audit trails | Medical data encryption |
-| PCI-DSS | Cardholder data, network segmentation | Tokenization, isolated networks |
-| SOC 2 | Availability, confidentiality, integrity | Access logging, incident response |
-| CCPA | Data disclosure, opt-out rights | Data inventory, deletion capability |
+### 1.2 Data Classification
 
-### 1.2 Asset Identification & Classification
+Classify all application data to determine security and encryption requirements:
 
-**Data Assets**
+| Classification | Sensitivity | Examples | Minimum Protection |
+|----------------|-------------|----------|-------------------|
+| **Public** | Low | Marketing copy, product docs | Public integrity check |
+| **Internal** | Medium | Internal policies, dev manuals | Authentication required |
+| **Confidential** | High | Financial reports, customer emails | Encryption at rest + audit |
+| **PII (Restricted)** | Critical | Name, address, IP, SSN, email | Encryption + pseudonymization |
+| **PCI (Restricted)** | Critical | Credit card numbers, CVVs | Tokenization + isolated network |
+| **PHI (Restricted)** | Critical | Health records, patient IDs | Strict access trails + TLS force |
 
-| Classification | Examples | Protection Level |
-|----------------|----------|------------------|
-| Public | Marketing content, public docs | None |
-| Internal | Internal docs, processes | Integrity only |
-| Confidential | Customer data, financials | Encryption + access control |
-| Restricted | Credentials, PII, health records | Encryption + MFA + audit |
+### 1.3 Abuse & Misuse Cases
 
-**System Assets**
-
-| Asset Type | Examples | Security Requirements |
-|------------|----------|----------------------|
-| Entry Points | APIs, web interfaces, mobile apps | Auth + validation + rate limiting |
-| Trust Boundaries | Internet-facing, internal, privileged | Network segmentation, zero-trust |
-| Dependencies | Third-party services, SDKs, cloud | Vetting, updates, isolation |
-| Data Stores | Databases, caches, file storage | Encryption, access control, backup |
-
-### 1.3 Threat Modeling (STRIDE)
-
-**Data Flow Diagram Elements**
+Draft abuse/misuse cases to model attacker behaviors against user stories:
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   External  │────▶│   Process   │────▶│  Data Store │
-│   Entity    │     │             │     │             │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │   Process   │
-                    │             │
-                    └─────────────┘
+User Story: "As a registered user, I want to reset my password via email so that I can regain access."
+  ├── Abuse Case 1: Attacker attempts to brute-force the password reset token
+  ├── Abuse Case 2: Attacker requests password reset to trigger email bombing/DoS
+  └── Misuse Case: Attacker alters username in the reset request to trigger token leaks (IDOR)
 ```
 
-**STRIDE Threat Categories**
+**Common Scenarios Checklist:**
+- **Auth Flow**: Abuse of MFA bypass, session replay, token stuffing.
+- **File Upload**: Uploading executable payloads, zip bomb decompression, path traversal names.
+- **APIs**: Mass assignment of permissions, BOLA/IDOR on resource IDs.
+- **Checkout/Payments**: Price manipulation (negative prices, coupon abuse).
 
-| Threat | Attack | Impact | Mitigations |
-|--------|--------|--------|-------------|
-| **Spoofing** | Credential theft, session hijacking | Impersonation | MFA, secure sessions, certificate pinning |
-| **Tampering** | SQL injection, data poisoning | Data corruption | Parameterized queries, integrity checks |
-| **Repudiation** | Deny actions, unsigned transactions | No accountability | Audit logs, digital signatures |
-| **Information Disclosure** | Data leaks, side-channel | Confidentiality loss | Encryption, access controls, minimal error messages |
-| **Denial of Service** | Resource exhaustion, service disruption | Availability loss | Rate limiting, redundancy, auto-scaling |
-| **Elevation of Privilege** | RBAC bypass, parameter injection | Unauthorized access | Least privilege, input validation, sandboxing |
+### 1.4 Compliance Controls Mapping
 
-### 1.4 Risk Assessment
+Map requirements directly to regulatory and standard compliance frameworks:
 
-**Risk Matrix**
+| Compliance Control | Requirement Focus | Technical Implementation |
+|--------------------|-------------------|--------------------------|
+| **GDPR Art. 25** | Data Protection by Design & Default | Pseudonymization, data minimization |
+| **GDPR Art. 32** | Security of Processing | Encryption, availability, regular testing |
+| **PCI-DSS 4.0 §3** | Protect Cardholder Data | Strong crypto (AES-256), primary account masking |
+| **PCI-DSS 4.0 §6** | Develop Secure Systems | Code reviews, SAST/SCA integration, dependency pins |
+| **HIPAA §164.312(a)** | Access Controls | Unique user IDs, automatic logoff, encryption |
+| **HIPAA §164.312(b)** | Audit Controls | Immutable logs tracking PHI access |
+| **ISO 27001 Annex A.8** | Asset Management & Info Classification | Clear labels, access control guidelines |
+| **ISO 27001 Annex A.14** | Secure System Development | Secure engineering principles, test data control |
 
-| Impact ↓ / Likelihood → | Low | Medium | High |
-|-------------------------|-----|--------|------|
-| **Critical** | High | Critical | Critical |
-| **High** | Medium | High | Critical |
-| **Medium** | Low | Medium | High |
-| **Low** | Low | Low | Medium |
+### 1.5 Security Acceptance Criteria
 
-**Risk Treatment Options**
+Define explicit security criteria before developers start coding:
 
-| Option | When to Use | Example |
-|--------|-------------|---------|
-| Mitigate | Can add controls | Add MFA to reduce auth risk |
-| Transfer | Insurance or contracts | Cyber insurance for breach costs |
-| Accept | Low risk, high cost to fix | Known legacy system limitation |
-| Avoid | Can redesign process | Use managed service instead of self-hosted |
-
-### 1.5 Trust Boundary Definition
-
-**Common Trust Boundaries**
-
-```
-Internet ──────────────────────────── DMZ ──────────────────────────── Internal
-   │                                    │                                    │
-   ▼                                    ▼                                    ▼
-Public APIs                         WAF/Load Balancer              Private Services
-                                   (untrusted)                      (trusted)
-                                         │
-                                    Auth Service
-                                         │
-                                    Database
-                                    (highly trusted)
-```
-
-**Boundary Mapping**
-
-| Boundary | Between | Security Controls |
-|----------|---------|-------------------|
-| External → DMZ | Internet, third parties | WAF, rate limiting, input validation |
-| DMZ → Internal | Web to application | Auth service, API gateway |
-| Internal → Data | App to database | Encryption, access controls |
-| Admin → Production | Privileged access | MFA, jump hosts, audit logging |
-
-### 1.6 Abuse Case Identification
-
-**Common Abuse Cases**
-
-| Abuse Case | Attack Vector | Impact |
-|------------|---------------|--------|
-| Account takeover | Credential stuffing, phishing | Data breach, fraud |
-| Privilege escalation | IDOR, parameter manipulation | Unauthorized access |
-| Data exfiltration | SQL injection, misconfigured S3 | PII exposure |
-| Service disruption | DDoS, resource exhaustion | Availability loss |
-| Supply chain attack | Compromised dependency | Backdoor, persistence |
+- `[ ]` Input parameters are validated against a strict allowlist.
+- `[ ]` Data flow crossing trust boundaries uses TLS 1.3/HTTPS.
+- `[ ]` Secrets/credentials are loaded from external configuration (never hardcoded).
+- `[ ]` User identity is verified on every API request checking the specific resource ownership.
+- `[ ]` Logging covers success/failure of authentication and authorization events.
 
 ## GraphX Integration
 
-**Query Architecture**
+**Query Phase 1 Elements**
+
+Initialize the knowledge graph and verify compliance scope:
 
 ```bash
-# Entry points discovery
+# Initialize GraphX threat model
+graphx init
+
+# Query entry points to define trust boundaries
 GraphX: GetAPIs()
-
-# Trust boundaries
-GraphX: GetTrustBoundaries()
-
-# Asset classification
-GraphX: Query type="function" security_sensitivity>7
-
-# Auth-related functions
-GraphX: SearchNodes("auth", "login", "password")
-
-# Data handling functions
-GraphX: SearchNodes("pii", "personal", "credential")
 ```
 
 ## Deliverables
 
-| Deliverable | Description |
-|-------------|-------------|
-| Security Requirements | Functional and compliance requirements |
-| Data Classification | Asset inventory with classification |
-| Threat Model | DFD with STRIDE threats |
-| Risk Register | Prioritized risks with treatment |
-| Trust Boundary Map | Security zones and controls |
-| Abuse Case Catalog | Identified attack scenarios |
+- **Security Requirements Document**: Mapped to ASVS L1/L2/L3.
+- **Data Classification Catalog**: Listing PII, PCI, and PHI assets.
+- **Abuse & Misuse Case Catalog**: Attacker stories.
+- **Compliance Mapping Matrix**: Traceable controls.
+- **Security Acceptance Criteria**: Integrated into sprint tasks.
 
 ## Exit Criteria
 
-- [ ] All assets identified and classified
-- [ ] Threat model covers all entry points
-- [ ] Risk register reviewed and approved
-- [ ] Trust boundaries defined
-- [ ] Security requirements traceable
-- [ ] GraphX initialized with architecture
+- [ ] ASVS targets established.
+- [ ] Compliance scope defined.
+- [ ] Security acceptance criteria defined.
+- [ ] GraphX initialized.

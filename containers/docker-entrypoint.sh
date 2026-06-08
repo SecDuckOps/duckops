@@ -164,13 +164,17 @@ log "DuckOps sandbox ready (Caido: ${CAIDO_STATUS}, tool server on :${TOOL_SERVE
 
 # ─── Generate Tool Server Token ───────────────────────────────────
 TOOL_SERVER_TOKEN_FILE="${RUNTIME_HOME}/.tool_server_token"
-if [ -f "$TOOL_SERVER_TOKEN_FILE" ]; then
+if [ -n "${TOOL_SERVER_TOKEN:-}" ]; then
+    mkdir -p "$RUNTIME_HOME"
+    echo "$TOOL_SERVER_TOKEN" > "$TOOL_SERVER_TOKEN_FILE" 2>/dev/null || true
+    chmod 600 "$TOOL_SERVER_TOKEN_FILE" 2>/dev/null || true
+elif [ -f "$TOOL_SERVER_TOKEN_FILE" ]; then
     TOOL_SERVER_TOKEN=$(cat "$TOOL_SERVER_TOKEN_FILE" 2>/dev/null || echo "")
 else
     TOOL_SERVER_TOKEN=$(openssl rand -base64 32 2>/dev/null || head -c 32 /dev/urandom | base64)
     mkdir -p "$RUNTIME_HOME"
     echo "$TOOL_SERVER_TOKEN" > "$TOOL_SERVER_TOKEN_FILE" 2>/dev/null || true
-    chmod 600 "$TOOL_SERVER_TOKEN_FILE"
+    chmod 600 "$TOOL_SERVER_TOKEN_FILE" 2>/dev/null || true
 fi
 
 # ─── Launch Tool Server ────────────────────────────────────────────

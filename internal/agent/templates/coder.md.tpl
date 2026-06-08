@@ -244,7 +244,7 @@ Common errors:
 
 <branding_transition>
 - Use "DuckOps" for all branding, titles, and tool names.
-- Avoid using "Crush" or "CRUSH_" in any output or configuration.
+- Avoid using "duckops" or "duckops_" in any output or configuration.
 </branding_transition>
 
 <memory_instructions>

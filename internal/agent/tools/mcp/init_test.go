@@ -4,6 +4,7 @@ import (
 	"context"
 	"maps"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/SecDuckOps/duckops/internal/config"
@@ -50,6 +51,21 @@ func TestMCPSession_CancelOnClose(t *testing.T) {
 
 	// After Close, the context must be cancelled.
 	require.ErrorIs(t, ctx.Err(), context.Canceled)
+}
+
+func TestTranslatePathMapsProjectAbsolutePath(t *testing.T) {
+	hostRoot := filepath.Join(t.TempDir(), "duck")
+	require.NoError(t, os.MkdirAll(filepath.Join(hostRoot, "internal", "cmd"), 0o755))
+
+	mapping := PathMapping{
+		hostRoot: "/workspace/duck",
+	}
+
+	got := translatePath(filepath.Join(hostRoot, "internal", "cmd", "toolserver.go"), mapping)
+	require.Equal(t, "/workspace/duck/internal/cmd/toolserver.go", filepath.ToSlash(got))
+
+	got = translatePath(hostRoot, mapping)
+	require.Equal(t, "/workspace/duck", filepath.ToSlash(got))
 }
 
 // TestCreateTransport_URLResolution pins that m.URL goes through the
@@ -401,7 +417,7 @@ func TestCreateTransport_HeadersResolution(t *testing.T) {
 // TestCreateSession_ResolutionFailureUpdatesState pins the user-visible
 // half of the regression fix: when any of command/args/env/headers/url
 // fails to resolve, createSession must publish StateError to the state
-// map so crush_info and the TUI's MCP status card can render a real
+// map so duckops_info and the TUI's MCP status card can render a real
 // error instead of the MCP silently sitting in "starting" or being
 // spawned with an empty credential.
 //

@@ -1,5 +1,5 @@
 ---
-name: ssdlc-master
+name: ssdlc
 description: SSDLC Master - Autonomous Secure Software Engineering & SSDLC Intelligence System
 ---
 
@@ -27,21 +27,20 @@ Transform software engineering into an inherently secure process through AI-driv
 ## SSDLC Phases
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                          SSDLC Intelligence Layer                            │
-├─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬───────────────┤
-│ Phase 1 │ Phase 2 │ Phase 3 │ Phase 4 │ Phase 5 │ Phase 6 │   Phase 7      │
-│Require- │  Secure │ Secure  │ Security│  Secure │Operations│ Maintenance   │
-│ments    │ Design  │ Develop-│ Testing │Deploy- │& Monitor-│& Continuous   │
-│         │         │ment     │         │ment     │ing       │Improvement    │
-└─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴───────────────┘
-                                      │
-                              ┌───────────────┐
-                              │    GraphX     │
-                              │ Security      │
-                              │ Knowledge     │
-                              │    Graph      │
-                              └───────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          SSDLC Intelligence Layer                           │
+├───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┬─────────────┤
+│Phase 1│Phase 2│Phase 3│Phase 4│Phase 5│Phase 6│Phase 7│Phase 8│   Phase 9   │
+│Require│Secure │Secure │Build &│Testing│Release│Deploy │Operat │  Incident   │
+│-ments │Design │Develop│CI/CD  │& Val  │& Stage│& Infra│-ions  │  Response   │
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┴─────────────┘
+                                       │
+                               ┌───────────────┐
+                               │    GraphX     │
+                               │ Security      │
+                               │ Knowledge     │
+                               │    Graph      │
+                               └───────────────┘
 ```
 
 ## Phase Orchestration
@@ -52,31 +51,33 @@ Each phase gates the next:
 
 | Gate | Transition | Criteria |
 |------|------------|----------|
-| Design Gate | Phase 1 → 2 | Threat model approved, risks accepted |
-| Build Gate | Phase 2 → 3 | Secure design verified |
-| Test Gate | Phase 3 → 4 | SAST clean, code reviewed |
-| Deploy Gate | Phase 4 → 5 | All HIGH/CRITICAL resolved |
-| Release Gate | Phase 5 → 6 | Deployment validated |
-| Health Gate | Phase 6 → 7 | Monitoring active, metrics healthy |
+| Requirements Gate | Phase 1 → 2 | Security requirements defined, ASVS mapped, abuse cases drafted |
+| Design Gate | Phase 2 → 3 | Threat model approved, STRIDE threats mapped to controls |
+| Code Gate | Phase 3 → 4 | Secure coding guidelines implemented, first review complete |
+| Build Gate | Phase 4 → 5 | Secrets scan clean, SCA dependencies approved, GHA pins verified |
+| Test Gate | Phase 5 → 6 | DAST completed, all HIGH/CRITICAL issues resolved |
+| Release Gate | Phase 6 → 7 | Release checklist verified, Trivy image clean, SBOM attached |
+| Deploy Gate | Phase 7 → 8 | IaC tfsec/k8s-bench validated, IAM roles mapped to least privilege |
+| Ops Gate | Phase 8 → 9 | Runtime monitoring active, alerts threshold set, patch SLAs met |
 
 ### GraphX Integration Points
 
 ```
 Project Start
     ↓
-GraphX.Initialize() → Repository Analysis
+GraphX.Initialize() → Repository Analysis (Phase 1)
     ↓
-GraphX.BuildArchitecture() → C4 + DFD Generation
+GraphX.BuildArchitecture() → C4 + DFD Generation (Phase 2)
     ↓
-GraphX.ThreatModel() → STRIDE + Attack Paths
+GraphX.ThreatModel() → STRIDE + Attack Paths (Phase 2)
     ↓
-GraphX.TrackSecurity() → Continuous Code Analysis
+GraphX.TrackSecurity() → Continuous Code Analysis (Phase 3/4)
     ↓
-GraphX.AnalyzeBlastRadius() → Change Impact
+GraphX.AnalyzeBlastRadius() → Change Impact (Phase 5)
     ↓
-GraphX.Monitor() → Runtime Security Context
+GraphX.Monitor() → Runtime Security Context (Phase 8)
     ↓
-GraphX.Improve() → Continuous Feedback Loop
+GraphX.Improve() → Continuous Feedback Loop (Phase 9)
 ```
 
 ## Phase Reference
@@ -84,13 +85,15 @@ GraphX.Improve() → Continuous Feedback Loop
 Load specific phase skills for detailed guidance:
 
 ```
-/skill:ssdlc-phase1-requirements   # Requirements gathering, risk assessment
-/skill:ssdlc-phase2-design          # Secure architecture, threat modeling
-/skill:ssdlc-phase3-development     # Secure coding, SAST integration
-/skill:ssdlc-phase4-testing         # Security testing, DAST, pen testing
-/skill:ssdlc-phase5-deployment      # Hardening, secrets management
-/skill:ssdlc-phase6-operations      # Monitoring, incident response
-/skill:ssdlc-phase7-maintenance     # Patch management, improvement
+/skill:phase1-requirements   # Requirements gathering, compliance mapping
+/skill:phase2-design          # Secure architecture, STRIDE threat modeling
+/skill:phase3-development     # Secure coding, framework-specific risks
+/skill:phase4-build           # Secrets scan, SCA, CI/CD pipeline validation
+/skill:phase5-testing         # Scan modes (quick/standard/deep), DAST, API testing
+/skill:phase6-release         # Pre-release gate, container image validation, SBOM
+/skill:phase7-deploy          # IaC security, Kubernetes Pod Security, Cloud IAM
+/skill:phase8-operations      # Runtime observability, alerts, vuln management
+/skill:phase9-incident        # Containment, identification, eradication, recovery
 ```
 
 ## DevSecOps Integration
@@ -111,89 +114,101 @@ devsecops_pipeline:
       - trust_boundary_mapping
     
     development:
-      - sast_integration
-      - dependency_scanning
-      - secrets_detection
-      - code_review
+      - secure_coding_standards
+      - unit_security_tests
     
-    testing:
+    build_cicd:
+      - secrets_detection
+      - dependency_scanning (SCA)
+      - github_actions_hardening
+    
+    testing_validation:
       - dast_automation
       - penetration_testing
+      - api_security_testing
       - blast_radius_analysis
-      - fuzz_testing
     
-    deployment:
+    release_staging:
       - artifact_signing
-      - container_hardening
-      - secrets_rotation
-      - deployment_validation
+      - container_image_scanning
+      - sbom_generation
     
-    operations:
-      - runtime_monitoring
-      - siem_integration
-      - incident_response
-      - drift_detection
+    deploy_infrastructure:
+      - iac_validation (tfsec)
+      - kubernetes_security_context
+      - cloud_misconfiguration_scan
+    
+    operations_runtime:
+      - runtime_monitoring (SIEM/RASP)
+      - vulnerability_sla_checks
+      - secrets_rotation
+    
+    incident_response:
+      - logs_preservation
+      - containment_playbooks
+      - post_mortem_analysis
 ```
 
 ## Quick Reference
 
 ### Phase Checklist Summary
 
-**Phase 1 - Requirements**
-- [ ] Security requirements documented
-- [ ] Compliance requirements mapped
-- [ ] Data classification complete
+**Phase 1 - Requirements & Planning**
+- [ ] Security requirements mapped to OWASP ASVS (L1/L2/L3)
+- [ ] Data classification complete (PII, PCI, PHI, Confidential)
+- [ ] Compliance requirements identified (GDPR, HIPAA, PCI-DSS)
+- [ ] Abuse and misuse cases defined
 - [ ] Risk assessment performed
-- [ ] Abuse cases identified
-- [ ] Trust boundaries defined
 
-**Phase 2 - Design**
-- [ ] Threat model created
-- [ ] C4/DFD diagrams generated
-- [ ] Attack surface analyzed
-- [ ] Security patterns applied
-- [ ] Architecture reviewed
-- [ ] Trust boundaries mapped
+**Phase 2 - Design & Architecture**
+- [ ] Threat model created (analyze_architecture)
+- [ ] C4/DFD diagrams generated (generate_c4_model)
+- [ ] STRIDE threats enumerated per component
+- [ ] Attack surfaces and boundaries mapped (generate_attack_paths)
+- [ ] Multi-tenancy and cryptographic architecture reviewed
 
-**Phase 3 - Development**
-- [ ] Secure coding standards followed
-- [ ] SAST integration in CI
-- [ ] Dependency scanning active
-- [ ] No secrets in code
-- [ ] Code review completed
+**Phase 3 - Development & Coding**
+- [ ] Secure coding standards followed (Framework skills loaded)
+- [ ] Vulnerability patterns checked (injections, auth flaws)
+- [ ] Unit security tests implemented
 - [ ] GraphX tracking enabled
 
-**Phase 4 - Testing**
-- [ ] DAST scan passed
-- [ ] Penetration testing complete
-- [ ] Blast radius analyzed
-- [ ] HIGH/CRITICAL resolved
-- [ ] Security tests automated
-- [ ] GraphX threat model updated
+**Phase 4 - Build & CI/CD**
+- [ ] Secrets scan completed (secrets__gitleaks / trufflehog)
+- [ ] Software Composition Analysis (SCA) completed (sca__trivy_fs)
+- [ ] GitHub Actions pinned to commit SHAs with minimal permissions
+- [ ] Cache poisoning risks mitigated
 
-**Phase 5 - Deployment**
-- [ ] Artifacts signed
-- [ ] Containers hardened
-- [ ] Secrets in Vault
-- [ ] Infrastructure validated
-- [ ] Monitoring active
-- [ ] GraphX deployment mapped
+**Phase 5 - Testing & Validation**
+- [ ] Scan mode selected (/quick, /standard, /deep)
+- [ ] DAST scans completed (OWASP ZAP / nuclei)
+- [ ] API Security tested against OWASP API Top 10
+- [ ] Vulnerability validation and PoC generated
+- [ ] Blast radius analysis performed
 
-**Phase 6 - Operations**
-- [ ] SIEM connected
-- [ ] Alerts configured
-- [ ] Incident playbooks ready
-- [ ] Metrics tracking
-- [ ] Drift detection active
-- [ ] GraphX monitoring updated
+**Phase 6 - Release & Staging**
+- [ ] Pre-release security gate verification (0 CRITICAL/HIGH)
+- [ ] Container image scanned (Trivy) and signed (Cosign)
+- [ ] Secrets verified absent from image layers (docker history)
+- [ ] SBOM generated (syft) and attached to release
 
-**Phase 7 - Maintenance**
-- [ ] Patches current
-- [ ] Dependencies updated
-- [ ] Threat model reviewed
-- [ ] Architecture validated
-- [ ] Technical debt addressed
-- [ ] GraphX knowledge refreshed
+**Phase 7 - Deploy & Infrastructure**
+- [ ] IaC files validated (tfsec / checkov)
+- [ ] IAM roles and permissions verified for least-privilege
+- [ ] Kubernetes Pod Security Standards enforced
+- [ ] Cloud infrastructure misconfiguration scan run
+
+**Phase 8 - Operations & Runtime**
+- [ ] Application and authentication event logs structured
+- [ ] Alerting rules active for brute force and travel anomalies
+- [ ] Secrets rotation scheduled and monitored
+- [ ] Vulnerability patch SLAs enforced (CRITICAL <= 24h)
+
+**Phase 9 - Incident Response**
+- [ ] 5-step IR plan verified (Contain, Identify, Eradicate, Recover, Lessons)
+- [ ] Evidence preservation scripts ready
+- [ ] Vulnerability report and executive summary generated
+- [ ] Post-mortem analysis and threat model updated
 
 ## Core Principles
 

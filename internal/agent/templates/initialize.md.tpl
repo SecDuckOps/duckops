@@ -13,6 +13,9 @@ Analyze this codebase and create/update **{{.Config.Options.InitializeAs}}** to 
 5. Read representative source files to understand code patterns, architecture, control/data flow
 6. If {{.Config.Options.InitializeAs}} exists, read and improve it
 
+**GraphX Initialization (SSDLC Phase 1)**:
+After the above discovery, call tool `graphx_init` to initialize the security knowledge graph. This analyzes the codebase structure, identifies entry points, trust boundaries, and builds the initial threat model. The graph enables security-aware code analysis throughout the development lifecycle.
+
 **Content to include**:
 
 - Essential commands (build, test, run, deploy, etc.) - whatever is relevant for this project

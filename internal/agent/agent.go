@@ -209,6 +209,7 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 		largeModel.Model,
 		fantasy.WithSystemPrompt(systemPrompt),
 		fantasy.WithTools(agentTools...),
+		fantasy.WithRepairToolCall(repairToolCall),
 		fantasy.WithUserAgent(userAgent),
 	)
 
@@ -735,8 +736,13 @@ func (a *sessionAgent) Summarize(ctx context.Context, sessionID string, opts fan
 
 	a.updateSessionUsage(largeModel, &currentSession, resp.TotalUsage, openrouterCost)
 
-	// Just in case, get just the last usage info.
+	// Record compression savings.
+	oldTotal := currentSession.PromptTokens + currentSession.CompletionTokens
 	usage := resp.Response.Usage
+	if saved := oldTotal - usage.OutputTokens; saved > 0 {
+		currentSession.CompressionSavedTokens = saved
+		currentSession.CompressionOriginalTokens = oldTotal
+	}
 	currentSession.SummaryMessageID = summaryMessage.ID
 	currentSession.CompletionTokens = usage.OutputTokens
 	currentSession.PromptTokens = 0

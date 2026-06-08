@@ -216,7 +216,6 @@ func (a *Arguments) HandleMsg(msg tea.Msg) Action {
 					action.Args = args
 					return action
 				case ActionRunMCPPrompt:
-					action.Args = args
 					return action
 				}
 			}

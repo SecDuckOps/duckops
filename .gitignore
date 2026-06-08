@@ -45,7 +45,7 @@ Thumbs.db
 # Nix/direnv
 .direnv/
 
-**/crush
+**/duckops
 **/tmp/
 **/manpages/
 **/completions/duckops.*sh
@@ -56,3 +56,8 @@ duckops
 .fuse_hidden0000461c00000069
 .fuse_hidden
 *.fuse_hidden*
+
+
+.graphx
+
+.duckops

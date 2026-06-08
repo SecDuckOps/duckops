@@ -139,6 +139,12 @@ func renderHeaderDetails(
 		parts = append(parts, hc)
 	}
 
+	if session.CompressionSavedTokens > 0 {
+		ratio := float64(session.CompressionSavedTokens) / float64(session.CompressionOriginalTokens) * 100
+		comp := t.Header.Compression.Render(fmt.Sprintf("🗜%.0f%%", ratio))
+		parts = append(parts, comp)
+	}
+
 	const keystroke = "ctrl+d"
 	if detailsOpen {
 		parts = append(parts, t.Header.Keystroke.Render(keystroke)+t.Header.KeystrokeTip.Render(" close"))

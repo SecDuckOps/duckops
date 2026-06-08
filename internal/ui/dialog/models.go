@@ -497,6 +497,7 @@ func (m *Models) setProviderItems() error {
 
 	// Set model groups in the list.
 	m.list.SetGroups(groups...)
+
 	m.list.SetSelectedItem(selectedItemID)
 	m.list.ScrollToTop()
 

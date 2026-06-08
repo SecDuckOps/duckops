@@ -1,5 +1,39 @@
 {
   "$schema": "https://secduckops.dev/duck.json",
+  "mcp": {
+    "duckops": {
+      "type": "stdio",
+      "command": "duckops",
+      "args": [
+        "mcp-tool-server"
+      ],
+      "env": {
+        "DUCKOPS_TOOL_SERVER_URL": "http://127.0.0.1:48081",
+                "DUCKOPS_CONTAINER_WORKSPACE": "/workspace/duck"
+            },
+            "workspace_mount": "/workspace/duck",
+            "path_mapping": {
+                "/run/media/h3ckt0r/apps/Work/duck": "/workspace/duck"
+            },
+            "timeout": 180
+        },
+        "duckops-security": {
+            "type": "stdio",
+            "command": "duckops",
+            "args": [
+                "mcp-tool-server"
+            ],
+            "env": {
+                "DUCKOPS_TOOL_SERVER_URL": "http://127.0.0.1:48081",
+        "DUCKOPS_CONTAINER_WORKSPACE": "/workspace/duck"
+      },
+      "workspace_mount": "/workspace/duck",
+      "path_mapping": {
+        "/run/media/h3ckt0r/apps/Work/duck": "/workspace/duck"
+      },
+      "timeout": 180
+    }
+  },
   "lsp": {
     "gopls": {
       "options": {

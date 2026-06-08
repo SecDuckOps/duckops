@@ -949,6 +949,12 @@ func (m *UI) setSessionMessages(msgs []message.Message) tea.Cmd {
 	// Add messages to chat with linked tool results
 	items := make([]chat.MessageItem, 0, len(msgs)*2)
 	for _, msg := range msgPtrs {
+		if msg.IsSummaryMessage {
+			saved := m.session.CompressionSavedTokens
+			original := m.session.CompressionOriginalTokens
+			indicator := chat.NewCompressionIndicatorItem(m.com.Styles, msg.ID, saved, original)
+			items = append(items, indicator)
+		}
 		switch msg.Role {
 		case message.User:
 			m.lastUserMessageTime = msg.CreatedAt
@@ -3690,11 +3696,15 @@ func (m *UI) drawSessionDetails(scr uv.Screen, area uv.Rectangle) {
 	height := area.Dy() - s.CompactDetails.View.GetVerticalFrameSize()
 
 	title := s.CompactDetails.Title.Width(width).MaxHeight(2).Render(m.session.Title)
+	compBlock := m.compressionInfo(width)
 	blocks := []string{
 		title,
 		"",
 		m.modelInfo(width),
 		"",
+	}
+	if compBlock != "" {
+		blocks = append(blocks, compBlock, "")
 	}
 
 	detailsHeader := lipgloss.JoinVertical(

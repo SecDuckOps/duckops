@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -196,6 +197,7 @@ func Initialize(ctx context.Context, permissions permission.Service, cfg *config
 			}()
 
 			if err := initClient(ctx, cfg, name, m, cfg.Resolver()); err != nil {
+				updateState(name, StateError, err, nil, Counts{})
 				slog.Debug("Failed to initialize MCP client", "name", name, "error", err)
 			}
 		}(name, m)
@@ -304,7 +306,14 @@ func setupPathMapping(name string, m config.MCPConfig, workspaceRoot string) err
 	}
 
 	if home, err := os.UserHomeDir(); err == nil && mapping[home] == "" {
-		mapping[home] = "/workspace"
+		mount := "/workspace"
+		if m.WorkspaceMount != "" {
+			mount = m.WorkspaceMount
+		} else if ws.WorkspaceRoot != "" {
+			projectName := filepath.Base(ws.ProjectRoot)
+			mount = filepath.Join(ws.WorkspaceRoot, projectName)
+		}
+		mapping[home] = mount
 	}
 
 	if len(mapping) > 0 {
@@ -584,10 +593,10 @@ type PathMapping map[string]string
 var pathMappings = csync.NewMap[string, PathMapping]()
 
 type WorkspaceContext struct {
-	ProjectRoot           string
-	WorkspaceRoot         string
+	ProjectRoot          string
+	WorkspaceRoot        string
 	GitRoot              string
-	ContainerProjectRoot  string
+	ContainerProjectRoot string
 }
 
 var activeWorkspace = csync.NewValue(WorkspaceContext{})
@@ -642,15 +651,20 @@ func buildProjectOnlyMapping() PathMapping {
 	return mapping
 }
 
+func sortedMappingKeys(mapping PathMapping) []string {
+	keys := make([]string, 0, len(mapping))
+	for k := range mapping {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return len(keys[i]) > len(keys[j])
+	})
+	return keys
+}
+
 func translatePath(path string, mapping PathMapping) string {
 	if path == "" {
 		return path
-	}
-
-	for hostPrefix, containerPrefix := range mapping {
-		if strings.HasPrefix(path, hostPrefix) {
-			return containerPrefix + path[len(hostPrefix):]
-		}
 	}
 
 	expanded := expandTilde(path)
@@ -659,29 +673,26 @@ func translatePath(path string, mapping PathMapping) string {
 		return path
 	}
 
-	for hostPrefix, containerPrefix := range mapping {
+	for _, hostPrefix := range sortedMappingKeys(mapping) {
+		if strings.HasPrefix(absPath, hostPrefix) {
+			containerPrefix := mapping[hostPrefix]
+			return containerPrefix + absPath[len(hostPrefix):]
+		}
+	}
+
+	for _, hostPrefix := range sortedMappingKeys(mapping) {
+		containerPrefix := mapping[hostPrefix]
 		rel, err := filepath.Rel(hostPrefix, absPath)
 		if err != nil {
 			continue
 		}
-		if !strings.HasPrefix(rel, "..") {
+		if rel == "." {
+			return containerPrefix
+		}
+		if strings.HasPrefix(rel, "..") {
 			continue
 		}
-
-		parts := strings.Split(rel, string(filepath.Separator))
-		upCount := 0
-		for _, p := range parts {
-			if p == ".." {
-				upCount++
-			} else {
-				break
-			}
-		}
-
-		if upCount > 0 {
-			remain := filepath.Join(parts[upCount:]...)
-			return filepath.Join(containerPrefix, remain)
-		}
+		return filepath.Join(containerPrefix, rel)
 	}
 
 	return path
@@ -823,7 +834,7 @@ func InitWorkspaceContext(dir string) WorkspaceContext {
 	ctx := WorkspaceContext{
 		ProjectRoot:          hostProjectRoot,
 		WorkspaceRoot:        workspaceRoot,
-		GitRoot:             gitRoot,
+		GitRoot:              gitRoot,
 		ContainerProjectRoot: containerProjectRoot,
 	}
 

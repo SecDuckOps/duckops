@@ -15,6 +15,17 @@ import (
 
 // modelInfo renders the current model information including reasoning
 // settings and context usage/cost for the sidebar.
+func (m *UI) compressionInfo(width int) string {
+	if m.session == nil || m.session.CompressionSavedTokens <= 0 {
+		return ""
+	}
+	t := m.com.Styles
+	ratio := float64(m.session.CompressionSavedTokens) / float64(m.session.CompressionOriginalTokens) * 100
+	ratioText := t.ModelInfo.Compression.Render(fmt.Sprintf("🗜 %.0f%%", ratio))
+	saved := t.ModelInfo.CompressionSaved.Render(fmt.Sprintf("(%s)", formatTokenCountSidebar(m.session.CompressionSavedTokens)))
+	return lipgloss.NewStyle().PaddingLeft(2).Render(fmt.Sprintf("%s %s", ratioText, saved))
+}
+
 func (m *UI) modelInfo(width int) string {
 	model := m.selectedLargeModel()
 	reasoningInfo := ""
@@ -155,6 +166,7 @@ func (m *UI) drawSidebar(scr uv.Screen, area uv.Rectangle) {
 		wsInfo,
 		"",
 		m.modelInfo(width),
+		m.compressionInfo(width),
 		"",
 	}
 
@@ -213,4 +225,15 @@ func (m *UI) drawSidebar(scr uv.Screen, area uv.Rectangle) {
 				),
 			),
 	).Draw(scr, area)
+}
+
+func formatTokenCountSidebar(n int64) string {
+	switch {
+	case n >= 1_000_000:
+		return fmt.Sprintf("%.1fM", float64(n)/1_000_000)
+	case n >= 1_000:
+		return fmt.Sprintf("%.1fK", float64(n)/1_000)
+	default:
+		return fmt.Sprintf("%d", n)
+	}
 }

@@ -80,7 +80,7 @@ type (
 		PromptID    string
 		ClientID    string
 		Arguments   []commands.Argument
-		Args        map[string]string // Actual argument values
+		Args        map[string]string
 	}
 	// ActionEnableDockerMCP is a message to enable Docker MCP.
 	ActionEnableDockerMCP struct{}

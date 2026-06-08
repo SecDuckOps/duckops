@@ -577,6 +577,7 @@ func quickStyle(o quickStyleOpts) Styles {
 	s.Header.Charm = base.Foreground(o.secondary)
 	s.Header.Diagonals = base.Foreground(o.primary)
 	s.Header.Percentage = muted
+	s.Header.Compression = lipgloss.NewStyle().Foreground(o.success)
 	s.Header.Hypercredit = base.Foreground(o.fgSubtle)
 	s.Header.Keystroke = muted
 	s.Header.KeystrokeTip = subtle
@@ -764,6 +765,8 @@ func quickStyle(o quickStyleOpts) Styles {
 	s.ModelInfo.Reasoning = lipgloss.NewStyle().Foreground(o.fgMostSubtle).PaddingLeft(2)
 	s.ModelInfo.TokenCount = lipgloss.NewStyle().Foreground(o.fgMostSubtle)
 	s.ModelInfo.TokenPercentage = lipgloss.NewStyle().Foreground(o.fgMoreSubtle)
+	s.ModelInfo.Compression = lipgloss.NewStyle().Foreground(o.success)
+	s.ModelInfo.CompressionSaved = lipgloss.NewStyle().Foreground(o.fgMostSubtle)
 	s.ModelInfo.Cost = lipgloss.NewStyle().Foreground(o.fgMoreSubtle)
 	s.ModelInfo.HypercreditIcon = lipgloss.NewStyle().Foreground(o.fgSubtle)
 	s.ModelInfo.HypercreditText = lipgloss.NewStyle().Foreground(o.fgMoreSubtle)
@@ -800,6 +803,8 @@ func quickStyle(o quickStyleOpts) Styles {
 	// No padding or border for compact tool calls within messages
 	s.Messages.ToolCallCompact = muted
 	s.Messages.SectionHeader = base.PaddingLeft(2)
+	s.Messages.CompressionLine = lipgloss.NewStyle().Foreground(o.fgMostSubtle)
+	s.Messages.CompressionLabel = lipgloss.NewStyle().Foreground(o.success)
 	s.Messages.AssistantInfoIcon = subtle
 	s.Messages.AssistantInfoModel = muted
 	s.Messages.AssistantInfoProvider = subtle
@@ -830,6 +835,8 @@ func quickStyle(o quickStyleOpts) Styles {
 
 	// Dialog.Models
 	s.Dialog.Models.ConfiguredText = lipgloss.NewStyle().Foreground(o.fgMostSubtle)
+	s.Dialog.Models.AddProviderIcon = lipgloss.NewStyle().Foreground(o.primary).Bold(true)
+	s.Dialog.Models.AddProviderText = lipgloss.NewStyle().Foreground(o.fgBase)
 
 	// Dialog.Permissions
 	s.Dialog.Permissions.KeyText = lipgloss.NewStyle().Foreground(o.fgMoreSubtle)

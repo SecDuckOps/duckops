@@ -17,8 +17,6 @@ import (
 	_ "embed"
 )
 
-//go:generate wget -O provider.json https://hyper.charm.land/v1/provider
-
 //go:embed provider.json
 var embedded []byte
 
@@ -36,9 +34,9 @@ var Embedded = sync.OnceValue(func() catwalk.Provider {
 
 const (
 	// Name is the default name of this meta provider.
-	Name = "hyper"
-	// DisplayName is the display name of Hyper.
-	DisplayName = "Charm Hyper"
+	Name = "duckops"
+	// DisplayName is the display name of duckops.
+	DisplayName = "duckops provider"
 	// defaultBaseURL is the default proxy URL.
 	defaultBaseURL = "https://models.dev/api.json"
 )

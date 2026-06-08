@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -29,6 +30,39 @@ type ViewParams struct {
 	FilePath string `json:"file_path" description:"The path to the file to read"`
 	Offset   int    `json:"offset,omitempty" description:"The line number to start reading from (0-based)"`
 	Limit    int    `json:"limit,omitempty" description:"The number of lines to read (defaults to 2000)"`
+}
+
+func (p *ViewParams) UnmarshalJSON(data []byte) error {
+	raw := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	if fp, ok := raw["file_path"]; ok {
+		if err := json.Unmarshal(fp, &p.FilePath); err != nil {
+			return err
+		}
+	} else if path, ok := raw["path"]; ok {
+		if err := json.Unmarshal(path, &p.FilePath); err != nil {
+			return err
+		}
+	} else if loc, ok := raw["location"]; ok {
+		if err := json.Unmarshal(loc, &p.FilePath); err != nil {
+			return err
+		}
+	}
+
+	if off, ok := raw["offset"]; ok {
+		if err := json.Unmarshal(off, &p.Offset); err != nil {
+			return err
+		}
+	}
+	if lim, ok := raw["limit"]; ok {
+		if err := json.Unmarshal(lim, &p.Limit); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type ViewPermissionsParams struct {

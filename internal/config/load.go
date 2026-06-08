@@ -705,6 +705,9 @@ func lookupConfigs(cwd string) []string {
 	configPaths := []string{
 		GlobalConfig(),
 		GlobalConfigData(),
+		// Legacy XDG paths — loaded if they exist for backward compatibility
+		filepath.Join(home.Config(), appName, fmt.Sprintf("%s.json", appName)),
+		filepath.Join(home.Dir(), ".local", "share", appName, fmt.Sprintf("%s.json", appName)),
 	}
 
 	configNames := []string{appName + ".json", "." + appName + ".json"}
@@ -797,7 +800,7 @@ func GlobalConfig() string {
 	if duckopsGlobal := os.Getenv("DUCKOPS_GLOBAL_CONFIG"); duckopsGlobal != "" {
 		return filepath.Join(duckopsGlobal, fmt.Sprintf("%s.json", appName))
 	}
-	return filepath.Join(home.Config(), appName, fmt.Sprintf("%s.json", appName))
+	return filepath.Join(home.Dir(), "."+appName, fmt.Sprintf("%s.json", appName))
 }
 
 // GlobalCacheDir returns the path to the global cache directory for the
@@ -825,22 +828,7 @@ func GlobalConfigData() string {
 	if duckopsData := os.Getenv("DUCKOPS_GLOBAL_DATA"); duckopsData != "" {
 		return filepath.Join(duckopsData, fmt.Sprintf("%s.json", appName))
 	}
-	if xdgDataHome := os.Getenv("XDG_DATA_HOME"); xdgDataHome != "" {
-		return filepath.Join(xdgDataHome, appName, fmt.Sprintf("%s.json", appName))
-	}
-
-	// return the path to the main data directory
-	// for windows, it should be in `%LOCALAPPDATA%/duckops/`
-	// for linux and macOS, it should be in `$HOME/.local/share/duckops/`
-	if runtime.GOOS == "windows" {
-		localAppData := cmp.Or(
-			os.Getenv("LOCALAPPDATA"),
-			filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Local"),
-		)
-		return filepath.Join(localAppData, appName, fmt.Sprintf("%s.json", appName))
-	}
-
-	return filepath.Join(home.Dir(), ".local", "share", appName, fmt.Sprintf("%s.json", appName))
+	return filepath.Join(home.Dir(), "."+appName, fmt.Sprintf("%s.json", appName))
 }
 
 // GlobalWorkspaceDir returns the path to the global server workspace

@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -27,6 +28,34 @@ var writeDescription []byte
 type WriteParams struct {
 	FilePath string `json:"file_path" description:"The path to the file to write"`
 	Content  string `json:"content" description:"The content to write to the file"`
+}
+
+func (p *WriteParams) UnmarshalJSON(data []byte) error {
+	raw := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	if fp, ok := raw["file_path"]; ok {
+		if err := json.Unmarshal(fp, &p.FilePath); err != nil {
+			return err
+		}
+	} else if path, ok := raw["path"]; ok {
+		if err := json.Unmarshal(path, &p.FilePath); err != nil {
+			return err
+		}
+	} else if loc, ok := raw["location"]; ok {
+		if err := json.Unmarshal(loc, &p.FilePath); err != nil {
+			return err
+		}
+	}
+
+	if c, ok := raw["content"]; ok {
+		if err := json.Unmarshal(c, &p.Content); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type WritePermissionsParams struct {

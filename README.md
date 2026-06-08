@@ -113,6 +113,32 @@ docker run --rm -it \
   duckops
 ```
 
+### Docker Security Sandbox + MCP
+
+Build the scanner image and expose the HTTP tool server:
+
+```bash
+docker build -f containers/Dockerfile -t duckops:latest .
+
+docker run --rm --name duckops-security \
+  -p 48081:48081 \
+  -e TOOL_SERVER_TOKEN=duckops-local-token \
+  -v "$(pwd):/workspace/$(basename "$PWD")" \
+  -w "/workspace/$(basename "$PWD")" \
+  duckops:latest
+```
+
+Call the sandbox directly:
+
+```bash
+curl -s http://127.0.0.1:48081/scan \
+  -H 'Authorization: Bearer duckops-local-token' \
+  -H 'Content-Type: application/json' \
+  -d "{\"agent_id\":\"manual\",\"path\":\"/workspace/$(basename "$PWD")\"}"
+```
+
+The project `duckops.json` also registers `duckops-security` as a stdio MCP server. DuckOps agents can call `duckops_security_scan` for the default scan preset or `duckops_execute_tool` for one bundled scanner.
+
 ## Configuration
 
 ### Environment Variables
