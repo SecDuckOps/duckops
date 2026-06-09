@@ -30,7 +30,7 @@ type containerConfig struct {
 func defaultSandboxConfig(port int) containerConfig {
 	imageName := os.Getenv("DUCKOPS_SANDBOX_IMAGE")
 	if imageName == "" {
-		imageName = "ghcr.io/usestrix/strix-sandbox:0.1.13"
+		imageName = "duckops-sandbox:latest"
 	}
 	cwd, _ := os.Getwd()
 	return containerConfig{
@@ -274,7 +274,7 @@ func buildDockerRunArgs(cfg containerConfig) []string {
 	args := []string{
 		"run", "--rm", "-d",
 		"--name", containerName,
-		"-p", fmt.Sprintf("%d", containerPort),
+		"-p", fmt.Sprintf("%d:%d", containerPort, containerPort),
 	}
 
 	for hostPath, containerPath := range cfg.Volumes {
