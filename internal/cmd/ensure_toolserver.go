@@ -187,7 +187,7 @@ func sandboxImageName() string {
 	if img := os.Getenv("DUCKOPS_SANDBOX_IMAGE"); img != "" {
 		return img
 	}
-	return "duckops-sandbox:latest"
+	return "ghcr.io/usestrix/strix-sandbox:0.1.13"
 }
 
 func EnsureToolServerDocker(port int) (int, string, bool) {

@@ -203,6 +203,8 @@ func (c *toolServerHTTPClient) post(ctx context.Context, path string, payload an
 		req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(c.token))
 	}
 
+	slog.Debug("tool server request", "path", path, "payload_size", len(body))
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("call DuckOps tool server: %w", err)
@@ -213,6 +215,9 @@ func (c *toolServerHTTPClient) post(ctx context.Context, path string, payload an
 	if err != nil {
 		return "", fmt.Errorf("read response: %w", err)
 	}
+
+	slog.Debug("tool server response", "path", path, "status", resp.StatusCode, "response_size", len(data))
+
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return "", fmt.Errorf("tool server returned %s: %s", resp.Status, strings.TrimSpace(string(data)))
 	}

@@ -251,6 +251,38 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 
 	history, files := a.preparePrompt(msgs, largeModel.CatwalkCfg.SupportsImages, call.Attachments...)
 
+	contextWindow := largeModel.CatwalkCfg.ContextWindow
+	maxOut := resolveMaxOutputTokens(call, largeModel)
+	estimated := estimateRequestTokens(systemPrompt, history, call.Prompt, files, call.Attachments...)
+	if contextWindow > 0 && !a.disableAutoSummarize {
+		for attempt := 0; attempt < 3 && needsAutoSummarizeBeforeRequest(contextWindow, estimated, maxOut); attempt++ {
+			slog.Info("Auto-summarizing conversation to stay within context window",
+				"session_id", call.SessionID,
+				"estimated_tokens", estimated,
+				"max_output", maxOut,
+				"context_window", contextWindow,
+				"attempt", attempt+1,
+			)
+			a.activeRequests.Del(call.SessionID)
+			if sumErr := a.Summarize(ctx, call.SessionID, call.ProviderOptions); sumErr != nil {
+				return nil, sumErr
+			}
+			a.activeRequests.Set(call.SessionID, cancel)
+			currentSession, err = a.sessions.Get(ctx, call.SessionID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get session after summarize: %w", err)
+			}
+			msgs, err = a.getSessionMessages(ctx, currentSession)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get session messages after summarize: %w", err)
+			}
+			history, files = a.preparePrompt(msgs, largeModel.CatwalkCfg.SupportsImages, call.Attachments...)
+			estimated = estimateRequestTokens(systemPrompt, history, call.Prompt, files, call.Attachments...)
+			maxOut = resolveMaxOutputTokens(call, largeModel)
+		}
+	}
+	maxOut = capMaxOutputTokens(contextWindow, estimated, maxOut)
+
 	startTime := time.Now()
 	a.eventPromptSent(call.SessionID)
 
@@ -258,8 +290,8 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 	var shouldSummarize bool
 	// Don't send MaxOutputTokens if 0 — some providers (e.g. LM Studio) reject it
 	var maxOutputTokens *int64
-	if call.MaxOutputTokens > 0 {
-		maxOutputTokens = &call.MaxOutputTokens
+	if maxOut > 0 {
+		maxOutputTokens = &maxOut
 	}
 	result, err := agent.Stream(genCtx, fantasy.AgentStreamCall{
 		Prompt:           message.PromptWithTextAttachments(call.Prompt, call.Attachments),
@@ -648,6 +680,20 @@ func (a *sessionAgent) Summarize(ctx context.Context, sessionID string, opts fan
 	}
 
 	aiMsgs, _ := a.preparePrompt(msgs, largeModel.CatwalkCfg.SupportsImages)
+	contextWindow := largeModel.CatwalkCfg.ContextWindow
+	if contextWindow > 0 {
+		budget := int(contextWindow * 60 / 100)
+		aiMsgs = truncateFantasyMessagesToTokenBudget(aiMsgs, budget)
+	}
+	summaryMaxOut := capMaxOutputTokens(
+		contextWindow,
+		estimateFantasyMessagesTokens(aiMsgs),
+		largeModel.CatwalkCfg.DefaultMaxTokens,
+	)
+	var summaryMaxOutput *int64
+	if summaryMaxOut > 0 {
+		summaryMaxOutput = &summaryMaxOut
+	}
 
 	genCtx, cancel := context.WithCancel(ctx)
 	a.activeRequests.Set(sessionID, cancel)
@@ -673,6 +719,7 @@ func (a *sessionAgent) Summarize(ctx context.Context, sessionID string, opts fan
 	resp, err := agent.Stream(genCtx, fantasy.AgentStreamCall{
 		Prompt:          summaryPromptText,
 		Messages:        aiMsgs,
+		MaxOutputTokens: summaryMaxOutput,
 		ProviderOptions: opts,
 		PrepareStep: func(callContext context.Context, options fantasy.PrepareStepFunctionOptions) (_ context.Context, prepared fantasy.PrepareStepResult, err error) {
 			prepared.Messages = options.Messages

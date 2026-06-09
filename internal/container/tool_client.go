@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
@@ -75,6 +76,12 @@ func (c *ToolClient) Execute(ctx context.Context, toolName string, kwargs map[st
 		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
 
+	slog.Debug("container tool execute",
+		"tool", toolName,
+		"endpoint", c.baseURL+"/execute",
+		"kwargs", fmt.Sprintf("%v", kwargs),
+	)
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
@@ -85,6 +92,12 @@ func (c *ToolClient) Execute(ctx context.Context, toolName string, kwargs map[st
 	if err != nil {
 		return "", fmt.Errorf("failed to read response: %w", err)
 	}
+
+	slog.Debug("container tool response",
+		"tool", toolName,
+		"status", resp.StatusCode,
+		"response_size", len(respBody),
+	)
 
 	var execResp ExecuteResponse
 	if err := json.Unmarshal(respBody, &execResp); err != nil {

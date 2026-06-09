@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -29,7 +30,7 @@ type containerConfig struct {
 func defaultSandboxConfig(port int) containerConfig {
 	imageName := os.Getenv("DUCKOPS_SANDBOX_IMAGE")
 	if imageName == "" {
-		imageName = "duckops-sandbox:latest"
+		imageName = "ghcr.io/usestrix/strix-sandbox:0.1.13"
 	}
 	cwd, _ := os.Getwd()
 	return containerConfig{
@@ -58,11 +59,16 @@ func EnsureDockerSandbox(port int) (int, string, bool) {
 	// Phase 2: Check container state and act accordingly.
 	state := inspectContainer(containerName)
 
+	// Resolve the actual host port for any existing container.
+	if p, ok := resolveContainerHostPort(containerName, containerPort); ok {
+		port = p
+	}
+
 	switch state {
 	case "running":
 		cached, _ := readCachedToolServerToken()
 		if token, ok := resolveVerifiedToolServerToken(port, cached); ok {
-			slog.Info("Docker sandbox already running", "container", containerName)
+			slog.Info("Docker sandbox already running", "container", containerName, "port", port)
 			return port, token, true
 		}
 		slog.Warn("Running container but token could not be verified, proceeding without auth")
@@ -218,6 +224,15 @@ func createAndWait(cfg containerConfig) (int, string, bool) {
 		return cfg.Port, "", false
 	}
 
+	// Resolve the actual host port mapped to the container.
+	hostPort, ok := resolveContainerHostPort(containerName, containerPort)
+	if !ok {
+		slog.Error("Failed to resolve container host port")
+		exec.Command("docker", "rm", "-f", containerName).Run()
+		return cfg.Port, "", false
+	}
+	cfg.Port = hostPort
+
 	if waitForHealth(cfg.Port) {
 		slog.Info("Docker sandbox started", "port", cfg.Port)
 		return cfg.Port, cfg.Token, true
@@ -235,9 +250,14 @@ func createAndWait(cfg containerConfig) (int, string, bool) {
 		rollbackCmd := exec.Command("docker", args...)
 		var rbStderr bytes.Buffer
 		rollbackCmd.Stderr = &rbStderr
-		if rollbackCmd.Run() == nil && waitForHealth(cfg.Port) {
-			slog.Info("Rollback successful", "image", rollbackImage)
-			return cfg.Port, cfg.Token, true
+		if rollbackCmd.Run() == nil {
+			if hostPort, ok := resolveContainerHostPort(containerName, containerPort); ok {
+				cfg.Port = hostPort
+			}
+			if waitForHealth(cfg.Port) {
+				slog.Info("Rollback successful", "image", rollbackImage)
+				return cfg.Port, cfg.Token, true
+			}
 		}
 		slog.Error("Rollback also failed", "image", rollbackImage)
 	}
@@ -254,7 +274,7 @@ func buildDockerRunArgs(cfg containerConfig) []string {
 	args := []string{
 		"run", "--rm", "-d",
 		"--name", containerName,
-		"-p", fmt.Sprintf("%d:%d", cfg.Port, containerPort),
+		"-p", fmt.Sprintf("%d", containerPort),
 	}
 
 	for hostPath, containerPath := range cfg.Volumes {
@@ -268,6 +288,22 @@ func buildDockerRunArgs(cfg containerConfig) []string {
 
 	args = append(args, cfg.Image)
 	return args
+}
+
+func resolveContainerHostPort(name string, containerPort int) (int, bool) {
+	cmd := exec.Command("docker", "port", name, fmt.Sprintf("%d/tcp", containerPort))
+	out, err := cmd.Output()
+	if err != nil {
+		return 0, false
+	}
+	// Output format: "0.0.0.0:34501\n" or "0.0.0.0:34501\n[::]:34501\n"
+	line := strings.TrimSpace(string(out))
+	if idx := strings.LastIndex(line, ":"); idx >= 0 {
+		if port, err := strconv.Atoi(line[idx+1:]); err == nil {
+			return port, true
+		}
+	}
+	return 0, false
 }
 
 func waitForHealth(port int) bool {

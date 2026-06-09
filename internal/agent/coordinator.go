@@ -214,6 +214,22 @@ func (c *coordinator) Run(ctx context.Context, sessionID string, prompt string, 
 		}
 	}
 
+	if isContextLengthError(originalErr) && !c.cfg.Config().Options.DisableAutoSummarize {
+		for attempt := 1; attempt <= 3; attempt++ {
+			slog.Warn("Context length exceeded, auto-summarizing and retrying",
+				"session_id", sessionID,
+				"attempt", attempt,
+			)
+			if sumErr := c.Summarize(ctx, sessionID); sumErr != nil {
+				break
+			}
+			result, originalErr = run()
+			if originalErr == nil || !isContextLengthError(originalErr) {
+				return result, originalErr
+			}
+		}
+	}
+
 	return result, originalErr
 }
 

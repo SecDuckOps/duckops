@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -27,42 +26,22 @@ import (
 var viewDescription []byte
 
 type ViewParams struct {
-	FilePath string `json:"file_path" description:"The path to the file to read"`
+	FilePath string `json:"file_path,omitempty" description:"The path to the file to read"`
+	Location string `json:"location,omitempty" description:"Alias for file_path (skill location from available_skills)"`
+	Path     string `json:"path,omitempty" description:"Alias for file_path"`
 	Offset   int    `json:"offset,omitempty" description:"The line number to start reading from (0-based)"`
 	Limit    int    `json:"limit,omitempty" description:"The number of lines to read (defaults to 2000)"`
 }
 
-func (p *ViewParams) UnmarshalJSON(data []byte) error {
-	raw := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-
-	if fp, ok := raw["file_path"]; ok {
-		if err := json.Unmarshal(fp, &p.FilePath); err != nil {
-			return err
-		}
-	} else if path, ok := raw["path"]; ok {
-		if err := json.Unmarshal(path, &p.FilePath); err != nil {
-			return err
-		}
-	} else if loc, ok := raw["location"]; ok {
-		if err := json.Unmarshal(loc, &p.FilePath); err != nil {
-			return err
+// ResolveFilePath returns the first non-empty path parameter. Models often
+// send location (from skill XML) or path instead of file_path.
+func (p ViewParams) ResolveFilePath() string {
+	for _, candidate := range []string{p.FilePath, p.Location, p.Path} {
+		if strings.TrimSpace(candidate) != "" {
+			return strings.TrimSpace(candidate)
 		}
 	}
-
-	if off, ok := raw["offset"]; ok {
-		if err := json.Unmarshal(off, &p.Offset); err != nil {
-			return err
-		}
-	}
-	if lim, ok := raw["limit"]; ok {
-		if err := json.Unmarshal(lim, &p.Limit); err != nil {
-			return err
-		}
-	}
-	return nil
+	return ""
 }
 
 type ViewPermissionsParams struct {
@@ -105,6 +84,7 @@ func NewViewTool(
 		ViewToolName,
 		FirstLineDescription(viewDescription),
 		func(ctx context.Context, params ViewParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
+			params.FilePath = params.ResolveFilePath()
 			if params.FilePath == "" {
 				return fantasy.NewTextErrorResponse("file_path is required"), nil
 			}
@@ -148,7 +128,11 @@ func NewViewTool(
 						ToolName:    ViewToolName,
 						Action:      "read",
 						Description: fmt.Sprintf("Read file outside working directory: %s", absFilePath),
-						Params:      ViewPermissionsParams(params),
+						Params: ViewPermissionsParams{
+							FilePath: params.FilePath,
+							Offset:   params.Offset,
+							Limit:    params.Limit,
+						},
 					},
 				)
 				if permReqErr != nil {

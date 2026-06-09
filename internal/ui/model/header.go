@@ -45,7 +45,7 @@ func newHeader(com *common.Common) *header {
 // after the theme changes.
 func (h *header) refresh() {
 	t := h.com.Styles
-	h.compactLogo = "🦆 " + styles.ApplyBoldForegroundGrad(t.Header.LogoGradCanvas, "DUCKOPS", t.Header.LogoGradFromColor, t.Header.LogoGradToColor) + " "
+	h.compactLogo = styles.ApplyBoldForegroundGrad(t.Header.LogoGradCanvas, "DUCKOPS", t.Header.LogoGradFromColor, t.Header.LogoGradToColor) + " "
 	h.width = 0
 }
 
@@ -141,7 +141,7 @@ func renderHeaderDetails(
 
 	if session.CompressionSavedTokens > 0 {
 		ratio := float64(session.CompressionSavedTokens) / float64(session.CompressionOriginalTokens) * 100
-		comp := t.Header.Compression.Render(fmt.Sprintf("🗜%.0f%%", ratio))
+		comp := t.Header.Compression.Render(fmt.Sprintf("%.0f%%", ratio))
 		parts = append(parts, comp)
 	}
 

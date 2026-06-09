@@ -21,8 +21,8 @@ const (
 	CheckIcon       string = "✓"
 	SpinnerIcon     string = "⋯"
 	LoadingIcon     string = "⟳"
-	ModelIcon       string = "◇"
-	HypercreditIcon string = "◆"
+	ModelIcon       string = "o"
+	HypercreditIcon string = "#"
 
 	ArrowRightIcon string = "→"
 
@@ -66,7 +66,7 @@ type Styles struct {
 		Diagonals         lipgloss.Style // Style for diagonal separators (╱)
 		Percentage        lipgloss.Style // Style for context percentage
 		Compression       lipgloss.Style // Style for compression savings indicator
-		Hypercredit       lipgloss.Style // Style for Hypercredit count (◆ N)
+		Hypercredit       lipgloss.Style // Style for Hypercredit count (# N)
 		Keystroke         lipgloss.Style // Style for keystroke hints (e.g., "ctrl+d")
 		KeystrokeTip      lipgloss.Style // Style for keystroke action text (e.g., "open", "close")
 		WorkingDir        lipgloss.Style // Style for current working directory
@@ -186,7 +186,7 @@ type Styles struct {
 
 	// ModelInfo (model name, provider, reasoning, token/cost summary)
 	ModelInfo struct {
-		Icon             lipgloss.Style // Model icon (◇)
+		Icon             lipgloss.Style // Model icon (o)
 		Name             lipgloss.Style // Model name text
 		Provider         lipgloss.Style // "via <provider>" text
 		ProviderFallback lipgloss.Style // Provider on its own second line
@@ -196,7 +196,7 @@ type Styles struct {
 		Compression      lipgloss.Style // Compression savings (e.g. "70%")
 		CompressionSaved lipgloss.Style // Compression saved tokens (e.g. "(12K saved)")
 		Cost             lipgloss.Style // "$0.42" cost readout
-		HypercreditIcon  lipgloss.Style // Hypercredit icon (◆)
+		HypercreditIcon  lipgloss.Style // Hypercredit icon (#)
 		HypercreditText  lipgloss.Style // Remaining Hypercredits text
 	}
 

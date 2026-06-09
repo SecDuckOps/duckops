@@ -21,7 +21,7 @@ func (m *UI) compressionInfo(width int) string {
 	}
 	t := m.com.Styles
 	ratio := float64(m.session.CompressionSavedTokens) / float64(m.session.CompressionOriginalTokens) * 100
-	ratioText := t.ModelInfo.Compression.Render(fmt.Sprintf("🗜 %.0f%%", ratio))
+	ratioText := t.ModelInfo.Compression.Render(fmt.Sprintf("%.0f%%", ratio))
 	saved := t.ModelInfo.CompressionSaved.Render(fmt.Sprintf("(%s)", formatTokenCountSidebar(m.session.CompressionSavedTokens)))
 	return lipgloss.NewStyle().PaddingLeft(2).Render(fmt.Sprintf("%s %s", ratioText, saved))
 }
@@ -150,13 +150,13 @@ func (m *UI) drawSidebar(scr uv.Screen, area uv.Rectangle) {
 	width := area.Dx()
 	height := area.Dy()
 
-	title := t.Sidebar.SessionTitle.Width(width).MaxHeight(2).Render("🦆 " + m.session.Title)
+	title := t.Sidebar.SessionTitle.Width(width).MaxHeight(2).Render(m.session.Title)
 	cwd := common.PrettyPath(t, m.com.Workspace.WorkingDir(), width)
 
 	ws := mcp.GetActiveWorkspace()
 	var wsInfo string
 	if ws.ContainerProjectRoot != "" {
-		wsInfo = t.Sidebar.WorkspaceContext.Render("📁 " + ws.ContainerProjectRoot)
+		wsInfo = t.Sidebar.WorkspaceContext.Render(ws.ContainerProjectRoot)
 	}
 
 	blocks := []string{
