@@ -759,8 +759,6 @@ func (c *Config) SetupAgents() {
 			Model:        SelectedModelTypeLarge,
 			ContextPaths: c.Options.ContextPaths,
 			AllowedTools: resolveReadOnlyTools(allowedTools),
-			// NO MCPs or LSPs by default
-			AllowedMCP: map[string][]string{},
 		},
 	}
 	c.Agents = agents
