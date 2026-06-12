@@ -15,9 +15,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/charlievieth/fastwalk"
 	"github.com/SecDuckOps/duckops/internal/home"
 	"github.com/SecDuckOps/duckops/internal/pubsub"
+	"github.com/charlievieth/fastwalk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -40,6 +40,8 @@ type Skill struct {
 	License       string            `yaml:"license,omitempty" json:"license,omitempty"`
 	Compatibility string            `yaml:"compatibility,omitempty" json:"compatibility,omitempty"`
 	Metadata      map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
+	UserInvocable bool              `yaml:"user-invocable" json:"user_invocable"`
+	Label         string            `yaml:"label,omitempty" json:"label,omitempty"`
 	Instructions  string            `yaml:"-" json:"instructions"`
 	Path          string            `yaml:"-" json:"path"`
 	SkillFilePath string            `yaml:"-" json:"skill_file_path"`
@@ -74,6 +76,25 @@ var broker = pubsub.NewBroker[Event]()
 // SubscribeEvents returns a channel that receives events when skill discovery state changes.
 func SubscribeEvents(ctx context.Context) <-chan pubsub.Event[Event] {
 	return broker.Subscribe(ctx)
+}
+
+var (
+	latestStatesMu sync.RWMutex
+	latestStates   []*SkillState
+)
+
+// GetLatestStates returns the package-wide latest skill discovery states.
+func GetLatestStates() []*SkillState {
+	latestStatesMu.RLock()
+	defer latestStatesMu.RUnlock()
+	return append([]*SkillState(nil), latestStates...)
+}
+
+// SetLatestStates updates the package-wide latest skill discovery states.
+func SetLatestStates(states []*SkillState) {
+	latestStatesMu.Lock()
+	latestStates = append([]*SkillState(nil), states...)
+	latestStatesMu.Unlock()
 }
 
 // Validate checks if the skill meets spec requirements.
@@ -332,26 +353,83 @@ func Filter(all []*Skill, disabled []string) []*Skill {
 	return result
 }
 
+// SourceType identifies where a skill comes from.
+type SourceType string
+
+const (
+	SourceTypeUser    SourceType = "user"
+	SourceTypeBuiltin SourceType = "builtin"
+)
+
+// SkillReadResult holds metadata about a skill returned alongside its
+// content.
+type SkillReadResult struct {
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Source      SourceType `json:"source"`
+	Builtin     bool       `json:"builtin"`
+}
+
 // CatalogEntry represents a skill entry in the skill catalog database/list.
 type CatalogEntry struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	Label         string `json:"label"`
-	UserInvocable bool   `json:"user_invocable"`
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Description   string     `json:"description"`
+	Label         string     `json:"label"`
+	Source        SourceType `json:"source"`
+	UserInvocable bool       `json:"user_invocable"`
 }
+
+// Option configures the skills manager.
+type Option func(*Manager)
 
 // Manager holds the pre-discovered skills lists.
 type Manager struct {
-	allSkills    []*Skill
-	activeSkills []*Skill
+	mu            sync.RWMutex
+	allSkills     []*Skill
+	activeSkills  []*Skill
+	states        []*SkillState
+	resolvedPaths []string
+	workingDir    string
+	globalMirror  bool
 }
 
 // NewManager creates a new skills Manager with the given lists of skills.
-func NewManager(all []*Skill, active []*Skill) *Manager {
-	return &Manager{
+func NewManager(all []*Skill, active []*Skill, states []*SkillState, opts ...Option) *Manager {
+	m := &Manager{
 		allSkills:    all,
 		activeSkills: active,
+		states:       append([]*SkillState(nil), states...),
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(m)
+		}
+	}
+	if m.globalMirror {
+		SetLatestStates(m.states)
+	}
+	return m
+}
+
+// WithResolvedPaths configures the manager with the resolved skill discovery paths.
+func WithResolvedPaths(paths []string) Option {
+	return func(m *Manager) {
+		m.resolvedPaths = append([]string(nil), paths...)
+	}
+}
+
+// WithWorkingDir configures the manager with the workspace working directory.
+func WithWorkingDir(workingDir string) Option {
+	return func(m *Manager) {
+		m.workingDir = workingDir
+	}
+}
+
+// WithGlobalMirror keeps the package-level skills cache in sync with this manager.
+func WithGlobalMirror() Option {
+	return func(m *Manager) {
+		m.globalMirror = true
 	}
 }
 
@@ -365,11 +443,152 @@ func (m *Manager) ActiveSkills() []*Skill {
 	return m.activeSkills
 }
 
+// ResolvedPaths returns the resolved skill discovery paths for the manager.
+func (m *Manager) ResolvedPaths() []string {
+	return append([]string(nil), m.resolvedPaths...)
+}
+
+// WorkingDir returns the manager's workspace working directory.
+func (m *Manager) WorkingDir() string {
+	return m.workingDir
+}
+
+// States returns the most recent skill discovery states for the manager.
+func (m *Manager) States() []*SkillState {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return append([]*SkillState(nil), m.states...)
+}
+
+// SetLatestStates updates the manager state cache and packages it to
+// the global shared mirror if configured.
+func (m *Manager) SetLatestStates(states []*SkillState) {
+	m.mu.Lock()
+	m.states = append([]*SkillState(nil), states...)
+	m.mu.Unlock()
+	if m.globalMirror {
+		SetLatestStates(states)
+	}
+}
+
+// PublishStates updates the manager state cache and publishes an update
+// event to subscribers.
+func (m *Manager) PublishStates(states []*SkillState) {
+	m.SetLatestStates(states)
+	broker.Publish(pubsub.UpdatedEvent, Event{States: states})
+}
+
 // DiscoveryConfig holds options for the skills discovery process.
 type DiscoveryConfig struct {
 	SkillsPaths    []string
 	DisabledSkills []string
 	Resolver       func(string) (string, error)
+	ResolvedPaths  []string
+	WorkingDir     string
+}
+
+// ResolvedPaths returns the resolved skill discovery paths for this config.
+func (cfg DiscoveryConfig) ResolvePaths() []string {
+	if len(cfg.ResolvedPaths) > 0 {
+		return append([]string(nil), cfg.ResolvedPaths...)
+	}
+	if len(cfg.SkillsPaths) == 0 {
+		return nil
+	}
+
+	resolved := make([]string, 0, len(cfg.SkillsPaths))
+	for _, pth := range cfg.SkillsPaths {
+		expanded := home.Long(pth)
+		if strings.HasPrefix(expanded, "$") && cfg.Resolver != nil {
+			if resolvedPath, err := cfg.Resolver(expanded); err == nil {
+				expanded = resolvedPath
+			}
+		}
+		resolved = append(resolved, expanded)
+	}
+	return resolved
+}
+
+// Catalog converts active skills into a frontend-friendly catalog.
+func Catalog(skills []*Skill, resolvedPaths []string, workingDir string) []CatalogEntry {
+	entries := make([]CatalogEntry, 0, len(skills))
+	for _, s := range skills {
+		source := SourceTypeUser
+		if s.Builtin {
+			source = SourceTypeBuiltin
+		}
+		entries = append(entries, CatalogEntry{
+			ID:            s.SkillFilePath,
+			Name:          s.Name,
+			Description:   s.Description,
+			Label:         s.Label,
+			Source:        source,
+			UserInvocable: s.UserInvocable,
+		})
+	}
+	return entries
+}
+
+// ReadContent reads a skill's SKILL.md content and returns metadata.
+func ReadContent(activeSkills []*Skill, resolvedPaths []string, workingDir, skillID string) ([]byte, SkillReadResult, error) {
+	if skillID == "" {
+		return nil, SkillReadResult{}, errors.New("skill id is required")
+	}
+
+	var selected *Skill
+	for _, s := range activeSkills {
+		if s.SkillFilePath == skillID || s.Name == skillID {
+			selected = s
+			break
+		}
+	}
+
+	if strings.HasPrefix(skillID, BuiltinPrefix) {
+		builtinPath := strings.TrimPrefix(skillID, BuiltinPrefix)
+		builtinPath = filepath.ToSlash(strings.TrimPrefix(builtinPath, "/"))
+		data, err := BuiltinFS().ReadFile(filepath.ToSlash(filepath.Join("builtin", builtinPath)))
+		if err != nil {
+			return nil, SkillReadResult{}, err
+		}
+		result := SkillReadResult{Source: SourceTypeBuiltin, Builtin: true}
+		if selected != nil {
+			result.Name = selected.Name
+			result.Description = selected.Description
+		}
+		return data, result, nil
+	}
+
+	if selected != nil {
+		if selected.Builtin {
+			return ReadContent(activeSkills, resolvedPaths, workingDir, selected.SkillFilePath)
+		}
+		data, err := os.ReadFile(selected.SkillFilePath)
+		if err != nil {
+			return nil, SkillReadResult{}, err
+		}
+		return data, SkillReadResult{
+			Name:        selected.Name,
+			Description: selected.Description,
+			Source:      SourceTypeUser,
+			Builtin:     false,
+		}, nil
+	}
+
+	candidate := skillID
+	if !filepath.IsAbs(candidate) {
+		candidate = filepath.Join(workingDir, candidate)
+	}
+	data, err := os.ReadFile(candidate)
+	if err != nil {
+		return nil, SkillReadResult{}, err
+	}
+
+	result := SkillReadResult{Source: SourceTypeUser, Builtin: false}
+	if parsed, err := ParseContent(data); err == nil {
+		result.Name = parsed.Name
+		result.Description = parsed.Description
+	}
+	return data, result, nil
 }
 
 // DiscoverFromConfig performs skills discovery based on the provided configuration.

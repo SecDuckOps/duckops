@@ -28,6 +28,14 @@ const (
 	ModelNameContextKey modelNameKey = "model_name"
 )
 
+const (
+	AnalyzeArchitectureToolName  = "analyze_architecture"
+	GenerateC4ModelToolName      = "generate_c4_model"
+	GenerateThreatModelToolName  = "generate_threat_model"
+	GenerateAttackPathsToolName  = "generate_attack_paths"
+	ExportSecurityReportToolName = "export_security_report"
+)
+
 // getContextValue is a generic helper that retrieves a typed value from context.
 // If the value is not found or has the wrong type, it returns the default value.
 func getContextValue[T any](ctx context.Context, key any, defaultValue T) T {

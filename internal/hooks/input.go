@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/tidwall/gjson"
+	"github.com/SecDuckOps/duckops/internal/shell"
 )
 
 // SupportedOutputVersion is the highest envelope version this build
@@ -51,7 +52,7 @@ func BuildPayload(eventName, sessionID, cwd, toolName, toolInputJSON string) []b
 // It includes all current process env vars plus hook-specific ones.
 func BuildEnv(eventName, toolName, sessionID, cwd, projectDir, toolInputJSON string) []string {
 	env := os.Environ()
-	env = append(env, shell.duckopsEnvMarkers()...)
+	env = append(env, shell.DuckopsEnvMarkers()...)
 	env = append(
 		env,
 		fmt.Sprintf("duckops_EVENT=%s", eventName),

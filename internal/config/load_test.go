@@ -127,6 +127,29 @@ func TestLookupConfigs_BoundedByProject(t *testing.T) {
 		require.Contains(t, got, GlobalConfig())
 		require.Contains(t, got, GlobalConfigData())
 	})
+
+	t.Run("dedupes identical global config and data paths", func(t *testing.T) {
+		t.Setenv("duckops_GLOBAL_CONFIG", t.TempDir())
+		t.Setenv("duckops_GLOBAL_DATA", os.Getenv("duckops_GLOBAL_CONFIG"))
+
+		project := t.TempDir()
+		got := lookupConfigs(project)
+		path := GlobalConfig()
+		count := 0
+		for _, p := range got {
+			if p == path {
+				count++
+			}
+		}
+		require.Equal(t, 1, count)
+	})
+}
+
+func TestGlobalConfigData_AliasesGlobalConfigByDefault(t *testing.T) {
+	t.Setenv("duckops_GLOBAL_CONFIG", t.TempDir())
+	t.Setenv("duckops_GLOBAL_DATA", "")
+
+	require.Equal(t, GlobalConfig(), GlobalConfigData())
 }
 
 func TestLoadFromConfigPaths_InvalidJSON(t *testing.T) {

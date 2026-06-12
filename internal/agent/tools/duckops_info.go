@@ -16,7 +16,7 @@ import (
 
 const duckopsInfoToolName = "duckops_info"
 
-//go:embed crush_info.md
+//go:embed duckops_info.md
 var duckopsInfoDescription string
 
 type duckopsInfoParams struct{}

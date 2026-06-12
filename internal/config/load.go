@@ -732,10 +732,8 @@ func configureSelectedModels(store *ConfigStore, knownProviders []catwalk.Provid
 // regardless of the boundary.
 func lookupConfigs(cwd string) []string {
 	// prepend default config paths
-	configPaths := []string{
-		GlobalConfig(),
-		GlobalConfigData(),
-	}
+	configPaths := []string{GlobalConfig(), GlobalConfigData()}
+	configPaths = uniquePaths(configPaths...)
 
 	configNames := []string{appName + ".json", "." + appName + ".json"}
 
@@ -748,7 +746,7 @@ func lookupConfigs(cwd string) []string {
 	// reverse order so last config has more priority
 	slices.Reverse(foundConfigs)
 
-	return append(configPaths, foundConfigs...)
+	return uniquePaths(append(configPaths, foundConfigs...)...)
 }
 
 func loadFromConfigPaths(configPaths []string) (*Config, []string, error) {
@@ -838,22 +836,23 @@ func migrateDisableNotifications() {
 	dataConfig := GlobalConfigData()
 
 	var wasDisabled bool
-	filesToClean := []string{}
+	filesToClean := uniquePaths(globalConfig, dataConfig)
+	paths := make([]string, 0, len(filesToClean))
 
-	for _, path := range []string{globalConfig, dataConfig} {
+	for _, path := range filesToClean {
 		data, err := os.ReadFile(path)
 		if err != nil {
 			continue
 		}
 		if gjson.Get(string(data), "options.disable_notifications").Exists() {
-			filesToClean = append(filesToClean, path)
+			paths = append(paths, path)
 			if gjson.Get(string(data), "options.disable_notifications").Bool() {
 				wasDisabled = true
 			}
 		}
 	}
 
-	if len(filesToClean) == 0 {
+	if len(paths) == 0 {
 		return
 	}
 
@@ -875,7 +874,7 @@ func migrateDisableNotifications() {
 	}
 
 	// Remove disable_notifications from all files that contain it.
-	for _, path := range filesToClean {
+	for _, path := range paths {
 		data, err := os.ReadFile(path)
 		if err != nil {
 			continue
@@ -896,7 +895,7 @@ func GlobalConfig() string {
 	if duckopsGlobal := os.Getenv("duckops_GLOBAL_CONFIG"); duckopsGlobal != "" {
 		return filepath.Join(duckopsGlobal, fmt.Sprintf("%s.json", appName))
 	}
-	return filepath.Join(home.Config(), appName, fmt.Sprintf("%s.json", appName))
+	return filepath.Join(home.Dir(), fmt.Sprintf(".%s", appName), fmt.Sprintf("%s.json", appName))
 }
 
 // GlobalCacheDir returns the path to the global cache directory for the
@@ -923,28 +922,29 @@ func ProjectConfigs(cwd string) []string {
 	return lookupConfigs(cwd)
 }
 
-// GlobalConfigData returns the path to the main data directory for the application.
-// this config is used when the app overrides configurations instead of updating the global config.
+func uniquePaths(paths ...string) []string {
+	seen := make(map[string]struct{}, len(paths))
+	unique := make([]string, 0, len(paths))
+	for _, path := range paths {
+		if path == "" {
+			continue
+		}
+		if _, ok := seen[path]; ok {
+			continue
+		}
+		seen[path] = struct{}{}
+		unique = append(unique, path)
+	}
+	return unique
+}
+
+// GlobalConfigData returns the path to the global config file used for
+// persistence. By default this is the same file as GlobalConfig().
 func GlobalConfigData() string {
 	if duckopsData := os.Getenv("duckops_GLOBAL_DATA"); duckopsData != "" {
 		return filepath.Join(duckopsData, fmt.Sprintf("%s.json", appName))
 	}
-	if xdgDataHome := os.Getenv("XDG_DATA_HOME"); xdgDataHome != "" {
-		return filepath.Join(xdgDataHome, appName, fmt.Sprintf("%s.json", appName))
-	}
-
-	// return the path to the main data directory
-	// for windows, it should be in `%LOCALAPPDATA%/duckops/`
-	// for linux and macOS, it should be in `$HOME/.local/share/duckops/`
-	if runtime.GOOS == "windows" {
-		localAppData := cmp.Or(
-			os.Getenv("LOCALAPPDATA"),
-			filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Local"),
-		)
-		return filepath.Join(localAppData, appName, fmt.Sprintf("%s.json", appName))
-	}
-
-	return filepath.Join(home.Dir(), ".local", "share", appName, fmt.Sprintf("%s.json", appName))
+	return GlobalConfig()
 }
 
 // GlobalWorkspaceDir returns the path to the global server workspace

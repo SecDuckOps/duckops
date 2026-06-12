@@ -30,9 +30,9 @@ func TestBackend_WorkspaceSkillsIsolation(t *testing.T) {
 	// (global skills, XDG dirs, etc.) must be empty/deterministic.
 	hostHome := t.TempDir()
 	t.Setenv("HOME", hostHome)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(hostHome, ".config"))
-	t.Setenv("XDG_DATA_HOME", filepath.Join(hostHome, ".local", "share"))
-	t.Setenv("XDG_CACHE_HOME", filepath.Join(hostHome, ".cache"))
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(hostHome, ".duckops"))
+	t.Setenv("XDG_DATA_HOME", filepath.Join(hostHome, ".duckops"))
+	t.Setenv("XDG_CACHE_HOME", filepath.Join(hostHome, ".duckops", ".cache"))
 	t.Setenv("duckops_SKILLS_DIR", t.TempDir())
 
 	// Each workspace gets its own working directory containing a

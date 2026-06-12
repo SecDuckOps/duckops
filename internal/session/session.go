@@ -48,18 +48,20 @@ func HasIncompleteTodos(todos []Todo) bool {
 }
 
 type Session struct {
-	ID               string
-	ParentSessionID  string
-	Title            string
-	MessageCount     int64
-	PromptTokens     int64
-	CompletionTokens int64
-	EstimatedUsage   bool
-	SummaryMessageID string
-	Cost             float64
-	Todos            []Todo
-	CreatedAt        int64
-	UpdatedAt        int64
+	ID                        string
+	ParentSessionID           string
+	Title                     string
+	MessageCount              int64
+	PromptTokens              int64
+	CompletionTokens          int64
+	CompressionSavedTokens    int64
+	CompressionOriginalTokens int64
+	EstimatedUsage            bool
+	SummaryMessageID          string
+	Cost                      float64
+	Todos                     []Todo
+	CreatedAt                 int64
+	UpdatedAt                 int64
 }
 
 type Service interface {

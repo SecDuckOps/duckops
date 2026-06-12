@@ -42,7 +42,7 @@ func cachePathFor(name string) string {
 
 	// return the path to the main data directory
 	// for windows, it should be in `%LOCALAPPDATA%/duckops/`
-	// for linux and macOS, it should be in `$HOME/.local/share/duckops/`
+	// for linux and macOS, it should be in `$HOME/.duckops/`
 	if runtime.GOOS == "windows" {
 		localAppData := os.Getenv("LOCALAPPDATA")
 		if localAppData == "" {
@@ -51,7 +51,7 @@ func cachePathFor(name string) string {
 		return filepath.Join(localAppData, appName, name+".json")
 	}
 
-	return filepath.Join(home.Dir(), ".local", "share", appName, name+".json")
+	return filepath.Join(home.Dir(), ".duckops", appName, name+".json")
 }
 
 // UpdateProviders updates the Catwalk providers list from a specified source.

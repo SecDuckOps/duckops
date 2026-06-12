@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestduckopsInfo_MinimalConfig(t *testing.T) {
+func TestDuckopsInfo_MinimalConfig(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -31,7 +31,7 @@ func TestduckopsInfo_MinimalConfig(t *testing.T) {
 	require.NotContains(t, output, "[tools]")
 }
 
-func TestduckopsInfo_ConfigFiles(t *testing.T) {
+func TestDuckopsInfo_ConfigFiles(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(
@@ -45,7 +45,7 @@ func TestduckopsInfo_ConfigFiles(t *testing.T) {
 	require.Contains(t, output, "/project/.duckops/duckops.json")
 }
 
-func TestduckopsInfo_Models(t *testing.T) {
+func TestDuckopsInfo_Models(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -61,7 +61,7 @@ func TestduckopsInfo_Models(t *testing.T) {
 	require.Contains(t, output, "small = claude-haiku-3-20250307 (anthropic)")
 }
 
-func TestduckopsInfo_Providers(t *testing.T) {
+func TestDuckopsInfo_Providers(t *testing.T) {
 	t.Parallel()
 
 	providers := csync.NewMap[string, config.ProviderConfig]()
@@ -80,7 +80,7 @@ func TestduckopsInfo_Providers(t *testing.T) {
 	require.Contains(t, output, "openai = enabled (8 models)")
 }
 
-func TestduckopsInfo_DisabledProvidersOmitted(t *testing.T) {
+func TestDuckopsInfo_DisabledProvidersOmitted(t *testing.T) {
 	t.Parallel()
 
 	providers := csync.NewMap[string, config.ProviderConfig]()
@@ -93,7 +93,7 @@ func TestduckopsInfo_DisabledProvidersOmitted(t *testing.T) {
 	require.NotContains(t, output, "openai")
 }
 
-func TestduckopsInfo_LSPStates(t *testing.T) {
+func TestDuckopsInfo_LSPStates(t *testing.T) {
 	t.Parallel()
 
 	mgr := lsp.NewManager(config.NewTestStore(&config.Config{
@@ -117,7 +117,7 @@ func TestduckopsInfo_LSPStates(t *testing.T) {
 	require.Less(t, goplsIdx, pyrightIdx, "gopls should appear before pyright")
 }
 
-func TestduckopsInfo_MCPStates(t *testing.T) {
+func TestDuckopsInfo_MCPStates(t *testing.T) {
 	t.Parallel()
 
 	connectedAt := time.Date(2025, 1, 15, 15, 4, 5, 0, time.UTC)
@@ -150,7 +150,7 @@ func TestduckopsInfo_MCPStates(t *testing.T) {
 	require.Less(t, filesystemIdx, githubIdx, "filesystem should appear before github")
 }
 
-func TestduckopsInfo_YoloMode(t *testing.T) {
+func TestDuckopsInfo_YoloMode(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -164,7 +164,7 @@ func TestduckopsInfo_YoloMode(t *testing.T) {
 	require.Contains(t, output, "mode = yolo")
 }
 
-func TestduckopsInfo_AllowedTools(t *testing.T) {
+func TestDuckopsInfo_AllowedTools(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -177,7 +177,7 @@ func TestduckopsInfo_AllowedTools(t *testing.T) {
 	require.Contains(t, output, "allowed_tools = bash, edit:write")
 }
 
-func TestduckopsInfo_DisabledTools(t *testing.T) {
+func TestDuckopsInfo_DisabledTools(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -190,7 +190,7 @@ func TestduckopsInfo_DisabledTools(t *testing.T) {
 	require.Contains(t, output, "disabled = agentic_fetch, sourcegraph")
 }
 
-func TestduckopsInfo_Options(t *testing.T) {
+func TestDuckopsInfo_Options(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -210,7 +210,7 @@ func TestduckopsInfo_Options(t *testing.T) {
 	require.Contains(t, output, "debug = true")
 }
 
-func TestduckopsInfo_AutoSummarizeInversion(t *testing.T) {
+func TestDuckopsInfo_AutoSummarizeInversion(t *testing.T) {
 	t.Parallel()
 
 	cfgFalse := config.NewTestStore(&config.Config{
@@ -228,7 +228,7 @@ func TestduckopsInfo_AutoSummarizeInversion(t *testing.T) {
 	require.Contains(t, outputTrue, "auto_summarize = true")
 }
 
-func TestduckopsInfo_NoSecrets(t *testing.T) {
+func TestDuckopsInfo_NoSecrets(t *testing.T) {
 	t.Parallel()
 
 	providers := csync.NewMap[string, config.ProviderConfig]()
@@ -244,7 +244,7 @@ func TestduckopsInfo_NoSecrets(t *testing.T) {
 	require.Contains(t, output, "openai = enabled (8 models)")
 }
 
-func TestduckopsInfo_DeterministicOrdering(t *testing.T) {
+func TestDuckopsInfo_DeterministicOrdering(t *testing.T) {
 	t.Parallel()
 
 	providers := csync.NewMap[string, config.ProviderConfig]()
@@ -286,7 +286,7 @@ func TestduckopsInfo_DeterministicOrdering(t *testing.T) {
 	require.Contains(t, output, "allowed_tools = a-perm, z-perm")
 }
 
-func TestduckopsInfo_EmptySectionsOmitted(t *testing.T) {
+func TestDuckopsInfo_EmptySectionsOmitted(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -303,7 +303,7 @@ func TestduckopsInfo_EmptySectionsOmitted(t *testing.T) {
 	require.NotContains(t, output, "[skills]")
 }
 
-func TestduckopsInfo_ConfigStaleness_Clean(t *testing.T) {
+func TestDuckopsInfo_ConfigStaleness_Clean(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
@@ -324,7 +324,7 @@ func TestduckopsInfo_ConfigStaleness_Clean(t *testing.T) {
 	require.NotContains(t, output, "missing_paths")
 }
 
-func TestduckopsInfo_ConfigStaleness_Dirty(t *testing.T) {
+func TestDuckopsInfo_ConfigStaleness_Dirty(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
@@ -349,7 +349,7 @@ func TestduckopsInfo_ConfigStaleness_Dirty(t *testing.T) {
 	require.Contains(t, output, configPath)
 }
 
-func TestduckopsInfo_ConfigStaleness_MissingPath(t *testing.T) {
+func TestDuckopsInfo_ConfigStaleness_MissingPath(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
@@ -373,7 +373,7 @@ func TestduckopsInfo_ConfigStaleness_MissingPath(t *testing.T) {
 	require.Contains(t, output, configPath)
 }
 
-func TestduckopsInfo_Skills_NoSkills(t *testing.T) {
+func TestDuckopsInfo_Skills_NoSkills(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -383,7 +383,7 @@ func TestduckopsInfo_Skills_NoSkills(t *testing.T) {
 	require.NotContains(t, output, "[skills]")
 }
 
-func TestduckopsInfo_Skills_MixedLoadedUnloaded(t *testing.T) {
+func TestDuckopsInfo_Skills_MixedLoadedUnloaded(t *testing.T) {
 	t.Parallel()
 
 	allSkills := []*skills.Skill{
@@ -407,7 +407,7 @@ func TestduckopsInfo_Skills_MixedLoadedUnloaded(t *testing.T) {
 	require.Contains(t, output, "go-doc = user, unloaded")
 }
 
-func TestduckopsInfo_Skills_DisabledSkills(t *testing.T) {
+func TestDuckopsInfo_Skills_DisabledSkills(t *testing.T) {
 	t.Parallel()
 
 	allSkills := []*skills.Skill{
@@ -433,7 +433,7 @@ func TestduckopsInfo_Skills_DisabledSkills(t *testing.T) {
 	require.Contains(t, output, "image-convert = user, disabled")
 }
 
-func TestduckopsInfo_Skills_Ordering(t *testing.T) {
+func TestDuckopsInfo_Skills_Ordering(t *testing.T) {
 	t.Parallel()
 
 	allSkills := []*skills.Skill{
@@ -456,7 +456,7 @@ func TestduckopsInfo_Skills_Ordering(t *testing.T) {
 	require.Less(t, mIdx, zIdx)
 }
 
-func TestduckopsInfo_Skills_BuiltinOrigin(t *testing.T) {
+func TestDuckopsInfo_Skills_BuiltinOrigin(t *testing.T) {
 	t.Parallel()
 
 	allSkills := []*skills.Skill{
@@ -474,7 +474,7 @@ func TestduckopsInfo_Skills_BuiltinOrigin(t *testing.T) {
 	require.Contains(t, output, "my-skill = user, unloaded")
 }
 
-func TestduckopsInfo_Hooks(t *testing.T) {
+func TestDuckopsInfo_Hooks(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{
@@ -493,7 +493,7 @@ func TestduckopsInfo_Hooks(t *testing.T) {
 	require.Contains(t, output, "PreToolUse = audit.sh")
 }
 
-func TestduckopsInfo_Hooks_NoHooks(t *testing.T) {
+func TestDuckopsInfo_Hooks_NoHooks(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.NewTestStore(&config.Config{

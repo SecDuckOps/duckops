@@ -2022,7 +2022,7 @@ func (a *sessionAgent) convertToToolResult(result fantasy.ToolResultContent) mes
 func (a *sessionAgent) workaroundProviderMediaLimitations(messages []fantasy.Message, largeModel Model) []fantasy.Message {
 	providerSupportsMedia := largeModel.ModelCfg.Provider == string(catwalk.InferenceProviderAnthropic) ||
 		largeModel.ModelCfg.Provider == string(catwalk.InferenceProviderBedrock) ||
-		largeModel.ModelCfg.Provider == string(catwalk.InferenceProviderBedrockEurope)
+		largeModel.ModelCfg.Provider == "bedrock-europe"
 
 	if providerSupportsMedia {
 		return messages

@@ -55,7 +55,7 @@ func TestNewduckopsLogsTool(t *testing.T) {
 	require.Equal(t, duckopsLogsToolName, tool.Info().Name)
 }
 
-func TestduckopsLogs_HappyPath(t *testing.T) {
+func TestDuckopsLogs_HappyPath(t *testing.T) {
 	t.Parallel()
 	entries := []map[string]any{
 		makeLogEntry("INFO", "Application started", "app.go", 42, map[string]any{"version": "1.0.0"}),
@@ -83,7 +83,7 @@ func TestduckopsLogs_HappyPath(t *testing.T) {
 	require.Contains(t, lines[2], "db.go:55")
 }
 
-func TestduckopsLogs_DefaultLines(t *testing.T) {
+func TestDuckopsLogs_DefaultLines(t *testing.T) {
 	t.Parallel()
 	// Create 100 log entries.
 	var entries []map[string]any
@@ -104,7 +104,7 @@ func TestduckopsLogs_DefaultLines(t *testing.T) {
 	require.Contains(t, lines[49], "Entry 99")
 }
 
-func TestduckopsLogs_MaxCap(t *testing.T) {
+func TestDuckopsLogs_MaxCap(t *testing.T) {
 	t.Parallel()
 	// Create 200 log entries.
 	var entries []map[string]any
@@ -121,13 +121,13 @@ func TestduckopsLogs_MaxCap(t *testing.T) {
 	require.Len(t, lines, 100)
 }
 
-func TestduckopsLogs_MissingFile(t *testing.T) {
+func TestDuckopsLogs_MissingFile(t *testing.T) {
 	t.Parallel()
 	result := runduckopsLogs("/nonexistent/path/duckops.log", duckopsLogsParams{Lines: 50})
 	require.Contains(t, result, "No log file found")
 }
 
-func TestduckopsLogs_EmptyFile(t *testing.T) {
+func TestDuckopsLogs_EmptyFile(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
 	logFile := filepath.Join(tempDir, "duckops.log")
@@ -138,7 +138,7 @@ func TestduckopsLogs_EmptyFile(t *testing.T) {
 	require.Contains(t, result, "Log file is empty")
 }
 
-func TestduckopsLogs_MalformedLines(t *testing.T) {
+func TestDuckopsLogs_MalformedLines(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
 	logFile := filepath.Join(tempDir, "duckops.log")
@@ -168,7 +168,7 @@ func TestduckopsLogs_MalformedLines(t *testing.T) {
 	require.Contains(t, lines[1], "Another valid entry")
 }
 
-func TestduckopsLogs_ExtraFieldsSorted(t *testing.T) {
+func TestDuckopsLogs_ExtraFieldsSorted(t *testing.T) {
 	t.Parallel()
 	entries := []map[string]any{
 		makeLogEntry("INFO", "Test message", "app.go", 1, map[string]any{
@@ -191,7 +191,7 @@ func TestduckopsLogs_ExtraFieldsSorted(t *testing.T) {
 	require.True(t, idxM < idxZ, "m_field should come before z_field")
 }
 
-func TestduckopsLogs_NonStringValues(t *testing.T) {
+func TestDuckopsLogs_NonStringValues(t *testing.T) {
 	t.Parallel()
 	entry := map[string]any{
 		"time":   time.Now().Format(time.RFC3339),
@@ -225,7 +225,7 @@ func TestduckopsLogs_NonStringValues(t *testing.T) {
 	require.Contains(t, result, `arr="[`)
 }
 
-func TestduckopsLogs_Redaction(t *testing.T) {
+func TestDuckopsLogs_Redaction(t *testing.T) {
 	t.Parallel()
 	entries := []map[string]any{
 		makeLogEntry("INFO", "API call", "api.go", 10, map[string]any{
@@ -266,7 +266,7 @@ func TestduckopsLogs_Redaction(t *testing.T) {
 	require.NotContains(t, result, "mytoken")
 }
 
-func TestduckopsLogs_ReservedFields(t *testing.T) {
+func TestDuckopsLogs_ReservedFields(t *testing.T) {
 	t.Parallel()
 	entries := []map[string]any{
 		{
@@ -298,7 +298,7 @@ func TestduckopsLogs_ReservedFields(t *testing.T) {
 	require.Contains(t, result, `extra="should appear"`)
 }
 
-func TestduckopsLogs_OversizedLines(t *testing.T) {
+func TestDuckopsLogs_OversizedLines(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
 	logFile := filepath.Join(tempDir, "duckops.log")
@@ -340,7 +340,7 @@ func TestduckopsLogs_OversizedLines(t *testing.T) {
 	require.Contains(t, lines[1], "Second valid entry")
 }
 
-func TestduckopsLogs_PartialTrailingLine(t *testing.T) {
+func TestDuckopsLogs_PartialTrailingLine(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
 	logFile := filepath.Join(tempDir, "duckops.log")
@@ -370,7 +370,7 @@ func TestduckopsLogs_PartialTrailingLine(t *testing.T) {
 	}
 }
 
-func TestduckopsLogs_ValueQuoting(t *testing.T) {
+func TestDuckopsLogs_ValueQuoting(t *testing.T) {
 	t.Parallel()
 	entries := []map[string]any{
 		makeLogEntry("INFO", "Test", "app.go", 1, map[string]any{
@@ -410,7 +410,7 @@ func TestduckopsLogs_ValueQuoting(t *testing.T) {
 	require.Contains(t, result, "normal=simplevalue")
 }
 
-func TestduckopsLogs_ChronologicalOrder(t *testing.T) {
+func TestDuckopsLogs_ChronologicalOrder(t *testing.T) {
 	t.Parallel()
 	// Create entries with different timestamps.
 	baseTime := time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC)
@@ -448,7 +448,7 @@ func TestduckopsLogs_ChronologicalOrder(t *testing.T) {
 	require.Contains(t, lines[2], "Third")
 }
 
-func TestduckopsLogs_TimeOnlyFormat(t *testing.T) {
+func TestDuckopsLogs_TimeOnlyFormat(t *testing.T) {
 	t.Parallel()
 	entry := map[string]any{
 		"time":   "2024-01-15T15:04:05Z",
@@ -465,7 +465,7 @@ func TestduckopsLogs_TimeOnlyFormat(t *testing.T) {
 	require.True(t, strings.HasPrefix(result, "15:04:05"), "Expected time-only format, got: %s", result)
 }
 
-func TestduckopsLogs_LevelVariations(t *testing.T) {
+func TestDuckopsLogs_LevelVariations(t *testing.T) {
 	t.Parallel()
 	entries := []map[string]any{
 		makeLogEntry("DEBUG", "Debug message", "app.go", 1, nil),
@@ -490,7 +490,7 @@ func TestduckopsLogs_LevelVariations(t *testing.T) {
 	require.Contains(t, lines[4], "ERROR")
 }
 
-func TestduckopsLogs_SourceVariations(t *testing.T) {
+func TestDuckopsLogs_SourceVariations(t *testing.T) {
 	t.Parallel()
 	entries := []map[string]any{
 		// Source as object with file and line.

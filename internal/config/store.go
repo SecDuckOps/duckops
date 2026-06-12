@@ -58,7 +58,7 @@ type ConfigStore struct {
 	config             *Config
 	workingDir         string
 	resolver           VariableResolver
-	globalDataPath     string   // ~/.local/share/duckops/duckops.json
+	globalDataPath     string   // ~/.duckops/duckops.json
 	workspacePath      string   // .duckops/duckops.json
 	loadedPaths        []string // config files that were successfully loaded
 	knownProviders     []catwalk.Provider

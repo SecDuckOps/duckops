@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -131,9 +132,35 @@ func GetStates() map[string]ClientInfo {
 	return states.Copy()
 }
 
+// WorkspaceInfo holds active workspace metadata used by the UI.
+type WorkspaceInfo struct {
+	ContainerProjectRoot string
+}
+
+var (
+	activeWorkspaceMu sync.RWMutex
+	activeWorkspace   WorkspaceInfo
+)
+
 // GetState returns the state of a specific MCP client
 func GetState(name string) (ClientInfo, bool) {
 	return states.Get(name)
+}
+
+// GetActiveWorkspace returns the currently tracked workspace context.
+func GetActiveWorkspace() WorkspaceInfo {
+	activeWorkspaceMu.RLock()
+	defer activeWorkspaceMu.RUnlock()
+	return activeWorkspace
+}
+
+// InitWorkspaceContext updates the active workspace context from the current cwd.
+func InitWorkspaceContext(cwd string) {
+	activeWorkspaceMu.Lock()
+	defer activeWorkspaceMu.Unlock()
+	activeWorkspace = WorkspaceInfo{
+		ContainerProjectRoot: filepath.Clean(cwd),
+	}
 }
 
 // Close closes all MCP clients. This should be called during application shutdown.

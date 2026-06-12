@@ -391,7 +391,7 @@ func getProviderOptions(model Model, providerCfg config.ProviderConfig) fantasy.
 		)
 
 		switch providerCfg.ID {
-		case string(catwalk.InferenceProviderAlibabaSingapore):
+		case "alibaba-singapore":
 			switch {
 			case !hasEffort && shouldSetEffort:
 				extraBody["reasoning_effort"] = model.ModelCfg.ReasoningEffort
@@ -489,7 +489,7 @@ func getProviderOptions(model Model, providerCfg config.ProviderConfig) fantasy.
 					extraBody["reasoning"] = map[string]string{"effort": "none"}
 				}
 			}
-		case string(catwalk.InferenceProviderZAI), string(catwalk.InferenceProviderDeepSeek):
+		case string(catwalk.InferenceProviderZAI), "deepseek":
 			if model.ModelCfg.Think || model.ModelCfg.ReasoningEffort != "" {
 				extraBody["thinking"] = map[string]any{
 					"type": "enabled",
@@ -499,17 +499,10 @@ func getProviderOptions(model Model, providerCfg config.ProviderConfig) fantasy.
 					"type": "disabled",
 				}
 			}
-		case string(catwalk.InferenceProviderAlibabaSingapore):
+		case "alibaba-singapore":
 			if model.CatwalkCfg.CanReason {
 				extraBody["enable_thinking"] = model.ModelCfg.Think
 			}
-		}
-
-		mergedOptions["extra_body"] = extraBody
-
-		parsed, err := openaicompat.ParseOptions(mergedOptions)
-		if err == nil {
-			options[openaicompat.Name] = parsed
 		}
 	}
 
@@ -854,13 +847,8 @@ func (c *coordinator) buildOpenaiCompatProvider(baseURL, apiKey string, headers 
 	var httpClient *http.Client
 	switch providerID {
 	case string(catwalk.InferenceProviderCopilot):
-		opts = append(
-			opts,
-			openaicompat.WithUseResponsesAPI(),
-			openaicompat.WithResponsesAPIFunc(func(modelID string) bool {
-				return copilotResponsesModels[modelID]
-			}),
-		)
+		opts = append(opts, openaicompat.WithUseResponsesAPI())
+		httpClient = copilot.NewClient(isSubAgent, c.cfg.Config().Options.Debug)
 		httpClient = copilot.NewClient(isSubAgent, c.cfg.Config().Options.Debug)
 	}
 	if httpClient == nil && c.cfg.Config().Options.Debug {
@@ -921,13 +909,6 @@ func (c *coordinator) buildBedrockProvider(apiKey string, headers map[string]str
 		opts = append(opts, bedrock.WithAPIKey(os.Getenv("AWS_BEARER_TOKEN_BEDROCK")))
 	default:
 		// Skip, let the SDK do authentication.
-	}
-
-	switch providerID {
-	case string(catwalk.InferenceProviderBedrockEurope):
-		opts = append(opts, bedrock.WithRegion("eu-west-1"))
-	default:
-		opts = append(opts, bedrock.WithRegion("us-east-1"))
 	}
 
 	return bedrock.New(opts...)
