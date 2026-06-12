@@ -8,7 +8,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/SecDuckOps/duckops/internal/pubsub"
+	"github.com/SecDuckOps/duckopsinternal/pubsub"
 	"github.com/stretchr/testify/require"
 )
 

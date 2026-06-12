@@ -4,8 +4,8 @@ import (
 	"context"
 	_ "embed"
 
-	"github.com/SecDuckOps/duckops/internal/agent/prompt"
-	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckopsinternal/agent/prompt"
+	"github.com/SecDuckOps/duckopsinternal/config"
 )
 
 //go:embed templates/coder.md.tpl

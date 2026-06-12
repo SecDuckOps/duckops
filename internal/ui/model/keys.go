@@ -65,6 +65,7 @@ type KeyMap struct {
 	Sessions key.Binding
 	Tab      key.Binding
 	ToggleSidebar key.Binding
+	AddProvider   key.Binding
 }
 
 func DefaultKeyMap() KeyMap {
@@ -100,6 +101,10 @@ func DefaultKeyMap() KeyMap {
 		ToggleSidebar: key.NewBinding(
 			key.WithKeys("ctrl+b"),
 			key.WithHelp("ctrl+b", "sidebar"),
+		),
+		AddProvider: key.NewBinding(
+			key.WithKeys("ctrl+u"),
+			key.WithHelp("ctrl+u", "add provider"),
 		),
 	}
 

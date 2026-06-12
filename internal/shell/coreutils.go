@@ -9,9 +9,9 @@ import (
 var useGoCoreUtils bool
 
 func init() {
-	// If DUCKOPS_CORE_UTILS is set to either true or false, respect that.
+	// If duckops_CORE_UTILS is set to either true or false, respect that.
 	// By default, enable on Windows only.
-	if v, err := strconv.ParseBool(os.Getenv("DUCKOPS_CORE_UTILS")); err == nil {
+	if v, err := strconv.ParseBool(os.Getenv("duckops_CORE_UTILS")); err == nil {
 		useGoCoreUtils = v
 	} else {
 		useGoCoreUtils = runtime.GOOS == "windows"

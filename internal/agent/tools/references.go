@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckops/internal/lsp"
+	"github.com/SecDuckOps/duckopsinternal/lsp"
 	"github.com/charmbracelet/x/powernap/pkg/lsp/protocol"
 )
 
@@ -31,12 +31,12 @@ type referencesTool struct {
 const ReferencesToolName = "lsp_references"
 
 //go:embed references.md
-var referencesDescription []byte
+var referencesDescription string
 
 func NewReferencesTool(lspManager *lsp.Manager) fantasy.AgentTool {
 	return fantasy.NewAgentTool(
 		ReferencesToolName,
-		FirstLineDescription(referencesDescription),
+		referencesDescription,
 		func(ctx context.Context, params ReferencesParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.Symbol == "" {
 				return fantasy.NewTextErrorResponse("symbol is required"), nil
@@ -87,7 +87,8 @@ func NewReferencesTool(lspManager *lsp.Manager) fantasy.AgentTool {
 				return fantasy.NewTextErrorResponse(allErrs.Error()), nil
 			}
 			return fantasy.NewTextResponse(fmt.Sprintf("No references found for symbol '%s'", params.Symbol)), nil
-		})
+		},
+	)
 }
 
 func (r *referencesTool) Name() string {

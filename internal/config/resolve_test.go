@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SecDuckOps/duckops/internal/env"
+	"github.com/SecDuckOps/duckopsinternal/env"
 	"github.com/stretchr/testify/require"
 )
 

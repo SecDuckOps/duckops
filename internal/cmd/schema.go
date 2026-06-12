@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckopsinternal/config"
 	"github.com/invopop/jsonschema"
 	"github.com/spf13/cobra"
 )

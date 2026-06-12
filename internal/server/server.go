@@ -7,15 +7,34 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/SecDuckOps/duckops/internal/backend"
-	"github.com/SecDuckOps/duckops/internal/config"
-	_ "github.com/SecDuckOps/duckops/internal/swagger"
+	"github.com/SecDuckOps/duckopsinternal/backend"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	_ "github.com/SecDuckOps/duckopsinternal/swagger"
 	httpswagger "github.com/swaggo/http-swagger/v2"
 )
+
+// maxUnixSocketPathLen is the maximum length of a Unix domain socket
+// path. The macOS sun_path field is 104 bytes; Linux allows 108. We
+// use 104 so the resulting path is portable across both platforms.
+const maxUnixSocketPathLen = 104
+
+// socketDir returns the directory used for the duckops Unix socket.
+// It prefers $XDG_RUNTIME_DIR when set (systemd's per-user runtime
+// directory on Linux), and otherwise falls back to [os.TempDir],
+// which resolves to the per-user private $TMPDIR on macOS and to
+// /tmp on Linux.
+func socketDir() string {
+	if dir := os.Getenv("XDG_RUNTIME_DIR"); dir != "" {
+		return dir
+	}
+	return os.TempDir()
+}
 
 // ErrServerClosed is returned when the server is closed.
 var ErrServerClosed = http.ErrServerClosed
@@ -44,6 +63,14 @@ func ParseHostURL(host string) (*url.URL, error) {
 }
 
 // DefaultHost returns the default server host.
+//
+// On Windows the address is a named pipe under \\.\pipe\. On Unix
+// platforms the socket lives in the per-user runtime directory
+// returned by [socketDir] and is named duckops-<uid>.sock, falling
+// back to duckops.sock when the current uid cannot be determined. If
+// the composed path would exceed [maxUnixSocketPathLen] bytes (the
+// macOS sun_path limit), we fall back to /tmp/duckops-<uid>.sock so
+// the socket remains bindable.
 func DefaultHost() string {
 	sock := "duckops.sock"
 	usr, err := user.Current()
@@ -53,10 +80,14 @@ func DefaultHost() string {
 	if runtime.GOOS == "windows" {
 		return fmt.Sprintf("npipe:////./pipe/%s", sock)
 	}
-	return fmt.Sprintf("unix:///tmp/%s", sock)
+	path := filepath.Join(socketDir(), sock)
+	if len(path) > maxUnixSocketPathLen {
+		path = filepath.Join("/tmp", sock)
+	}
+	return "unix://" + path
 }
 
-// Server represents a DuckOps server bound to a specific address.
+// Server represents a duckops server bound to a specific address.
 type Server struct {
 	// Addr can be a TCP address, a Unix socket path, or a Windows named pipe.
 	Addr    string
@@ -100,7 +131,18 @@ func NewServer(cfg *config.ConfigStore, network, address string) *Server {
 			}
 		}()
 	})
+	s.installHandler()
+	if network == "tcp" {
+		s.h.Addr = address
+	}
+	return s
+}
 
+// installHandler builds the protocol/router around s.backend and
+// assigns the resulting http.Server to s.h. Extracted from
+// [NewServer] so test harnesses can wire a Server around a
+// pre-constructed backend.
+func (s *Server) installHandler() {
 	var p http.Protocols
 	p.SetHTTP1(true)
 	p.SetUnencryptedHTTP2(true)
@@ -113,6 +155,7 @@ func NewServer(cfg *config.ConfigStore, network, address string) *Server {
 	mux.HandleFunc("GET /v1/workspaces", c.handleGetWorkspaces)
 	mux.HandleFunc("POST /v1/workspaces", c.handlePostWorkspaces)
 	mux.HandleFunc("DELETE /v1/workspaces/{id}", c.handleDeleteWorkspaces)
+	mux.HandleFunc("POST /v1/workspaces/{id}/current-session", c.handlePostWorkspaceCurrentSession)
 	mux.HandleFunc("GET /v1/workspaces/{id}", c.handleGetWorkspace)
 	mux.HandleFunc("GET /v1/workspaces/{id}/config", c.handleGetWorkspaceConfig)
 	mux.HandleFunc("GET /v1/workspaces/{id}/events", c.handleGetWorkspaceEvents)
@@ -157,6 +200,8 @@ func NewServer(cfg *config.ConfigStore, network, address string) *Server {
 	mux.HandleFunc("GET /v1/workspaces/{id}/project/needs-init", c.handleGetWorkspaceProjectNeedsInit)
 	mux.HandleFunc("POST /v1/workspaces/{id}/project/init", c.handlePostWorkspaceProjectInit)
 	mux.HandleFunc("GET /v1/workspaces/{id}/project/init-prompt", c.handleGetWorkspaceProjectInitPrompt)
+	mux.HandleFunc("GET /v1/workspaces/{id}/skills", c.handleGetWorkspaceSkills)
+	mux.HandleFunc("POST /v1/workspaces/{id}/skills/read", c.handlePostWorkspaceSkillRead)
 	mux.HandleFunc("POST /v1/workspaces/{id}/mcp/refresh-tools", c.handlePostWorkspaceMCPRefreshTools)
 	mux.HandleFunc("POST /v1/workspaces/{id}/mcp/read-resource", c.handlePostWorkspaceMCPReadResource)
 	mux.HandleFunc("POST /v1/workspaces/{id}/mcp/get-prompt", c.handlePostWorkspaceMCPGetPrompt)
@@ -168,12 +213,15 @@ func NewServer(cfg *config.ConfigStore, network, address string) *Server {
 	mux.Handle("/v1/docs/", httpswagger.WrapHandler)
 	s.h = &http.Server{
 		Protocols: &p,
-		Handler:   s.loggingHandler(mux),
+		Handler:   s.recoverHandler(s.loggingHandler(mux)),
 	}
-	if network == "tcp" {
-		s.h.Addr = address
-	}
-	return s
+}
+
+// Handler returns the server's HTTP handler. Exposed so test harnesses
+// can wrap it in an httptest.Server without going through the
+// production listener setup.
+func (s *Server) Handler() http.Handler {
+	return s.h.Handler
 }
 
 // Serve accepts incoming connections on the listener.
@@ -186,9 +234,12 @@ func (s *Server) ListenAndServe() error {
 	if s.ln != nil {
 		return fmt.Errorf("server already started")
 	}
-	ln, err := listen(s.network, s.Addr)
+	ln, removedStale, err := listen(s.network, s.Addr)
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s: %w", s.Addr, err)
+	}
+	if removedStale && s.logger != nil {
+		s.logger.Warn("Removed stale socket before binding", "address", s.Addr)
 	}
 	return s.Serve(ln)
 }

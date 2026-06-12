@@ -13,7 +13,7 @@ import (
 	"charm.land/fantasy/providers/anthropic"
 	"charm.land/fantasy/providers/google"
 	"charm.land/fantasy/providers/openai"
-	"github.com/SecDuckOps/duckops/internal/stringext"
+	"github.com/SecDuckOps/duckopsinternal/stringext"
 )
 
 type MessageRole string

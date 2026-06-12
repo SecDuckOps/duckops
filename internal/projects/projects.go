@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckopsinternal/config"
 )
 
 const projectsFileName = "projects.json"

@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/home"
+	"github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/home"
+	"github.com/SecDuckOps/duckopsinternal/skills"
 )
 
 var namedArgPattern = regexp.MustCompile(`\$([A-Z][A-Z0-9_]*)`)
@@ -45,6 +46,8 @@ type CustomCommand struct {
 	Name      string
 	Content   string
 	Arguments []Argument
+	// Skill is set when this command represents a user-invocable skill
+	Skill *skills.Skill
 }
 
 type commandSource struct {
@@ -56,6 +59,31 @@ type commandSource struct {
 // XDG config directory, home directory, and project directory.
 func LoadCustomCommands(cfg *config.Config) ([]CustomCommand, error) {
 	return loadAll(buildCommandSources(cfg))
+}
+
+// FromSkillCatalog converts user-invocable catalog entries into custom
+// command entries for the command palette.
+func FromSkillCatalog(entries []skills.CatalogEntry) []CustomCommand {
+	commands := make([]CustomCommand, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.UserInvocable {
+			continue
+		}
+		name := entry.Label
+		if name == "" {
+			name = userCommandPrefix + entry.Name
+		}
+		commands = append(commands, CustomCommand{
+			ID:   name,
+			Name: name,
+			Skill: &skills.Skill{
+				Name:          entry.Name,
+				Description:   entry.Description,
+				SkillFilePath: entry.ID,
+			},
+		})
+	}
+	return commands
 }
 
 // LoadMCPPrompts loads custom commands from available MCP servers.

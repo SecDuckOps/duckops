@@ -29,13 +29,15 @@ Modern developers operate across an average of 5-7 different tools during a typi
 
 Each transition between tools incurs a context switch cost:
 
-| Switch | Cost |
-|--------|------|
-| Terminal → Browser | Find browser window, recall search terms, wait for page load |
-| Browser → AI Chat | Navigate to tab, recall conversation context, re-explain problem |
-| AI Chat → IDE | Recall file locations, re-establish mental model |
-| IDE → Terminal | Recall test commands, re-focus on output |
-| Terminal → Security Tool | Recall tool syntax, wait for scan, interpret output |
+
+| Switch                   | Cost                                                             |
+| ------------------------ | ---------------------------------------------------------------- |
+| Terminal → Browser       | Find browser window, recall search terms, wait for page load     |
+| Browser → AI Chat        | Navigate to tab, recall conversation context, re-explain problem |
+| AI Chat → IDE            | Recall file locations, re-establish mental model                 |
+| IDE → Terminal           | Recall test commands, re-focus on output                         |
+| Terminal → Security Tool | Recall tool syntax, wait for scan, interpret output              |
+
 
 **Total estimated overhead**: 30-60 minutes per developer per day.
 
@@ -43,43 +45,49 @@ Each transition between tools incurs a context switch cost:
 
 The OWASP Top 10 (2021) identifies critical web application security risks:
 
-| Rank | Risk | Required Tool Knowledge | Typical Developer Proficiency |
-|------|------|------------------------|-------------------------------|
-| 1 | Broken Access Control | Authorization testing | Low |
-| 2 | Cryptographic Failures | Crypto audit | Low |
-| 3 | Injection | SQLMap, manual testing | Medium |
-| 4 | Insecure Design | Threat modeling | Low |
-| 5 | Security Misconfiguration | Config review, Nuclei | Low-Medium |
-| 6 | Vulnerable Components | Dependency scanning (Trivy) | Medium |
-| 7 | Auth Failures | JWT testing | Low-Medium |
-| 8 | Data Integrity | Integrity checking | Low |
-| 9 | Logging Failures | Log review | Low |
-| 10 | SSRF | SSRF testing | Very Low |
+
+| Rank | Risk                      | Required Tool Knowledge     | Typical Developer Proficiency |
+| ---- | ------------------------- | --------------------------- | ----------------------------- |
+| 1    | Broken Access Control     | Authorization testing       | Low                           |
+| 2    | Cryptographic Failures    | Crypto audit                | Low                           |
+| 3    | Injection                 | SQLMap, manual testing      | Medium                        |
+| 4    | Insecure Design           | Threat modeling             | Low                           |
+| 5    | Security Misconfiguration | Config review, Nuclei       | Low-Medium                    |
+| 6    | Vulnerable Components     | Dependency scanning (Trivy) | Medium                        |
+| 7    | Auth Failures             | JWT testing                 | Low-Medium                    |
+| 8    | Data Integrity            | Integrity checking          | Low                           |
+| 9    | Logging Failures          | Log review                  | Low                           |
+| 10   | SSRF                      | SSRF testing                | Very Low                      |
+
 
 A survey of developer security practices reveals:
 
-| Statistic | Value |
-|-----------|-------|
-| Developers who run security scans regularly | 12% |
-| Developers who can identify OWASP Top 10 | 34% |
-| Developers who have used SQLMap | 8% |
-| Developers who have used Nuclei | 3% |
-| Developers who perform threat modeling | 15% |
-| Security issues found post-deployment | 67% (vs pre-deployment) |
+
+| Statistic                                   | Value                   |
+| ------------------------------------------- | ----------------------- |
+| Developers who run security scans regularly | 12%                     |
+| Developers who can identify OWASP Top 10    | 34%                     |
+| Developers who have used SQLMap             | 8%                      |
+| Developers who have used Nuclei             | 3%                      |
+| Developers who perform threat modeling      | 15%                     |
+| Security issues found post-deployment       | 67% (vs pre-deployment) |
+
 
 ### 3.1.3 Challenge 3: Provider Lock-in
 
 Dependence on a single AI provider creates several risks:
 
-| Risk | Impact | Example |
-|------|--------|---------|
-| **Availability** | Cannot work during provider outage | OpenAI outage June 2024 (4 hours) |
-| **Pricing Changes** | Unexpected cost increases | Anthropic pricing restructure 2024 |
-| **Model Deprecation** | Forced migration to new models | GPT-4 deprecation timeline |
-| **Capability Gaps** | Missing features available elsewhere | Gemini's 2M context window vs. competitors |
-| **Rate Limiting** | Throttled by provider | Tier 1 vs Tier 5 OpenAI limits |
-| **Geographic Restrictions** | Cannot access in some regions | Various provider regional blocks |
-| **Data Privacy** | Data handling policies vary | Provider-specific data retention |
+
+| Risk                        | Impact                               | Example                                    |
+| --------------------------- | ------------------------------------ | ------------------------------------------ |
+| **Availability**            | Cannot work during provider outage   | OpenAI outage June 2024 (4 hours)          |
+| **Pricing Changes**         | Unexpected cost increases            | Anthropic pricing restructure 2024         |
+| **Model Deprecation**       | Forced migration to new models       | GPT-4 deprecation timeline                 |
+| **Capability Gaps**         | Missing features available elsewhere | Gemini's 2M context window vs. competitors |
+| **Rate Limiting**           | Throttled by provider                | Tier 1 vs Tier 5 OpenAI limits             |
+| **Geographic Restrictions** | Cannot access in some regions        | Various provider regional blocks           |
+| **Data Privacy**            | Data handling policies vary          | Provider-specific data retention           |
+
 
 ### 3.1.4 Challenge 4: Context Window Exhaustion
 
@@ -99,6 +107,7 @@ Total:     145% of context window
 ```
 
 Without context management:
+
 - **After 10-15 messages**: Context about earlier decisions starts degrading
 - **After 20-30 messages**: Earlier files and decisions are lost
 - **After 50+ messages**: Session quality degrades significantly
@@ -108,57 +117,63 @@ Without context management:
 
 A comprehensive security assessment requires:
 
-| Tool | Purpose | Installation | Learning Curve |
-|------|---------|-------------|----------------|
-| Nmap | Network scanning | Package manager | Medium (200+ flags) |
-| Nuclei | Vulnerability scanning | Go install | Medium (DSL templates) |
-| SQLMap | SQL injection | Git clone/Python | High (100+ options) |
-| FFUF | Directory fuzzing | Go install | Low |
-| Subfinder | Subdomain enumeration | Go install | Low |
-| Httpx | HTTP probing | Go install | Low |
-| Katana | Web crawling | Go install | Medium |
-| Naabu | Port scanning | Go install | Low |
-| Semgrep | Static analysis | pip/Python | Medium (rule writing) |
-| Gitleaks | Secret detection | Go install | Low |
-| Trivy | Vulnerability scanning | Package manager | Medium |
-| **Total** | **11 tools** | **Multiple methods** | **Steep cumulative** |
+
+| Tool      | Purpose                | Installation         | Learning Curve         |
+| --------- | ---------------------- | -------------------- | ---------------------- |
+| Nmap      | Network scanning       | Package manager      | Medium (200+ flags)    |
+| Nuclei    | Vulnerability scanning | Go install           | Medium (DSL templates) |
+| SQLMap    | SQL injection          | Git clone/Python     | High (100+ options)    |
+| FFUF      | Directory fuzzing      | Go install           | Low                    |
+| Subfinder | Subdomain enumeration  | Go install           | Low                    |
+| Httpx     | HTTP probing           | Go install           | Low                    |
+| Katana    | Web crawling           | Go install           | Medium                 |
+| Naabu     | Port scanning          | Go install           | Low                    |
+| Semgrep   | Static analysis        | pip/Python           | Medium (rule writing)  |
+| Gitleaks  | Secret detection       | Go install           | Low                    |
+| Trivy     | Vulnerability scanning | Package manager      | Medium                 |
+| **Total** | **11 tools**           | **Multiple methods** | **Steep cumulative**   |
+
 
 ## 3.2 Existing Solutions
 
 ### 3.2.1 Solution Inventory
 
-| Solution | Type | Year Introduced | Provider Support | Security Integration | Session Management |
-|----------|------|----------------|-----------------|---------------------|-------------------|
-| ChatGPT | Web/Desktop | 2022 | Single (OpenAI) | None | Basic (web history) |
-| GitHub Copilot | IDE Plugin | 2022 | Single (OpenAI) | None | None |
-| Claude.ai | Web | 2023 | Single (Anthropic) | None | Basic |
-| Claude Code | CLI Agent | 2024 | Single (Anthropic) | None | File-based |
-| Shell-GPT | CLI Wrapper | 2023 | Dual (OpenAI/Anthropic) | None | None |
-| Warp | Terminal | 2023 | Single (OpenAI) | None | None |
-| Cursor | AI Editor | 2023 | Multi (limited) | None | Workspace-based |
-| Gemini Assistant | Web/IDE | 2024 | Single (Google) | None | Basic |
-| CodeGemma | IDE Plugin | 2024 | Single (Google) | None | None |
-| DuckOps | Terminal TUI | 2025 | 25+ providers | 15+ embedded tools | Full SQLite-backed |
+
+| Solution         | Type         | Year Introduced | Provider Support        | Security Integration | Session Management  |
+| ---------------- | ------------ | --------------- | ----------------------- | -------------------- | ------------------- |
+| ChatGPT          | Web/Desktop  | 2022            | Single (OpenAI)         | None                 | Basic (web history) |
+| GitHub Copilot   | IDE Plugin   | 2022            | Single (OpenAI)         | None                 | None                |
+| Claude.ai        | Web          | 2023            | Single (Anthropic)      | None                 | Basic               |
+| Claude Code      | CLI Agent    | 2024            | Single (Anthropic)      | None                 | File-based          |
+| Shell-GPT        | CLI Wrapper  | 2023            | Dual (OpenAI/Anthropic) | None                 | None                |
+| Warp             | Terminal     | 2023            | Single (OpenAI)         | None                 | None                |
+| Cursor           | AI Editor    | 2023            | Multi (limited)         | None                 | Workspace-based     |
+| Gemini Assistant | Web/IDE      | 2024            | Single (Google)         | None                 | Basic               |
+| CodeGemma        | IDE Plugin   | 2024            | Single (Google)         | None                 | None                |
+| DuckOps          | Terminal TUI | 2025            | 25+ providers           | 15+ embedded tools   | Full SQLite-backed  |
+
 
 ### 3.2.2 Feature Comparison Matrix
 
-| Feature | ChatGPT | Copilot | Claude Code | Shell-GPT | Cursor | DuckOps |
-|---------|---------|---------|-------------|-----------|--------|---------|
-| Multi-provider | ❌ | ❌ | ❌ | ⚠️ 2 | ⚠️ Limited | ✅ 25+ |
-| Terminal native | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
-| Rich TUI | ✅ (desktop) | ❌ | ❌ | ❌ | ✅ (editor) | ✅ |
-| Session persistence | ✅ (web) | ❌ | ⚠️ | ❌ | ✅ | ✅ |
-| File operations | ❌ | ⚠️ | ✅ | ❌ | ✅ | ✅ |
-| Shell execution | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ |
-| Security scanning | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| MCP support | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| LSP integration | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| Context compression | ❌ | ❌ | ⚠️ | ❌ | ❌ | ✅ |
-| Docker sandbox | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Skills framework | ✅ (GPTs) | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Cost tracking | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Open source | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Offline capable | ❌ | ❌ | ❌ | ⚠️ | ❌ | ✅ |
+
+| Feature             | ChatGPT     | Copilot | Claude Code | Shell-GPT | Cursor     | DuckOps |
+| ------------------- | ----------- | ------- | ----------- | --------- | ---------- | ------- |
+| Multi-provider      | ❌           | ❌       | ❌           | ⚠️ 2      | ⚠️ Limited | ✅ 25+   |
+| Terminal native     | ❌           | ❌       | ✅           | ✅         | ❌          | ✅       |
+| Rich TUI            | ✅ (desktop) | ❌       | ❌           | ❌         | ✅ (editor) | ✅       |
+| Session persistence | ✅ (web)     | ❌       | ⚠️          | ❌         | ✅          | ✅       |
+| File operations     | ❌           | ⚠️      | ✅           | ❌         | ✅          | ✅       |
+| Shell execution     | ❌           | ❌       | ✅           | ✅         | ❌          | ✅       |
+| Security scanning   | ❌           | ❌       | ❌           | ❌         | ❌          | ✅       |
+| MCP support         | ❌           | ❌       | ❌           | ❌         | ❌          | ✅       |
+| LSP integration     | ❌           | ✅       | ❌           | ❌         | ✅          | ✅       |
+| Context compression | ❌           | ❌       | ⚠️          | ❌         | ❌          | ✅       |
+| Docker sandbox      | ❌           | ❌       | ❌           | ❌         | ❌          | ✅       |
+| Skills framework    | ✅ (GPTs)    | ❌       | ❌           | ❌         | ❌          | ✅       |
+| Cost tracking       | ❌           | ❌       | ❌           | ❌         | ❌          | ✅       |
+| Open source         | ❌           | ❌       | ❌           | ✅         | ❌          | ✅       |
+| Offline capable     | ❌           | ❌       | ❌           | ⚠️        | ❌          | ✅       |
+
 
 ## 3.3 Limitations of Existing Solutions
 
@@ -184,7 +199,10 @@ graph LR
     end
 ```
 
+
+
 This creates:
+
 - **Single point of failure**: Provider outage stops all AI assistance
 - **No price optimization**: Cannot choose cheapest model for simple tasks
 - **No capability matching**: Cannot use specialized models for specific tasks
@@ -192,17 +210,22 @@ This creates:
 
 ### 3.3.2 No Security Integration
 
+### No Security Integration
+
 No major AI coding tool includes native security assessment capabilities:
 
-| Tool | Can it scan for vulnerabilities? | Can it run Nmap? | Can it interpret security results? |
-|------|--------------------------------|-------------------|-------------------------------------|
-| ChatGPT | ❌ | ❌ | ⚠️ (manual paste) |
-| Copilot | ❌ | ❌ | ❌ |
-| Claude Code | ❌ | ❌ | ⚠️ (manual paste) |
-| Shell-GPT | ❌ | ❌ | ❌ |
-| Cursor | ❌ | ❌ | ❌ |
+
+| Tool        | Can it scan for vulnerabilities? | Can it run Nmap? | Can it interpret security results? |
+| ----------- | -------------------------------- | ---------------- | ---------------------------------- |
+| ChatGPT     | ❌                                | ❌                | ⚠️ (manual paste)                  |
+| Copilot     | ❌                                | ❌                | ❌                                  |
+| Claude Code | ❌                                | ❌                | ⚠️ (manual paste)                  |
+| Shell-GPT   | ❌                                | ❌                | ❌                                  |
+| Cursor      | ❌                                | ❌                | ❌                                  |
+
 
 This forces developers to:
+
 1. Install and configure security tools separately
 2. Learn each tool's CLI syntax
 3. Run scans manually
@@ -225,6 +248,8 @@ graph TB
     PARTIAL --> |Cannot render rich output| FULL
 ```
 
+
+
 - **Web/Desktop apps**: Cannot execute commands, read files, or see terminal output
 - **CLI wrappers**: Can execute commands but have limited output rendering
 - **IDE plugins**: Limited to file operations within the editor
@@ -234,14 +259,17 @@ graph TB
 
 Most solutions lack persistent session management:
 
-| Solution | Cross-Session Persistence | Resumable Sessions | Context Across Restarts |
-|----------|--------------------------|-------------------|------------------------|
-| ChatGPT | ✅ (web history) | ✅ | ❌ (new chat loses context) |
-| Claude Code | ❌ | ❌ | ❌ |
-| Shell-GPT | ❌ | ❌ | ❌ |
-| DuckOps | ✅ (SQLite) | ✅ | ✅ (full history + summary) |
+
+| Solution    | Cross-Session Persistence | Resumable Sessions | Context Across Restarts    |
+| ----------- | ------------------------- | ------------------ | -------------------------- |
+| ChatGPT     | ✅ (web history)           | ✅                  | ❌ (new chat loses context) |
+| Claude Code | ❌                         | ❌                  | ❌                          |
+| Shell-GPT   | ❌                         | ❌                  | ❌                          |
+| DuckOps     | ✅ (SQLite)                | ✅                  | ✅ (full history + summary) |
+
 
 Without persistence:
+
 - Each new session starts from zero context
 - Project structure must be re-explained
 - Previous decisions and rationale are lost
@@ -269,27 +297,28 @@ quadrantChart
     DuckOps: [0.9, 0.95]
 ```
 
+
+
 ### 3.4.2 Identified Gaps
 
-| Gap | Description | Existing Solutions | DuckOps Solution |
-|-----|-------------|-------------------|------------------|
-| **G1** | Terminal-native AI with full tool access | Claude Code (partial) | Full terminal TUI with all tools |
-| **G2** | Embedded security assessment | None | 15+ integrated security tools |
-| **G3** | Multi-provider orchestration | None unified | 25+ providers, seamless switching |
-| **G4** | Persistent context management | Basic (ChatGPT) | SQLite-backed + auto-summarization |
-| **G5** | Rich terminal rendering | None | Markdown, syntax highlighting, images |
-| **G6** | Extensible tool/plugin system | GPTs (limited) | MCP + skills framework |
-| **G7** | Containerized sandbox execution | None | Full Docker integration |
-| **G8** | Client/server architecture | None | Unix socket API |
+
+| Gap    | Description                              | Existing Solutions    | DuckOps Solution                      |
+| ------ | ---------------------------------------- | --------------------- | ------------------------------------- |
+| **G1** | Terminal-native AI with full tool access | Claude Code (partial) | Full terminal TUI with all tools      |
+| **G2** | Embedded security assessment             | None                  | 15+ integrated security tools         |
+| **G3** | Multi-provider orchestration             | None unified          | 25+ providers, seamless switching     |
+| **G4** | Persistent context management            | Basic (ChatGPT)       | SQLite-backed + auto-summarization    |
+| **G5** | Rich terminal rendering                  | None                  | Markdown, syntax highlighting, images |
+| **G6** | Extensible tool/plugin system            | GPTs (limited)        | MCP + skills framework                |
+| **G7** | Containerized sandbox execution          | None                  | Full Docker integration               |
+| **G8** | Client/server architecture               | None                  | Unix socket API                       |
+
 
 ### 3.4.3 Why Existing Solutions Don't Bridge the Gap
 
 1. **Technical complexity**: Building a full TUI + multi-provider + security + MCP requires expertise across multiple domains (terminal UI, LLM APIs, security tooling, distributed systems).
-
 2. **Performance constraints**: Go was chosen specifically for its performance characteristics — fast startup, low memory footprint, and excellent concurrency support. Python/node.js alternatives would struggle with TUI performance.
-
 3. **Ecosystem maturity**: The Charm ecosystem (Bubble Tea, Lipgloss, Glamour, Catwalk, Fantasy) provides the building blocks for terminal UI and AI provider abstraction, significantly reducing development time.
-
 4. **Security domain expertise**: Integrating security tools requires understanding of each tool's API, output formats, and best practices — knowledge not commonly found in AI tooling teams.
 
 ## 3.5 Pain Points
@@ -319,6 +348,7 @@ Terminal: $ go test
 **Cost per iteration**: 2-5 minutes, repeated 3-5 times per debugging session.
 
 **With DuckOps**:
+
 ```
 Developer types: "Fix the CalculateTotal test failure"
 Assistant reads test output, source code, and implements fix
@@ -378,6 +408,8 @@ sequenceDiagram
     Note over AS2: Wastes 10-15 minutes regaining context
 ```
 
+
+
 **With DuckOps**: The session is persisted. Opening the same session resumes with full context.
 
 ## 3.6 Real-World Examples
@@ -387,6 +419,7 @@ sequenceDiagram
 **Scenario**: A Go web service is returning 500 errors for a specific API endpoint. The developer needs to investigate.
 
 **Without DuckOps**:
+
 ```
 1. See error in terminal logs
 2. Open browser, search for error message
@@ -402,6 +435,7 @@ Time: 25-45 minutes
 ```
 
 **With DuckOps**:
+
 ```
 User: "Investigate the 500 errors on /api/users endpoint"
 Assistant: Reads logs, traces code path, identifies issue
@@ -416,6 +450,7 @@ Time: 3-5 minutes
 **Scenario**: A company needs to run a security audit before a client deployment.
 
 **Without DuckOps**:
+
 ```
 1. Install Nmap: apt-get install nmap
 2. Run Nmap scan: nmap -sV -sC target.com
@@ -432,6 +467,7 @@ Time: 4-8 hours (depending on tool familiarity)
 ```
 
 **With DuckOps**:
+
 ```
 User: "Run a full security assessment on target.com"
 Assistant orchestrates:
@@ -452,6 +488,7 @@ Time: 15-30 minutes
 **Scenario**: Rename a widely-used function across a large codebase.
 
 **Without DuckOps**:
+
 ```
 1. IDE: Find all references (slow for large codebase)
 2. Manual: Check each reference for context
@@ -464,6 +501,7 @@ Time: 30-60 minutes
 ```
 
 **With DuckOps**:
+
 ```
 User: "Rename 'calculateTotal' to 'computeTotalPrice' across the codebase"
 Assistant: Greps all occurrences, checks context, makes edits

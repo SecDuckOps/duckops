@@ -10,14 +10,15 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/catwalk/pkg/catwalk"
-	mcptools "github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/history"
-	"github.com/SecDuckOps/duckops/internal/lsp"
-	"github.com/SecDuckOps/duckops/internal/message"
-	"github.com/SecDuckOps/duckops/internal/oauth"
-	"github.com/SecDuckOps/duckops/internal/permission"
-	"github.com/SecDuckOps/duckops/internal/session"
+	mcptools "github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/history"
+	"github.com/SecDuckOps/duckopsinternal/lsp"
+	"github.com/SecDuckOps/duckopsinternal/message"
+	"github.com/SecDuckOps/duckopsinternal/oauth"
+	"github.com/SecDuckOps/duckopsinternal/permission"
+	"github.com/SecDuckOps/duckopsinternal/session"
+	"github.com/SecDuckOps/duckopsinternal/skills"
 )
 
 // LSPClientInfo holds information about an LSP client's state. This is
@@ -67,6 +68,12 @@ type Workspace interface {
 	DeleteSession(ctx context.Context, sessionID string) error
 	CreateAgentToolSessionID(messageID, toolCallID string) string
 	ParseAgentToolSessionID(sessionID string) (messageID string, toolCallID string, ok bool)
+	// SetCurrentSession reports the session this client is currently
+	// viewing. Empty sessionID clears the entry (e.g. landing screen).
+	// In single-client local mode this is a no-op. In client/server
+	// mode it informs the server's per-client presence map so other
+	// observers can compute attached-client counts per session.
+	SetCurrentSession(ctx context.Context, sessionID string) error
 
 	// Messages
 	ListMessages(ctx context.Context, sessionID string) ([]message.Message, error)
@@ -89,9 +96,17 @@ type Workspace interface {
 	GetDefaultSmallModel(providerID string) config.SelectedModel
 
 	// Permissions
-	PermissionGrant(perm permission.PermissionRequest)
-	PermissionGrantPersistent(perm permission.PermissionRequest)
-	PermissionDeny(perm permission.PermissionRequest)
+	//
+	// PermissionGrant, PermissionGrantPersistent, and PermissionDeny
+	// return true if the call resolved the pending request and false if
+	// it had already been resolved by another subscriber (or is no
+	// longer pending). A false return is not an error; the modal can
+	// still close locally because the resolution will arrive via the
+	// PermissionNotification event stream regardless of which client
+	// won the race.
+	PermissionGrant(perm permission.PermissionRequest) bool
+	PermissionGrantPersistent(perm permission.PermissionRequest) bool
+	PermissionDeny(perm permission.PermissionRequest) bool
 	PermissionSkipRequests() bool
 	PermissionSetSkipRequests(skip bool)
 
@@ -127,6 +142,8 @@ type Workspace interface {
 	ProjectNeedsInitialization() (bool, error)
 	MarkProjectInitialized() error
 	InitializePrompt() (string, error)
+	ListSkills(ctx context.Context) ([]skills.CatalogEntry, error)
+	ReadSkill(ctx context.Context, skillID string) ([]byte, skills.SkillReadResult, error)
 
 	// MCP operations (server-side in client mode)
 	MCPGetStates() map[string]mcptools.ClientInfo
@@ -141,91 +158,6 @@ type Workspace interface {
 	// Events
 	Subscribe(program *tea.Program)
 	Shutdown()
-
-	// GraphX - Security Knowledge Graph
-	GraphXInit(ctx context.Context) error
-	GraphXGetStatus() GraphXStatus
-	GraphXGetContext(query string, securityFocused bool) (*GraphXContext, error)
-	GraphXGetThreatModel() (*GraphXThreatModel, error)
-	GraphXGetBlastRadius(nodeID string) (*GraphXBlastResult, error)
-	GraphXSearchNodes(name string) []GraphXNode
-	GraphXWatch(enabled bool) error
-	GraphXShutdown()
-}
-
-type GraphXStatus struct {
-	State        string `json:"state"`
-	NodesCount   int    `json:"nodes_count"`
-	EdgesCount   int    `json:"edges_count"`
-	WatchEnabled bool   `json:"watch_enabled"`
-	LastUpdated  string `json:"last_updated"`
-}
-
-type GraphXContext struct {
-	Summary    string     `json:"summary"`
-	FilePaths  []string   `json:"file_paths"`
-	Nodes      []GraphXNode `json:"nodes"`
-	TokenCount int        `json:"token_count"`
-}
-
-type GraphXNode struct {
-	ID        string   `json:"id"`
-	Name      string   `json:"name"`
-	Type      string   `json:"type"`
-	FilePath  string   `json:"file_path"`
-	RiskScore float64  `json:"risk_score"`
-	Tags      []string `json:"tags"`
-}
-
-type GraphXThreatModel struct {
-	Summary       *ThreatSummary `json:"summary"`
-	EntryPoints   []GraphXNode   `json:"entry_points"`
-	TrustBoundaries []string     `json:"trust_boundaries"`
-	AttackPaths   []AttackPath   `json:"attack_paths"`
-	ExecutionFlows []ExecutionFlow `json:"execution_flows"`
-}
-
-type ThreatSummary struct {
-	Spoofing   int `json:"spoofing"`
-	Tampering  int `json:"tampering"`
-	Repudiation int `json:"repudiation"`
-	Disclosure int `json:"disclosure"`
-	DoS        int `json:"dos"`
-	EoP        int `json:"eop"`
-	Total      int `json:"total"`
-}
-
-type AttackPath struct {
-	Source     string   `json:"source"`
-	Target     string   `json:"target"`
-	Path       []string `json:"path"`
-	Complexity string   `json:"complexity"`
-	Impact     string   `json:"impact"`
-}
-
-type ExecutionFlow struct {
-	ID            string     `json:"id"`
-	Name          string     `json:"name"`
-	EntryPoint    string     `json:"entry_point"`
-	Steps         []FlowStep `json:"steps"`
-	AuthRequired  bool       `json:"auth_required"`
-	HandlesPII    bool       `json:"handles_pii"`
-	RiskLevel     string     `json:"risk_level"`
-}
-
-type FlowStep struct {
-	NodeID   string `json:"node_id"`
-	NodeName string `json:"node_name"`
-	Type     string `json:"type"`
-	Action   string `json:"action"`
-}
-
-type GraphXBlastResult struct {
-	AffectedNodes  []GraphXNode `json:"affected_nodes"`
-	AuthFlows      []string     `json:"auth_flows"`
-	ImpactedAPIs   []string     `json:"impacted_apis"`
-	RiskScore      float64      `json:"risk_score"`
-	CriticalPath   []string     `json:"critical_path"`
 }
 
 // MCPResourceContents holds the contents of an MCP resource.

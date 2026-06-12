@@ -12,19 +12,18 @@ import (
 	"charm.land/fantasy"
 	"charm.land/fantasy/providers/openaicompat"
 	"charm.land/x/vcr"
+	"github.com/SecDuckOps/duckopsinternal/agent/prompt"
+	"github.com/SecDuckOps/duckopsinternal/agent/tools"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckopsinternal/db"
+	"github.com/SecDuckOps/duckopsinternal/filetracker"
+	"github.com/SecDuckOps/duckopsinternal/history"
+	"github.com/SecDuckOps/duckopsinternal/lsp"
+	"github.com/SecDuckOps/duckopsinternal/message"
+	"github.com/SecDuckOps/duckopsinternal/permission"
+	"github.com/SecDuckOps/duckopsinternal/session"
 	"github.com/stretchr/testify/require"
-
-	"github.com/SecDuckOps/duckops/internal/agent/prompt"
-	"github.com/SecDuckOps/duckops/internal/agent/tools"
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/csync"
-	"github.com/SecDuckOps/duckops/internal/db"
-	"github.com/SecDuckOps/duckops/internal/filetracker"
-	"github.com/SecDuckOps/duckops/internal/history"
-	"github.com/SecDuckOps/duckops/internal/lsp"
-	"github.com/SecDuckOps/duckops/internal/message"
-	"github.com/SecDuckOps/duckops/internal/permission"
-	"github.com/SecDuckOps/duckops/internal/session"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -52,7 +51,7 @@ func hyperBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := openaicompat.New(
 			openaicompat.WithBaseURL("https://hyper.charm.land/v1"),
-			openaicompat.WithAPIKey(os.Getenv("DUCKOPS_HYPER_API_KEY")),
+			openaicompat.WithAPIKey(os.Getenv("duckops_HYPER_API_KEY")),
 			openaicompat.WithHTTPClient(&http.Client{Transport: r}),
 		)
 		if err != nil {
@@ -116,7 +115,7 @@ func testSessionAgent(env fakeEnv, large, small fantasy.LanguageModel, systemPro
 		LargeModel:   largeModel,
 		SmallModel:   smallModel,
 		SystemPrompt: systemPrompt,
-		Isduck:       true,
+		IsYolo:       true,
 		Sessions:     env.sessions,
 		Messages:     env.messages,
 		Tools:        tools,

@@ -4,8 +4,7 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-
-	"github.com/SecDuckOps/duckops/internal/event"
+	"github.com/SecDuckOps/duckopsinternal/event"
 )
 
 func (a *sessionAgent) eventPromptSent(sessionID string) {
@@ -47,6 +46,6 @@ func (a *sessionAgent) eventCommon(sessionID string, model Model) []any {
 		"model", m.Model,
 		"reasoning effort", m.ReasoningEffort,
 		"thinking mode", m.Think,
-		"duck mode", a.isduck,
+		"yolo mode", a.isYolo,
 	}
 }

@@ -10,8 +10,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/csync"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -33,14 +33,11 @@ func Tools() iter.Seq2[string, []*Tool] {
 }
 
 // RunTool runs an MCP tool with the given input parameters.
-// It translates paths according to the MCP server's path mapping before sending.
 func RunTool(ctx context.Context, cfg *config.ConfigStore, name, toolName string, input string) (ToolResult, error) {
 	var args map[string]any
 	if err := json.Unmarshal([]byte(input), &args); err != nil {
 		return ToolResult{}, fmt.Errorf("error parsing parameters: %s", err)
 	}
-
-	translatedArgs := TranslateToolPaths(name, toolName, args)
 
 	c, err := getOrRenewClient(ctx, cfg, name)
 	if err != nil {
@@ -48,7 +45,7 @@ func RunTool(ctx context.Context, cfg *config.ConfigStore, name, toolName string
 	}
 	result, err := c.CallTool(ctx, &mcp.CallToolParams{
 		Name:      toolName,
-		Arguments: translatedArgs,
+		Arguments: args,
 	})
 	if err != nil {
 		return ToolResult{}, err
@@ -145,7 +142,10 @@ func getTools(ctx context.Context, session *ClientSession) ([]*Tool, error) {
 }
 
 func updateTools(cfg *config.ConfigStore, name string, tools []*Tool) int {
-	tools = filterDisabledTools(cfg, name, tools)
+	mcpCfg, ok := cfg.Config().MCP[name]
+	if ok {
+		tools = filterTools(mcpCfg, tools)
+	}
 	if len(tools) == 0 {
 		allTools.Del(name)
 		return 0
@@ -154,20 +154,30 @@ func updateTools(cfg *config.ConfigStore, name string, tools []*Tool) int {
 	return len(tools)
 }
 
-// filterDisabledTools removes tools that are disabled via config.
-func filterDisabledTools(cfg *config.ConfigStore, mcpName string, tools []*Tool) []*Tool {
-	mcpCfg, ok := cfg.Config().MCP[mcpName]
-	if !ok || len(mcpCfg.DisabledTools) == 0 {
-		return tools
+// filterTools filters tools based on enabled_tools (allow list) and
+// disabled_tools (deny list) from the MCP config.
+func filterTools(mcpCfg config.MCPConfig, tools []*Tool) []*Tool {
+	if len(mcpCfg.EnabledTools) > 0 {
+		filtered := make([]*Tool, 0, len(mcpCfg.EnabledTools))
+		for _, tool := range tools {
+			if slices.Contains(mcpCfg.EnabledTools, tool.Name) {
+				filtered = append(filtered, tool)
+			}
+		}
+		tools = filtered
 	}
 
-	filtered := make([]*Tool, 0, len(tools))
-	for _, tool := range tools {
-		if !slices.Contains(mcpCfg.DisabledTools, tool.Name) {
-			filtered = append(filtered, tool)
+	if len(mcpCfg.DisabledTools) > 0 {
+		filtered := make([]*Tool, 0, len(tools))
+		for _, tool := range tools {
+			if !slices.Contains(mcpCfg.DisabledTools, tool.Name) {
+				filtered = append(filtered, tool)
+			}
 		}
+		tools = filtered
 	}
-	return filtered
+
+	return tools
 }
 
 // ensureRawBytes normalizes MCP media data into raw binary bytes.

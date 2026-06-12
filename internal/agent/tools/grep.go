@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
@@ -19,9 +20,9 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/csync"
-	"github.com/SecDuckOps/duckops/internal/fsext"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckopsinternal/fsext"
 )
 
 // regexCache provides thread-safe caching of compiled regex patterns
@@ -89,8 +90,23 @@ const (
 	maxGrepContentWidth = 500
 )
 
-//go:embed grep.md
-var grepDescription []byte
+//go:embed grep.md.tpl
+var grepDescriptionTmpl []byte
+
+var grepDescriptionTpl = template.Must(
+	template.New("grepDescription").
+		Parse(string(grepDescriptionTmpl)),
+)
+
+type grepDescriptionData struct {
+	MaxResults int
+}
+
+func grepDescription() string {
+	return renderTemplate(grepDescriptionTpl, grepDescriptionData{
+		MaxResults: 100,
+	})
+}
 
 // escapeRegexPattern escapes special regex characters so they're treated as literal characters
 func escapeRegexPattern(pattern string) string {
@@ -107,7 +123,7 @@ func escapeRegexPattern(pattern string) string {
 func NewGrepTool(workingDir string, config config.ToolGrep) fantasy.AgentTool {
 	return fantasy.NewAgentTool(
 		GrepToolName,
-		FirstLineDescription(grepDescription),
+		grepDescription(),
 		func(ctx context.Context, params GrepParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.Pattern == "" {
 				return fantasy.NewTextErrorResponse("pattern is required"), nil
@@ -170,7 +186,8 @@ func NewGrepTool(workingDir string, config config.ToolGrep) fantasy.AgentTool {
 					Truncated:       truncated,
 				},
 			), nil
-		})
+		},
+	)
 }
 
 func searchFiles(ctx context.Context, pattern, rootPath, include string, limit int) ([]grepMatch, bool, error) {
@@ -281,7 +298,7 @@ func searchFilesWithRegex(pattern, rootPath, include string) ([]grepMatch, error
 		}
 	}
 
-	// Create walker with gitignore and duckignore support
+	// Create walker with gitignore and duckopsignore support
 	walker := fsext.NewFastGlobWalker(rootPath)
 
 	err = filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
@@ -355,18 +372,26 @@ func fileContainsPattern(filePath string, pattern *regexp.Regexp) (bool, int, in
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
+	reader := bufio.NewReader(file)
 	lineNum := 0
-	for scanner.Scan() {
+	for {
+		line, err := reader.ReadString('\n')
 		lineNum++
-		line := scanner.Text()
+		line = strings.TrimSuffix(line, "\n")
+		line = strings.TrimSuffix(line, "\r")
 		if loc := pattern.FindStringIndex(line); loc != nil {
 			charNum := loc[0] + 1
 			return true, lineNum, charNum, line, nil
 		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return false, 0, 0, "", err
+		}
 	}
 
-	return false, 0, 0, "", scanner.Err()
+	return false, 0, 0, "", nil
 }
 
 // isTextFile checks if a file is a text file by examining its MIME type.

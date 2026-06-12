@@ -18,27 +18,27 @@ import (
 	"charm.land/catwalk/pkg/catwalk"
 	"charm.land/fantasy"
 	"charm.land/lipgloss/v2"
-	"github.com/SecDuckOps/duckops/internal/agent"
-	"github.com/SecDuckOps/duckops/internal/agent/notify"
-	"github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/db"
-	"github.com/SecDuckOps/duckops/internal/event"
-	"github.com/SecDuckOps/duckops/internal/filetracker"
-	"github.com/SecDuckOps/duckops/internal/format"
-	"github.com/SecDuckOps/duckops/internal/history"
-	"github.com/SecDuckOps/duckops/internal/log"
-	"github.com/SecDuckOps/duckops/internal/lsp"
-	"github.com/SecDuckOps/duckops/internal/message"
-	"github.com/SecDuckOps/duckops/internal/permission"
-	"github.com/SecDuckOps/duckops/internal/pubsub"
-	"github.com/SecDuckOps/duckops/internal/session"
-	"github.com/SecDuckOps/duckops/internal/shell"
-	"github.com/SecDuckOps/duckops/internal/skills"
-	"github.com/SecDuckOps/duckops/internal/ui/anim"
-	"github.com/SecDuckOps/duckops/internal/ui/styles"
-	"github.com/SecDuckOps/duckops/internal/update"
-	"github.com/SecDuckOps/duckops/internal/version"
+	"github.com/SecDuckOps/duckopsinternal/agent"
+	"github.com/SecDuckOps/duckopsinternal/agent/notify"
+	"github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/db"
+	"github.com/SecDuckOps/duckopsinternal/event"
+	"github.com/SecDuckOps/duckopsinternal/filetracker"
+	"github.com/SecDuckOps/duckopsinternal/format"
+	"github.com/SecDuckOps/duckopsinternal/history"
+	"github.com/SecDuckOps/duckopsinternal/log"
+	"github.com/SecDuckOps/duckopsinternal/lsp"
+	"github.com/SecDuckOps/duckopsinternal/message"
+	"github.com/SecDuckOps/duckopsinternal/permission"
+	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckopsinternal/session"
+	"github.com/SecDuckOps/duckopsinternal/shell"
+	"github.com/SecDuckOps/duckopsinternal/skills"
+	"github.com/SecDuckOps/duckopsinternal/ui/anim"
+	"github.com/SecDuckOps/duckopsinternal/ui/styles"
+	"github.com/SecDuckOps/duckopsinternal/update"
+	"github.com/SecDuckOps/duckopsinternal/version"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/charmtone"
 	"github.com/charmbracelet/x/term"
@@ -62,6 +62,8 @@ type App struct {
 
 	LSPManager *lsp.Manager
 
+	Skills *skills.Manager
+
 	config *config.ConfigStore
 
 	serviceEventsWG *sync.WaitGroup
@@ -73,10 +75,20 @@ type App struct {
 	globalCtx          context.Context
 	cleanupFuncs       []func(context.Context) error
 	agentNotifications *pubsub.Broker[notify.Notification]
+	// runCompletions is the authoritative per-run completion signal,
+	// emitted once per top-level agent turn after all message
+	// updates have been flushed. Bridged into app.events so SSE
+	// subscribers (notably `duckops run` in client/server mode) can
+	// drive their exit on a deterministic, payload-bearing event
+	// instead of guessing from message finish parts.
+	runCompletions *pubsub.Broker[notify.RunComplete]
 }
 
-// New initializes a new application instance.
-func New(ctx context.Context, conn *sql.DB, store *config.ConfigStore) (*App, error) {
+// New initializes a new application instance. skillsMgr carries the
+// per-workspace skill discovery results computed by the caller; the
+// caller is responsible for constructing it (typically via
+// skills.NewManager + skills.DiscoverFromConfig).
+func New(ctx context.Context, conn *sql.DB, store *config.ConfigStore, skillsMgr *skills.Manager) (*App, error) {
 	q := db.New(conn)
 	sessions := session.NewService(q, conn)
 	messages := message.NewService(q)
@@ -95,6 +107,7 @@ func New(ctx context.Context, conn *sql.DB, store *config.ConfigStore) (*App, er
 		Permissions: permission.NewPermissionService(store.WorkingDir(), skipPermissionsRequests, allowedTools),
 		FileTracker: filetracker.NewService(q),
 		LSPManager:  lsp.NewManager(store),
+		Skills:      skillsMgr,
 
 		globalCtx: ctx,
 
@@ -104,6 +117,7 @@ func New(ctx context.Context, conn *sql.DB, store *config.ConfigStore) (*App, er
 		serviceEventsWG:    &sync.WaitGroup{},
 		tuiWG:              &sync.WaitGroup{},
 		agentNotifications: pubsub.NewBroker[notify.Notification](),
+		runCompletions:     pubsub.NewBroker[notify.RunComplete](),
 	}
 
 	app.setupEvents()
@@ -113,10 +127,12 @@ func New(ctx context.Context, conn *sql.DB, store *config.ConfigStore) (*App, er
 
 	go mcp.Initialize(ctx, app.Permissions, store)
 
-	// cleanup database upon app shutdown
+	// Release the shared database connection on shutdown. The pool
+	// closes the underlying *sql.DB when the last reference is released.
+	dataDir := cfg.Options.DataDirectory
 	app.cleanupFuncs = append(
 		app.cleanupFuncs,
-		func(context.Context) error { return conn.Close() },
+		func(context.Context) error { return db.Release(dataDir) },
 		func(ctx context.Context) error { return mcp.Close(ctx) },
 	)
 
@@ -167,6 +183,14 @@ func (app *App) SendEvent(msg tea.Msg) {
 // AgentNotifications returns the broker for agent notification events.
 func (app *App) AgentNotifications() *pubsub.Broker[notify.Notification] {
 	return app.agentNotifications
+}
+
+// RunCompletions returns the broker for the authoritative per-run
+// terminal RunComplete events. The dispatcher (backend.runAgent) uses
+// it to emit a reliable terminal event when a run fails before the
+// coordinator could publish one of its own.
+func (app *App) RunCompletions() *pubsub.Broker[notify.RunComplete] {
+	return app.runCompletions
 }
 
 // resolveSession resolves which session to use for a non-interactive run
@@ -477,9 +501,12 @@ func (app *App) setupEvents() {
 	setupSubscriber(ctx, app.serviceEventsWG, "permissions-notifications", app.Permissions.SubscribeNotifications, app.events)
 	setupSubscriber(ctx, app.serviceEventsWG, "history", app.History.Subscribe, app.events)
 	setupSubscriber(ctx, app.serviceEventsWG, "agent-notifications", app.agentNotifications.Subscribe, app.events)
+	setupSubscriberMustDeliver(ctx, app.serviceEventsWG, "run-completions", app.runCompletions.Subscribe, app.events)
 	setupSubscriber(ctx, app.serviceEventsWG, "mcp", mcp.SubscribeEvents, app.events)
 	setupSubscriber(ctx, app.serviceEventsWG, "lsp", SubscribeLSPEvents, app.events)
-	setupSubscriber(ctx, app.serviceEventsWG, "skills", skills.SubscribeEvents, app.events)
+	if app.Skills != nil {
+		setupSubscriber(ctx, app.serviceEventsWG, "skills", app.Skills.SubscribeEvents, app.events)
+	}
 	cleanupFunc := func(context.Context) error {
 		cancel()
 		app.serviceEventsWG.Wait()
@@ -514,6 +541,38 @@ func setupSubscriber[T any](
 	})
 }
 
+// setupSubscriberMustDeliver is the bounded-blocking fan-in variant of
+// setupSubscriber: it re-publishes upstream events onto the shared
+// app.events broker using PublishMustDeliver instead of Publish. Use
+// this for terminal events that subscribers cannot tolerate losing —
+// notably RunComplete, which is the authoritative end-of-run signal
+// for `duckops run`. A lossy fan-in here can drop the only terminal
+// event and hang non-interactive clients waiting on it.
+func setupSubscriberMustDeliver[T any](
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	name string,
+	subscriber func(context.Context) <-chan pubsub.Event[T],
+	broker *pubsub.Broker[tea.Msg],
+) {
+	wg.Go(func() {
+		subCh := subscriber(ctx)
+		for {
+			select {
+			case event, ok := <-subCh:
+				if !ok {
+					slog.Debug("Subscription channel closed", "name", name)
+					return
+				}
+				broker.PublishMustDeliver(ctx, pubsub.UpdatedEvent, tea.Msg(event))
+			case <-ctx.Done():
+				slog.Debug("Subscription cancelled", "name", name)
+				return
+			}
+		}
+	})
+}
+
 func (app *App) InitCoderAgent(ctx context.Context) error {
 	coderAgentCfg := app.config.Config().Agents[config.AgentCoder]
 	if coderAgentCfg.ID == "" {
@@ -530,6 +589,8 @@ func (app *App) InitCoderAgent(ctx context.Context) error {
 		app.FileTracker,
 		app.LSPManager,
 		app.agentNotifications,
+		app.runCompletions,
+		app.Skills,
 	)
 	if err != nil {
 		slog.Error("Failed to create coder agent", "err", err)
@@ -582,12 +643,22 @@ func (app *App) Shutdown() {
 		app.AgentCoordinator.CancelAll()
 	}
 
-	// Now run remaining cleanup tasks in parallel.
-	var wg sync.WaitGroup
-
 	// Shared shutdown context for all timeout-bounded cleanup.
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	// Drain any debounced message updates before the DB-close cleanup
+	// runs in the parallel block below. message.Service buffers
+	// streaming deltas (see internal/message/message.go) and we must
+	// land them while the connection is still open.
+	if app.Messages != nil {
+		if err := app.Messages.FlushAll(shutdownCtx); err != nil {
+			slog.Error("Failed to flush pending message updates on shutdown", "error", err)
+		}
+	}
+
+	// Now run remaining cleanup tasks in parallel.
+	var wg sync.WaitGroup
 
 	// Send exit event
 	wg.Go(func() {

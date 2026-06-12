@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/SecDuckOps/duckops/internal/shell"
 	"github.com/tidwall/gjson"
 )
 
@@ -52,22 +51,23 @@ func BuildPayload(eventName, sessionID, cwd, toolName, toolInputJSON string) []b
 // It includes all current process env vars plus hook-specific ones.
 func BuildEnv(eventName, toolName, sessionID, cwd, projectDir, toolInputJSON string) []string {
 	env := os.Environ()
-	env = append(env, shell.DuckOpsEnvMarkers()...)
-	env = append(env,
-		fmt.Sprintf("DUCKOPS_EVENT=%s", eventName),
-		fmt.Sprintf("DUCKOPS_TOOL_NAME=%s", toolName),
-		fmt.Sprintf("DUCKOPS_SESSION_ID=%s", sessionID),
-		fmt.Sprintf("DUCKOPS_CWD=%s", cwd),
-		fmt.Sprintf("DUCKOPS_PROJECT_DIR=%s", projectDir),
+	env = append(env, shell.duckopsEnvMarkers()...)
+	env = append(
+		env,
+		fmt.Sprintf("duckops_EVENT=%s", eventName),
+		fmt.Sprintf("duckops_TOOL_NAME=%s", toolName),
+		fmt.Sprintf("duckops_SESSION_ID=%s", sessionID),
+		fmt.Sprintf("duckops_CWD=%s", cwd),
+		fmt.Sprintf("duckops_PROJECT_DIR=%s", projectDir),
 	)
 
 	// Extract tool-specific env vars from the JSON input.
 	if toolInputJSON != "" {
 		if cmd := gjson.Get(toolInputJSON, "command"); cmd.Exists() {
-			env = append(env, fmt.Sprintf("DUCKOPS_TOOL_INPUT_COMMAND=%s", cmd.String()))
+			env = append(env, fmt.Sprintf("duckops_TOOL_INPUT_COMMAND=%s", cmd.String()))
 		}
 		if fp := gjson.Get(toolInputJSON, "file_path"); fp.Exists() {
-			env = append(env, fmt.Sprintf("DUCKOPS_TOOL_INPUT_FILE_PATH=%s", fp.String()))
+			env = append(env, fmt.Sprintf("duckops_TOOL_INPUT_FILE_PATH=%s", fp.String()))
 		}
 	}
 
@@ -75,7 +75,7 @@ func BuildEnv(eventName, toolName, sessionID, cwd, projectDir, toolInputJSON str
 }
 
 // parseStdout parses the JSON output from a hook command's stdout.
-// Supports both DuckOps format and Claude Code format (hookSpecificOutput).
+// Supports both duckops format and Claude Code format (hookSpecificOutput).
 func parseStdout(stdout string) HookResult {
 	stdout = strings.TrimSpace(stdout)
 	if stdout == "" {
@@ -105,7 +105,8 @@ func parseStdout(stdout string) HookResult {
 	}
 
 	if parsed.Version > SupportedOutputVersion {
-		slog.Debug("Hook output declared a newer envelope version than this build supports",
+		slog.Debug(
+			"Hook output declared a newer envelope version than this build supports",
 			"version", parsed.Version,
 			"supported", SupportedOutputVersion,
 		)

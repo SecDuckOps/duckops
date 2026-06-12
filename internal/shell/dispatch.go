@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/SecDuckOps/duckopsinternal/filepathext"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
@@ -51,13 +52,10 @@ func scriptDispatchHandler(blockFuncs []BlockFunc) func(next interp.ExecHandlerF
 				return next(ctx, args)
 			}
 
-			scriptPath := args[0]
 			// Resolve relative paths against the interpreter's cwd, not
 			// the process cwd — hook commands are authored with the hook
 			// Runner's cwd in mind and sub-shells can cd before an exec.
-			if !filepath.IsAbs(scriptPath) {
-				scriptPath = filepath.Join(interp.HandlerCtx(ctx).Dir, scriptPath)
-			}
+			scriptPath := filepathext.SmartJoin(interp.HandlerCtx(ctx).Dir, args[0])
 			probe, err := probeFile(scriptPath)
 			if err != nil {
 				return err
@@ -369,7 +367,7 @@ func parseEnvShebang(rest string) (*shebang, error) {
 
 // runShellSource parses path's contents as POSIX shell and runs it
 // in-process via a nested interp.Runner. It reuses the parent runner's cwd,
-// env, and stdio, and rebuilds the DuckOps handler stack so builtins and the
+// env, and stdio, and rebuilds the duckops handler stack so builtins and the
 // dispatch handler itself remain available to anything the script invokes.
 // Positional parameters ($1, $2, …) come from args[1:].
 //

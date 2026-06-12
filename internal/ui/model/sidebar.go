@@ -78,7 +78,8 @@ func getDynamicHeightLimits(availableHeight, fileCount, lspCount, mcpCount, skil
 		defaultMaxFilesShown    = 1000
 		defaultMaxLSPsShown     = 1000
 		defaultMaxMCPsShown     = 1000
-		defaultMaxSkillsShown   = 1000
+		// defaultMaxSkillsShown   = 1000
+		defaultMaxSkillsShown = 15
 		minAvailableHeightLimit = 10
 	)
 

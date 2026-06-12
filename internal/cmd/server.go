@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/SecDuckOps/duckops/internal/config"
-	duckopslog "github.com/SecDuckOps/duckops/internal/log"
-	"github.com/SecDuckOps/duckops/internal/server"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	duckopslog "github.com/SecDuckOps/duckopsinternal/log"
+	"github.com/SecDuckOps/duckopsinternal/server"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +26,7 @@ func init() {
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Start the DuckOps server",
+	Short: "Start the duckops server",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		dataDir, err := cmd.Flags().GetString("data-dir")
 		if err != nil {
@@ -42,7 +42,12 @@ var serverCmd = &cobra.Command{
 			return fmt.Errorf("failed to load configuration: %v", err)
 		}
 
-		logFile := filepath.Join(config.GlobalCacheDir(), "server-"+safeNameRegexp.ReplaceAllString(serverHost, "_"), "duckops.log")
+		hostURL, err := server.ParseHostURL(serverHost)
+		if err != nil {
+			return fmt.Errorf("invalid server host: %v", err)
+		}
+
+		logFile := filepath.Join(config.GlobalCacheDir(), "server-"+safeHostName(hostURL), "duckops.log")
 
 		if term.IsTerminal(os.Stderr.Fd()) {
 			duckopslog.Setup(logFile, debug, os.Stderr)
@@ -50,14 +55,9 @@ var serverCmd = &cobra.Command{
 			duckopslog.Setup(logFile, debug)
 		}
 
-		hostURL, err := server.ParseHostURL(serverHost)
-		if err != nil {
-			return fmt.Errorf("invalid server host: %v", err)
-		}
-
 		srv := server.NewServer(cfg, hostURL.Scheme, hostURL.Host)
 		srv.SetLogger(slog.Default())
-		slog.Info("Starting DuckOps server...", "addr", serverHost)
+		slog.Info("Starting duckops server...", "addr", serverHost)
 
 		errch := make(chan error, 1)
 		sigch := make(chan os.Signal, 1)

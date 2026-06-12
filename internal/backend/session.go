@@ -3,9 +3,9 @@ package backend
 import (
 	"context"
 
-	"github.com/SecDuckOps/duckops/internal/message"
-	"github.com/SecDuckOps/duckops/internal/proto"
-	"github.com/SecDuckOps/duckops/internal/session"
+	"github.com/SecDuckOps/duckopsinternal/message"
+	"github.com/SecDuckOps/duckopsinternal/proto"
+	"github.com/SecDuckOps/duckopsinternal/session"
 )
 
 // CreateSession creates a new session in the given workspace.
@@ -72,6 +72,12 @@ func (b *Backend) ListSessionMessages(ctx context.Context, workspaceID, sessionI
 		return nil, err
 	}
 
+	// Drain debounced updates so HTTP clients (and the TUI on session
+	// switch) observe the latest in-memory state rather than racing the
+	// debounce timer in message.Service.
+	if err := ws.Messages.FlushAll(ctx); err != nil {
+		return nil, err
+	}
 	return ws.Messages.List(ctx, sessionID)
 }
 

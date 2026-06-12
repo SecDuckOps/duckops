@@ -24,7 +24,7 @@ type RunOptions struct {
 	Command string
 	// Cwd is the working directory for the execution. Required: callers
 	// must supply a non-empty value. Run does not silently fall back to
-	// the DuckOps process cwd — hooks and the bash tool have different
+	// the duckops process cwd — hooks and the bash tool have different
 	// notions of "default" and each owns that decision.
 	Cwd string
 	// Env is the full environment visible to the command. The caller is
@@ -86,9 +86,10 @@ func Run(ctx context.Context, opts RunOptions) (err error) {
 }
 
 // newRunner constructs an [interp.Runner] configured with the standard
-// DuckOps handler stack. Shared by the stateless [Run] entrypoint and the
+// duckops handler stack. Shared by the stateless [Run] entrypoint and the
 // stateful [Shell] so the two surfaces cannot drift.
 func newRunner(cwd string, env []string, stdin io.Reader, stdout, stderr io.Writer, blockFuncs []BlockFunc) (*interp.Runner, error) {
+	env = withNonInteractiveEnv(env)
 	return interp.New(
 		interp.StdIO(stdin, stdout, stderr),
 		interp.Interactive(false),
@@ -98,9 +99,49 @@ func newRunner(cwd string, env []string, stdin io.Reader, stdout, stderr io.Writ
 	)
 }
 
+// nonInteractiveEnvVars are forced on every shell execution to prevent
+// commands from hanging on a nonexistent TTY. These are always applied
+// regardless of the caller's environment because duckops shells are never
+// interactive — preserving user preferences like EDITOR=nvim only causes
+// hangs, not useful behavior.
+var nonInteractiveEnvVars = []string{
+	"TERM=xterm-256color",
+	"GIT_EDITOR=false",
+	"EDITOR=false",
+	"VISUAL=false",
+	"JJ_EDITOR=false",
+	"JJ_PAGER=cat",
+	"GIT_PAGER=cat",
+	"PAGER=cat",
+}
+
+// withNonInteractiveEnv returns env with nonInteractiveEnvVars forced in,
+// replacing any existing values for those keys. The returned slice is a
+// new allocation safe to use concurrently with the input.
+func withNonInteractiveEnv(env []string) []string {
+	// Build a set of override keys for fast lookup.
+	overrideKeys := make(map[string]bool, len(nonInteractiveEnvVars))
+	for _, kv := range nonInteractiveEnvVars {
+		if key, _, ok := strings.Cut(kv, "="); ok {
+			overrideKeys[key] = true
+		}
+	}
+
+	// Copy env, filtering out any keys we will override.
+	result := make([]string, 0, len(env)+len(nonInteractiveEnvVars))
+	for _, e := range env {
+		if key, _, ok := strings.Cut(e, "="); ok && overrideKeys[key] {
+			continue
+		}
+		result = append(result, e)
+	}
+
+	return append(result, nonInteractiveEnvVars...)
+}
+
 // standardHandlers returns the exec-handler middleware chain used by both
 // [Run] and [Shell]. Order matters:
-//  1. builtins first (so DuckOps's in-process jq wins over any PATH binary);
+//  1. builtins first (so duckops's in-process jq wins over any PATH binary);
 //  2. script dispatch (shebang / binary / shell-source for path-prefixed
 //     argv[0], no-op for bare commands) — runs before the block list so
 //     that deny rules see the already-resolved argv of anything the
@@ -119,7 +160,7 @@ func standardHandlers(blockFuncs []BlockFunc) []func(next interp.ExecHandlerFunc
 	return handlers
 }
 
-// builtinHandler returns middleware that dispatches recognized DuckOps
+// builtinHandler returns middleware that dispatches recognized duckops
 // builtins to their in-process Go implementations. Currently: jq.
 func builtinHandler() func(next interp.ExecHandlerFunc) interp.ExecHandlerFunc {
 	return func(next interp.ExecHandlerFunc) interp.ExecHandlerFunc {

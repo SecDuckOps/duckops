@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/SecDuckOps/duckops/internal/projects"
+	"github.com/SecDuckOps/duckopsinternal/projects"
 	"github.com/stretchr/testify/require"
 )
 
 func TestProjectsEmpty(t *testing.T) {
 	// Use a temp directory for projects.json
 	tmpDir := t.TempDir()
-	t.Setenv("DUCKOPS_GLOBAL_DATA", tmpDir)
+	t.Setenv("XDG_DATA_HOME", tmpDir)
 
 	var b bytes.Buffer
 	projectsCmd.SetOut(&b)
@@ -25,7 +25,7 @@ func TestProjectsEmpty(t *testing.T) {
 
 func TestProjectsJSON(t *testing.T) {
 	tmpDir := t.TempDir()
-	t.Setenv("DUCKOPS_GLOBAL_DATA", tmpDir)
+	t.Setenv("XDG_DATA_HOME", tmpDir)
 
 	// Register a project
 	err := projects.Register("/test/project", "/test/project/.duckops")

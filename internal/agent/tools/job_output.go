@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckops/internal/shell"
+	"github.com/SecDuckOps/duckopsinternal/shell"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 //go:embed job_output.md
-var jobOutputDescription []byte
+var jobOutputDescription string
 
 type JobOutputParams struct {
 	ShellID string `json:"shell_id" description:"The ID of the background shell to retrieve output from"`
@@ -33,7 +33,7 @@ type JobOutputResponseMetadata struct {
 func NewJobOutputTool() fantasy.AgentTool {
 	return fantasy.NewAgentTool(
 		JobOutputToolName,
-		FirstLineDescription(jobOutputDescription),
+		jobOutputDescription,
 		func(ctx context.Context, params JobOutputParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.ShellID == "" {
 				return fantasy.NewTextErrorResponse("missing shell_id"), nil
@@ -50,7 +50,6 @@ func NewJobOutputTool() fantasy.AgentTool {
 			}
 
 			stdout, stderr, done, err := bgShell.GetOutput()
-			status := bgShell.Status()
 
 			var outputParts []string
 			if stdout != "" {
@@ -60,10 +59,14 @@ func NewJobOutputTool() fantasy.AgentTool {
 				outputParts = append(outputParts, stderr)
 			}
 
-			if done && err != nil {
-				exitCode := shell.ExitCode(err)
-				if exitCode != 0 {
-					outputParts = append(outputParts, fmt.Sprintf("Exit code %d", exitCode))
+			status := "running"
+			if done {
+				status = "completed"
+				if err != nil {
+					exitCode := shell.ExitCode(err)
+					if exitCode != 0 {
+						outputParts = append(outputParts, fmt.Sprintf("Exit code %d", exitCode))
+					}
 				}
 			}
 
@@ -84,5 +87,6 @@ func NewJobOutputTool() fantasy.AgentTool {
 
 			result := fmt.Sprintf("Status: %s\n\n%s", status, output)
 			return fantasy.WithResponseMetadata(fantasy.NewTextResponse(result), metadata), nil
-		})
+		},
+	)
 }

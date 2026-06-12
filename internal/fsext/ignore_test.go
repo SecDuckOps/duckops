@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDuckOpsIgnore(t *testing.T) {
+func TestduckopsIgnore(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Chdir(tempDir)
 
@@ -85,8 +85,8 @@ func TestShouldExcludeFileHierarchical(t *testing.T) {
 	}
 
 	// Create .duckopsignore in subdir that ignores normal_nested
-	subDuckOpsIgnore := "normal_nested/\n"
-	if err := os.WriteFile(filepath.Join(subDir, ".duckopsignore"), []byte(subDuckOpsIgnore), 0o644); err != nil {
+	subduckopsignore := "normal_nested/\n"
+	if err := os.WriteFile(filepath.Join(subDir, ".duckopsignore"), []byte(subduckopsignore), 0o644); err != nil {
 		t.Fatalf("Failed to create subdir .duckopsignore: %v", err)
 	}
 

@@ -8,12 +8,12 @@ import (
 	"os/signal"
 
 	"charm.land/lipgloss/v2"
+	"github.com/SecDuckOps/duckopsinternal/client"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/oauth"
+	"github.com/SecDuckOps/duckopsinternal/oauth/copilot"
+	"github.com/SecDuckOps/duckopsinternal/oauth/hyper"
 	"github.com/atotto/clipboard"
-	"github.com/SecDuckOps/duckops/internal/client"
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/oauth"
-	"github.com/SecDuckOps/duckops/internal/oauth/copilot"
-	"github.com/SecDuckOps/duckops/internal/oauth/hyper"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
@@ -22,8 +22,8 @@ import (
 var loginCmd = &cobra.Command{
 	Aliases: []string{"auth"},
 	Use:     "login [platform]",
-	Short:   "Login DuckOps to a platform",
-	Long: `Login DuckOps to a specified platform.
+	Short:   "Login duckops to a platform",
+	Long: `Login duckops to a specified platform.
 The platform should be provided as an argument.
 Available platforms are: hyper, copilot.`,
 	Example: `
@@ -32,6 +32,9 @@ duckops login
 
 # Authenticate with GitHub Copilot
 duckops login copilot
+
+# Force re-authentication even if already logged in
+duckops login -f copilot
   `,
 	ValidArgs: []cobra.Completion{
 		"hyper",
@@ -57,19 +60,35 @@ duckops login copilot
 		if len(args) > 0 {
 			provider = args[0]
 		}
+		force, _ := cmd.Flags().GetBool("force")
 		switch provider {
 		case "hyper":
-			return loginHyper(c, ws.ID)
+			return loginHyper(c, ws.ID, force)
 		case "copilot", "github", "github-copilot":
-			return loginCopilot(cmd.Context(), c, ws.ID)
+			return loginCopilot(c, ws.ID, force)
 		default:
 			return fmt.Errorf("unknown platform: %s", args[0])
 		}
 	},
 }
 
-func loginHyper(c *client.Client, wsID string) error {
+func init() {
+	loginCmd.Flags().BoolP("force", "f", false, "Force re-authentication even if already logged in")
+}
+
+func loginHyper(c *client.Client, wsID string, force bool) error {
 	ctx := getLoginContext()
+
+	if !force {
+		cfg, err := c.GetConfig(ctx, wsID)
+		if err == nil && cfg != nil {
+			if pc, ok := cfg.Providers.Get("hyper"); ok && pc.OAuthToken != nil {
+				fmt.Println("You are already logged in to Hyper.")
+				fmt.Println("Use --force to re-authenticate.")
+				return nil
+			}
+		}
+	}
 
 	resp, err := hyper.InitiateDeviceAuth(ctx)
 	if err != nil {
@@ -127,14 +146,17 @@ func loginHyper(c *client.Client, wsID string) error {
 	return nil
 }
 
-func loginCopilot(ctx context.Context, c *client.Client, wsID string) error {
+func loginCopilot(c *client.Client, wsID string, force bool) error {
 	loginCtx := getLoginContext()
 
-	cfg, err := c.GetConfig(ctx, wsID)
-	if err == nil && cfg != nil {
-		if pc, ok := cfg.Providers.Get("copilot"); ok && pc.OAuthToken != nil {
-			fmt.Println("You are already logged in to GitHub Copilot.")
-			return nil
+	if !force {
+		cfg, err := c.GetConfig(loginCtx, wsID)
+		if err == nil && cfg != nil {
+			if pc, ok := cfg.Providers.Get("copilot"); ok && pc.OAuthToken != nil {
+				fmt.Println("You are already logged in to GitHub Copilot.")
+				fmt.Println("Use --force to re-authenticate.")
+				return nil
+			}
 		}
 	}
 

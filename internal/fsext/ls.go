@@ -10,9 +10,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckopsinternal/home"
 	"github.com/charlievieth/fastwalk"
-	"github.com/SecDuckOps/duckops/internal/csync"
-	"github.com/SecDuckOps/duckops/internal/home"
 	gitconfig "github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 )
@@ -34,7 +34,7 @@ var fastIgnoreDirs = map[string]bool{
 	".Trash":          true,
 	".Spotlight-V100": true,
 	".fseventsd":      true,
-	".duckops":          true,
+	".duckops":        true,
 	"OrbStack":        true,
 	".local":          true,
 	".share":          true,

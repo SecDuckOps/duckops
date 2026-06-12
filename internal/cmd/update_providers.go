@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"charm.land/lipgloss/v2"
-	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckopsinternal/config"
 	"github.com/charmbracelet/x/exp/charmtone"
 	"github.com/spf13/cobra"
 )

@@ -6,7 +6,7 @@ import (
 	"testing/synctest"
 	"time"
 
-	"github.com/SecDuckOps/duckops/internal/db"
+	"github.com/SecDuckOps/duckopsinternal/db"
 	"github.com/stretchr/testify/require"
 )
 

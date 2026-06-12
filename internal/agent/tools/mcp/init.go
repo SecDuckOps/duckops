@@ -1,5 +1,5 @@
 // Package mcp provides functionality for managing Model Context Protocol (MCP)
-// clients within the DuckOps application.
+// clients within the duckops application.
 package mcp
 
 import (
@@ -12,18 +12,16 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/csync"
-	"github.com/SecDuckOps/duckops/internal/home"
-	"github.com/SecDuckOps/duckops/internal/permission"
-	"github.com/SecDuckOps/duckops/internal/pubsub"
-	"github.com/SecDuckOps/duckops/internal/version"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckopsinternal/home"
+	"github.com/SecDuckOps/duckopsinternal/permission"
+	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckopsinternal/version"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -197,7 +195,6 @@ func Initialize(ctx context.Context, permissions permission.Service, cfg *config
 			}()
 
 			if err := initClient(ctx, cfg, name, m, cfg.Resolver()); err != nil {
-				updateState(name, StateError, err, nil, Counts{})
 				slog.Debug("Failed to initialize MCP client", "name", name, "error", err)
 			}
 		}(name, m)
@@ -235,10 +232,10 @@ func InitializeSingle(ctx context.Context, name string, cfg *config.ConfigStore)
 
 // initClient initializes a single MCP client with the given configuration.
 func initClient(ctx context.Context, cfg *config.ConfigStore, name string, m config.MCPConfig, resolver config.VariableResolver) error {
+	// Set initial starting state.
 	updateState(name, StateStarting, nil, nil, Counts{})
 
-	workspaceRoot, _ := cfg.Resolver().ResolveValue("")
-
+	// createSession handles its own timeout internally.
 	session, err := createSession(ctx, name, m, resolver)
 	if err != nil {
 		return err
@@ -268,57 +265,6 @@ func initClient(ctx context.Context, cfg *config.ConfigStore, name string, m con
 		Tools:   toolCount,
 		Prompts: len(prompts),
 	})
-
-	if m.Type == "stdio" || m.Type == "" {
-		if err := setupPathMapping(name, m, workspaceRoot); err != nil {
-			slog.Warn("Failed to setup path mapping for MCP", "name", name, "error", err)
-		}
-	}
-
-	return nil
-}
-
-func setupPathMapping(name string, m config.MCPConfig, workspaceRoot string) error {
-	mapping := make(PathMapping)
-
-	ws := GetActiveWorkspace()
-	if ws.ProjectRoot != "" && ws.WorkspaceRoot != "" {
-		projectName := filepath.Base(ws.ProjectRoot)
-		mount := filepath.Join(ws.WorkspaceRoot, projectName)
-		mapping[ws.ProjectRoot] = mount
-		if ws.GitRoot != "" && ws.GitRoot != ws.ProjectRoot {
-			mapping[ws.GitRoot] = mount
-		}
-	}
-
-	if workspaceRoot != "" && mapping[workspaceRoot] == "" {
-		mount := "/workspace"
-		if m.WorkspaceMount != "" {
-			mount = m.WorkspaceMount
-		}
-		mapping[workspaceRoot] = mount
-	}
-
-	if len(m.PathMapping) > 0 {
-		for host, container := range m.PathMapping {
-			mapping[host] = container
-		}
-	}
-
-	if home, err := os.UserHomeDir(); err == nil && mapping[home] == "" {
-		mount := "/workspace"
-		if m.WorkspaceMount != "" {
-			mount = m.WorkspaceMount
-		} else if ws.WorkspaceRoot != "" {
-			projectName := filepath.Base(ws.ProjectRoot)
-			mount = filepath.Join(ws.WorkspaceRoot, projectName)
-		}
-		mapping[home] = mount
-	}
-
-	if len(mapping) > 0 {
-		SetPathMapping(name, mapping)
-	}
 
 	return nil
 }
@@ -420,7 +366,7 @@ func createSession(ctx context.Context, name string, m config.MCPConfig, resolve
 		&mcp.Implementation{
 			Name:    "duckops",
 			Version: version.Version,
-			Title:   "DuckOps",
+			Title:   "duckops",
 		},
 		&mcp.ClientOptions{
 			ToolListChangedHandler: func(context.Context, *mcp.ToolListChangedRequest) {
@@ -586,269 +532,4 @@ func stdioCheck(old *exec.Cmd) error {
 		return nil
 	}
 	return fmt.Errorf("%w: %s", err, string(out))
-}
-
-type PathMapping map[string]string
-
-var pathMappings = csync.NewMap[string, PathMapping]()
-
-type WorkspaceContext struct {
-	ProjectRoot          string
-	WorkspaceRoot        string
-	GitRoot              string
-	ContainerProjectRoot string
-}
-
-var activeWorkspace = csync.NewValue(WorkspaceContext{})
-
-func SetActiveWorkspace(ctx WorkspaceContext) {
-	activeWorkspace.Set(ctx)
-}
-
-func GetActiveWorkspace() WorkspaceContext {
-	return activeWorkspace.Get()
-}
-
-func SetPathMapping(mcpName string, mapping PathMapping) {
-	pathMappings.Set(mcpName, mapping)
-}
-
-func TranslateToolPaths(mcpName string, toolName string, args map[string]interface{}) map[string]interface{} {
-	mapping, ok := pathMappings.Get(mcpName)
-	if !ok || len(mapping) == 0 {
-		mapping = buildProjectOnlyMapping()
-		if len(mapping) == 0 {
-			return args
-		}
-	}
-
-	translated := make(map[string]interface{}, len(args))
-	for k, v := range args {
-		if str, ok := v.(string); ok {
-			translated[k] = translatePath(str, mapping)
-		} else if strSlice, ok := v.([]string); ok {
-			out := make([]string, len(strSlice))
-			for i, s := range strSlice {
-				out[i] = translatePath(s, mapping)
-			}
-			translated[k] = out
-		} else {
-			translated[k] = v
-		}
-	}
-	return translated
-}
-
-func buildProjectOnlyMapping() PathMapping {
-	ws := GetActiveWorkspace()
-	if ws.ProjectRoot == "" || ws.WorkspaceRoot == "" {
-		return nil
-	}
-	mapping := make(PathMapping)
-	projectName := filepath.Base(ws.ProjectRoot)
-	containerRoot := filepath.Join(ws.WorkspaceRoot, projectName)
-	mapping[ws.ProjectRoot] = containerRoot
-	return mapping
-}
-
-func sortedMappingKeys(mapping PathMapping) []string {
-	keys := make([]string, 0, len(mapping))
-	for k := range mapping {
-		keys = append(keys, k)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return len(keys[i]) > len(keys[j])
-	})
-	return keys
-}
-
-func translatePath(path string, mapping PathMapping) string {
-	if path == "" {
-		return path
-	}
-
-	expanded := expandTilde(path)
-	absPath, err := filepath.Abs(expanded)
-	if err != nil {
-		return path
-	}
-
-	for _, hostPrefix := range sortedMappingKeys(mapping) {
-		if strings.HasPrefix(absPath, hostPrefix) {
-			containerPrefix := mapping[hostPrefix]
-			return containerPrefix + absPath[len(hostPrefix):]
-		}
-	}
-
-	for _, hostPrefix := range sortedMappingKeys(mapping) {
-		containerPrefix := mapping[hostPrefix]
-		rel, err := filepath.Rel(hostPrefix, absPath)
-		if err != nil {
-			continue
-		}
-		if rel == "." {
-			return containerPrefix
-		}
-		if strings.HasPrefix(rel, "..") {
-			continue
-		}
-		return filepath.Join(containerPrefix, rel)
-	}
-
-	return path
-}
-
-func expandTilde(path string) string {
-	if !strings.HasPrefix(path, "~") {
-		return path
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return path
-	}
-	if path == "~" {
-		return home
-	}
-	if strings.HasPrefix(path, "~/") {
-		return filepath.Join(home, path[2:])
-	}
-	return path
-}
-
-func DetectGitRoot(dir string) string {
-	if dir == "" {
-		dir, _ = os.Getwd()
-	}
-	dir, err := filepath.Abs(dir)
-	if err != nil {
-		return ""
-	}
-
-	for {
-		gitPath := filepath.Join(dir, ".git")
-		if info, err := os.Stat(gitPath); err == nil && info.IsDir() {
-			return dir
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			break
-		}
-		dir = parent
-	}
-	return ""
-}
-
-func DetectProjectRoot(dir string) string {
-	if dir == "" {
-		dir, _ = os.Getwd()
-	}
-	absDir, err := filepath.Abs(dir)
-	if err != nil {
-		return ""
-	}
-
-	gitRoot := DetectGitRoot(absDir)
-	if gitRoot != "" {
-		return gitRoot
-	}
-
-	return absDir
-}
-
-func DetectWorkspaceRoot() string {
-	home, _ := os.UserHomeDir()
-	candidates := []string{
-		"/workspace",
-		"/app/workspace",
-		filepath.Join(home, "workspace"),
-		filepath.Join(home, "Projects"),
-		filepath.Join(home, "projects"),
-	}
-
-	for _, c := range candidates {
-		if info, err := os.Stat(c); err == nil && info.IsDir() {
-			return c
-		}
-	}
-	return "/workspace"
-}
-
-func NormalizePath(path string) string {
-	expanded := expandTilde(path)
-	abs, err := filepath.Abs(expanded)
-	if err != nil {
-		return path
-	}
-	clean := filepath.Clean(abs)
-	realPath, err := filepath.EvalSymlinks(clean)
-	if err != nil {
-		return clean
-	}
-	return realPath
-}
-
-func TranslateProjectPath(path string, projectRoot, workspaceRoot string) string {
-	if path == "" || projectRoot == "" || workspaceRoot == "" {
-		return path
-	}
-
-	normalized := NormalizePath(path)
-
-	if strings.HasPrefix(normalized, projectRoot) {
-		rel, err := filepath.Rel(projectRoot, normalized)
-		if err != nil {
-			return path
-		}
-		return filepath.Join(workspaceRoot, rel)
-	}
-
-	return path
-}
-
-func InitWorkspaceContext(dir string) WorkspaceContext {
-	containerCwd, _ := os.Getwd()
-	if dir != "" {
-		containerCwd = dir
-	}
-
-	hostProjectRoot := containerCwd
-	if strings.HasPrefix(containerCwd, "/workspace") {
-		home, _ := os.UserHomeDir()
-		if home != "" {
-			hostProjectRoot = filepath.Join(home, containerCwd[len("/workspace"):])
-		}
-	}
-
-	gitRoot := DetectGitRoot(hostProjectRoot)
-	if gitRoot != "" {
-		hostProjectRoot = gitRoot
-	}
-
-	workspaceRoot := DetectWorkspaceRoot()
-	containerProjectRoot := "/workspace"
-	home, _ := os.UserHomeDir()
-	if home != "" && strings.HasPrefix(hostProjectRoot, home) {
-		containerProjectRoot = filepath.Join("/workspace", hostProjectRoot[len(home):])
-	}
-
-	ctx := WorkspaceContext{
-		ProjectRoot:          hostProjectRoot,
-		WorkspaceRoot:        workspaceRoot,
-		GitRoot:              gitRoot,
-		ContainerProjectRoot: containerProjectRoot,
-	}
-
-	SetActiveWorkspace(ctx)
-
-	if hostProjectRoot != "" {
-		mapping := make(PathMapping)
-		projectName := filepath.Base(hostProjectRoot)
-		if projectName == "" || projectName == "/" {
-			projectName = "project"
-		}
-		mapping[hostProjectRoot] = filepath.Join(workspaceRoot, projectName)
-		SetPathMapping("default", mapping)
-	}
-
-	return ctx
 }

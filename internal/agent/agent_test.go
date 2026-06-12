@@ -12,9 +12,9 @@ import (
 
 	"charm.land/fantasy"
 	"charm.land/x/vcr"
-	"github.com/SecDuckOps/duckops/internal/agent/tools"
-	"github.com/SecDuckOps/duckops/internal/message"
-	"github.com/SecDuckOps/duckops/internal/session"
+	"github.com/SecDuckOps/duckopsinternal/agent/tools"
+	"github.com/SecDuckOps/duckopsinternal/message"
+	"github.com/SecDuckOps/duckopsinternal/session"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -421,7 +421,7 @@ func TestCoderAgent(t *testing.T) {
 				require.NoError(t, err)
 
 				res, err := agent.Run(t.Context(), SessionAgentCall{
-					Prompt:          "use multiedit to change 'Hello, World!' to 'Hello, DuckOps!' and add a comment '// Greeting' above the fmt.Println line in main.go",
+					Prompt:          "use multiedit to change 'Hello, World!' to 'Hello, duckops!' and add a comment '// Greeting' above the fmt.Println line in main.go",
 					SessionID:       session.ID,
 					MaxOutputTokens: 10000,
 				})
@@ -456,7 +456,7 @@ func TestCoderAgent(t *testing.T) {
 				mainGoPath := filepath.Join(env.workingDir, "main.go")
 				content, err := os.ReadFile(mainGoPath)
 				require.NoError(t, err)
-				require.Contains(t, string(content), "Hello, DuckOps!", "Expected file to contain 'Hello, DuckOps!'")
+				require.Contains(t, string(content), "Hello, duckops!", "Expected file to contain 'Hello, duckops!'")
 			})
 			t.Run("sourcegraph tool", func(t *testing.T) {
 				agent, env := setupAgent(t, pair)

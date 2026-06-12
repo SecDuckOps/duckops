@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/SecDuckOps/duckops/internal/db"
-	"github.com/SecDuckOps/duckops/internal/pubsub"
+	"github.com/SecDuckOps/duckopsinternal/db"
+	"github.com/SecDuckOps/duckopsinternal/pubsub"
 	"github.com/google/uuid"
 )
 

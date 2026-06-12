@@ -1763,6 +1763,11 @@ func (m *UI) handleKeyPressMsg(msg tea.KeyPressMsg) tea.Cmd {
 				cmds = append(cmds, cmd)
 			}
 			return true
+		case key.Matches(msg, m.keyMap.AddProvider):
+			if cmd := m.openAddProviderDialog(); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			return true
 		case key.Matches(msg, m.keyMap.Chat.Details) && m.isCompact:
 			m.detailsOpen = !m.detailsOpen
 			m.updateLayoutAndSize()
@@ -3301,6 +3306,16 @@ func (m *UI) openModelsDialog() tea.Cmd {
 }
 
 // openCommandsDialog opens the commands dialog.
+func (m *UI) openAddProviderDialog() tea.Cmd {
+	if m.dialog.ContainsDialog(dialog.AddProviderID) {
+		m.dialog.BringToFront(dialog.AddProviderID)
+		return nil
+	}
+	d, _ := dialog.NewAddProvider(m.com)
+	m.dialog.OpenDialog(d)
+	return nil
+}
+
 func (m *UI) openCommandsDialog() tea.Cmd {
 	if m.dialog.ContainsDialog(dialog.CommandsID) {
 		// Bring to front

@@ -4,11 +4,10 @@ import (
 	"context"
 	"maps"
 	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/env"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/env"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
@@ -51,21 +50,6 @@ func TestMCPSession_CancelOnClose(t *testing.T) {
 
 	// After Close, the context must be cancelled.
 	require.ErrorIs(t, ctx.Err(), context.Canceled)
-}
-
-func TestTranslatePathMapsProjectAbsolutePath(t *testing.T) {
-	hostRoot := filepath.Join(t.TempDir(), "duck")
-	require.NoError(t, os.MkdirAll(filepath.Join(hostRoot, "internal", "cmd"), 0o755))
-
-	mapping := PathMapping{
-		hostRoot: "/workspace/duck",
-	}
-
-	got := translatePath(filepath.Join(hostRoot, "internal", "cmd", "toolserver.go"), mapping)
-	require.Equal(t, "/workspace/duck/internal/cmd/toolserver.go", filepath.ToSlash(got))
-
-	got = translatePath(hostRoot, mapping)
-	require.Equal(t, "/workspace/duck", filepath.ToSlash(got))
 }
 
 // TestCreateTransport_URLResolution pins that m.URL goes through the
@@ -392,7 +376,7 @@ func TestCreateTransport_HeadersResolution(t *testing.T) {
 
 	t.Run("sse unset var header drops silently", func(t *testing.T) {
 		t.Parallel()
-		// Pinning test for design decision #18 + lenient nounset:
+		// Pinning test for empty-header drop + lenient nounset:
 		// a header whose value resolves to "" (here because the
 		// bare $VAR is unset) is omitted from the round tripper
 		// rather than sent as "X-Header:". Guards against a
@@ -504,10 +488,9 @@ func TestCreateSession_ResolutionFailureUpdatesState(t *testing.T) {
 		},
 		{
 			// Bare $MISSING in a header resolves to "" silently
-			// and is then dropped (design decision #18). The
-			// "header Authorization" wrap only surfaces on a
-			// $(cmd) failure; that is what this subtest now
-			// pins for the SSE path.
+			// and is then dropped. The "header Authorization"
+			// wrap only surfaces on a $(cmd) failure; that is
+			// what this subtest now pins for the SSE path.
 			name:    "sse header failure",
 			mcpName: "test-sse-header-fail",
 			cfg: config.MCPConfig{

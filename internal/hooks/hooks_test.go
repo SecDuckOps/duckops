@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/shell"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/shell"
 	"github.com/stretchr/testify/require"
 )
 
@@ -188,18 +188,18 @@ func TestBuildEnv(t *testing.T) {
 		}
 	}
 
-	require.Equal(t, EventPreToolUse, envMap["DUCKOPS_EVENT"])
-	require.Equal(t, "bash", envMap["DUCKOPS_TOOL_NAME"])
-	require.Equal(t, "sess-1", envMap["DUCKOPS_SESSION_ID"])
-	require.Equal(t, "/work", envMap["DUCKOPS_CWD"])
-	require.Equal(t, "/project", envMap["DUCKOPS_PROJECT_DIR"])
-	require.Equal(t, "ls", envMap["DUCKOPS_TOOL_INPUT_COMMAND"])
-	require.Equal(t, "/tmp/f.txt", envMap["DUCKOPS_TOOL_INPUT_FILE_PATH"])
+	require.Equal(t, EventPreToolUse, envMap["duckops_EVENT"])
+	require.Equal(t, "bash", envMap["duckops_TOOL_NAME"])
+	require.Equal(t, "sess-1", envMap["duckops_SESSION_ID"])
+	require.Equal(t, "/work", envMap["duckops_CWD"])
+	require.Equal(t, "/project", envMap["duckops_PROJECT_DIR"])
+	require.Equal(t, "ls", envMap["duckops_TOOL_INPUT_COMMAND"])
+	require.Equal(t, "/tmp/f.txt", envMap["duckops_TOOL_INPUT_FILE_PATH"])
 
-	// Shared DuckOps markers must be present so hook-authored scripts can
-	// detect they're running under DuckOps the same way bash-tool-invoked
+	// Shared duckops markers must be present so hook-authored scripts can
+	// detect they're running under duckops the same way bash-tool-invoked
 	// scripts can.
-	require.Equal(t, "1", envMap["DUCKOPS"])
+	require.Equal(t, "1", envMap["duckops"])
 	require.Equal(t, "duckops", envMap["AGENT"])
 	require.Equal(t, "duckops", envMap["AI_AGENT"])
 }
@@ -476,6 +476,37 @@ func TestValidateHooksNormalizesEventNames(t *testing.T) {
 	}
 }
 
+func TestRunnerHookNameUsesDisplayName(t *testing.T) {
+	t.Parallel()
+
+	t.Run("name field is used when set", func(t *testing.T) {
+		t.Parallel()
+		hookCfg := config.HookConfig{
+			Name:    "my-hook",
+			Command: `echo '{"decision":"allow"}'`,
+		}
+		r := NewRunner([]config.HookConfig{hookCfg}, t.TempDir(), t.TempDir())
+		result, err := r.Run(context.Background(), EventPreToolUse, "sess", "bash", `{}`)
+		require.NoError(t, err)
+		require.Equal(t, DecisionAllow, result.Decision)
+		require.Len(t, result.Hooks, 1)
+		require.Equal(t, "my-hook", result.Hooks[0].Name)
+	})
+
+	t.Run("command is used when name is empty", func(t *testing.T) {
+		t.Parallel()
+		hookCfg := config.HookConfig{
+			Command: `echo '{"decision":"allow"}'`,
+		}
+		r := NewRunner([]config.HookConfig{hookCfg}, t.TempDir(), t.TempDir())
+		result, err := r.Run(context.Background(), EventPreToolUse, "sess", "bash", `{}`)
+		require.NoError(t, err)
+		require.Equal(t, DecisionAllow, result.Decision)
+		require.Len(t, result.Hooks, 1)
+		require.Equal(t, `echo '{"decision":"allow"}'`, result.Hooks[0].Name)
+	})
+}
+
 func TestRunnerParallelExecution(t *testing.T) {
 	t.Parallel()
 	// Two hooks: one allows, one denies. Deny should win.
@@ -493,7 +524,7 @@ func TestRunnerParallelExecution(t *testing.T) {
 func TestRunnerEnvVarsPropagated(t *testing.T) {
 	t.Parallel()
 	hookCfg := config.HookConfig{
-		Command: `printf '{"decision":"allow","context":"%s"}' "$DUCKOPS_TOOL_NAME"`,
+		Command: `printf '{"decision":"allow","context":"%s"}' "$duckops_TOOL_NAME"`,
 	}
 	r := NewRunner([]config.HookConfig{hookCfg}, t.TempDir(), t.TempDir())
 	result, err := r.Run(context.Background(), EventPreToolUse, "sess", "bash", `{}`)
@@ -538,7 +569,8 @@ func TestAggregationUpdatedInput(t *testing.T) {
 		require.Equal(t, DecisionAllow, agg.Decision)
 		// command overridden by second patch; keep preserved from first
 		// patch; timeout preserved from original input.
-		require.JSONEq(t,
+		require.JSONEq(
+			t,
 			`{"command":"second","keep":"me","timeout":60}`,
 			agg.UpdatedInput,
 		)
@@ -550,7 +582,8 @@ func TestAggregationUpdatedInput(t *testing.T) {
 			{Decision: DecisionAllow, UpdatedInput: `{"env":{"FOO":"bar"}}`},
 		}, `{"env":{"BAZ":"qux"},"command":"ls"}`)
 		// "env" is replaced entirely; "command" preserved.
-		require.JSONEq(t,
+		require.JSONEq(
+			t,
 			`{"env":{"FOO":"bar"},"command":"ls"}`,
 			agg.UpdatedInput,
 		)
@@ -678,7 +711,8 @@ func TestRunnerUpdatedInput(t *testing.T) {
 	result, err := r.Run(context.Background(), EventPreToolUse, "sess", "bash", `{"command":"echo original","timeout":60}`)
 	require.NoError(t, err)
 	require.Equal(t, DecisionAllow, result.Decision)
-	require.JSONEq(t,
+	require.JSONEq(
+		t,
 		`{"command":"echo rewritten","timeout":60}`,
 		result.UpdatedInput,
 	)

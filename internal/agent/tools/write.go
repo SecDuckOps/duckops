@@ -3,7 +3,6 @@ package tools
 import (
 	"context"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,50 +11,22 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckops/internal/diff"
-	"github.com/SecDuckOps/duckops/internal/filepathext"
-	"github.com/SecDuckOps/duckops/internal/filetracker"
-	"github.com/SecDuckOps/duckops/internal/fsext"
-	"github.com/SecDuckOps/duckops/internal/history"
+	"github.com/SecDuckOps/duckopsinternal/diff"
+	"github.com/SecDuckOps/duckopsinternal/filepathext"
+	"github.com/SecDuckOps/duckopsinternal/filetracker"
+	"github.com/SecDuckOps/duckopsinternal/fsext"
+	"github.com/SecDuckOps/duckopsinternal/history"
 
-	"github.com/SecDuckOps/duckops/internal/lsp"
-	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckopsinternal/lsp"
+	"github.com/SecDuckOps/duckopsinternal/permission"
 )
 
 //go:embed write.md
-var writeDescription []byte
+var writeDescription string
 
 type WriteParams struct {
 	FilePath string `json:"file_path" description:"The path to the file to write"`
 	Content  string `json:"content" description:"The content to write to the file"`
-}
-
-func (p *WriteParams) UnmarshalJSON(data []byte) error {
-	raw := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-
-	if fp, ok := raw["file_path"]; ok {
-		if err := json.Unmarshal(fp, &p.FilePath); err != nil {
-			return err
-		}
-	} else if path, ok := raw["path"]; ok {
-		if err := json.Unmarshal(path, &p.FilePath); err != nil {
-			return err
-		}
-	} else if loc, ok := raw["location"]; ok {
-		if err := json.Unmarshal(loc, &p.FilePath); err != nil {
-			return err
-		}
-	}
-
-	if c, ok := raw["content"]; ok {
-		if err := json.Unmarshal(c, &p.Content); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 type WritePermissionsParams struct {
@@ -81,14 +52,10 @@ func NewWriteTool(
 ) fantasy.AgentTool {
 	return fantasy.NewAgentTool(
 		WriteToolName,
-		FirstLineDescription(writeDescription),
+		writeDescription,
 		func(ctx context.Context, params WriteParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			if params.FilePath == "" {
 				return fantasy.NewTextErrorResponse("file_path is required"), nil
-			}
-
-			if params.Content == "" {
-				return fantasy.NewTextErrorResponse("content is required"), nil
 			}
 
 			sessionID := GetSessionFromContext(ctx)
@@ -138,7 +105,8 @@ func NewWriteTool(
 				strings.TrimPrefix(filePath, workingDir),
 			)
 
-			p, err := permissions.Request(ctx,
+			p, err := permissions.Request(
+				ctx,
 				permission.CreatePermissionRequest{
 					SessionID:   sessionID,
 					Path:        fsext.PathOrPrefix(filePath, workingDir),
@@ -157,7 +125,13 @@ func NewWriteTool(
 				return fantasy.ToolResponse{}, err
 			}
 			if !p {
-				return NewPermissionDeniedResponse(), nil
+				resp := NewPermissionDeniedResponse()
+				resp = fantasy.WithResponseMetadata(resp, WriteResponseMetadata{
+					Diff:      diff,
+					Additions: additions,
+					Removals:  removals,
+				})
+				return resp, nil
 			}
 
 			err = os.WriteFile(filePath, []byte(params.Content), 0o644)
@@ -194,12 +168,14 @@ func NewWriteTool(
 			result := fmt.Sprintf("File successfully written: %s", filePath)
 			result = fmt.Sprintf("<result>\n%s\n</result>", result)
 			result += getDiagnostics(filePath, lspManager)
-			return fantasy.WithResponseMetadata(fantasy.NewTextResponse(result),
+			return fantasy.WithResponseMetadata(
+				fantasy.NewTextResponse(result),
 				WriteResponseMetadata{
 					Diff:      diff,
 					Additions: additions,
 					Removals:  removals,
 				},
 			), nil
-		})
+		},
+	)
 }

@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,15 +11,13 @@ import (
 
 	"charm.land/fantasy"
 
-	"github.com/SecDuckOps/duckops/internal/agent/prompt"
-	"github.com/SecDuckOps/duckops/internal/agent/tools"
-	"github.com/SecDuckOps/duckops/internal/permission"
-
-	_ "embed"
+	"github.com/SecDuckOps/duckopsinternal/agent/prompt"
+	"github.com/SecDuckOps/duckopsinternal/agent/tools"
+	"github.com/SecDuckOps/duckopsinternal/permission"
 )
 
 //go:embed templates/agentic_fetch.md
-var agenticFetchToolDescription []byte
+var agenticFetchToolDescription string
 
 // agenticFetchValidationResult holds the validated parameters from the tool call context.
 type agenticFetchValidationResult struct {
@@ -66,7 +65,7 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 
 	return fantasy.NewParallelAgentTool(
 		tools.AgenticFetchToolName,
-		tools.FirstLineDescription(agenticFetchToolDescription),
+		agenticFetchToolDescription,
 		func(ctx context.Context, params tools.AgenticFetchParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			validationResult, err := validateAgenticFetchParams(ctx, params)
 			if err != nil {
@@ -81,7 +80,8 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 				description = "Search the web and analyze results"
 			}
 
-			p, err := c.permissions.Request(ctx,
+			p, err := c.permissions.Request(
+				ctx,
 				permission.CreatePermissionRequest{
 					SessionID:   validationResult.SessionID,
 					Path:        c.cfg.WorkingDir(),
@@ -184,7 +184,7 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 				SystemPromptPrefix:   smallProviderCfg.SystemPromptPrefix,
 				SystemPrompt:         systemPrompt,
 				DisableAutoSummarize: c.cfg.Config().Options.DisableAutoSummarize,
-				Isduck:               c.permissions.SkipRequests(),
+				IsYolo:               c.permissions.SkipRequests(),
 				Sessions:             c.sessions,
 				Messages:             c.messages,
 				Tools:                fetchTools,
@@ -201,5 +201,6 @@ func (c *coordinator) agenticFetchTool(_ context.Context, client *http.Client) (
 					c.permissions.AutoApproveSession(sessionID)
 				},
 			})
-		}), nil
+		},
+	), nil
 }

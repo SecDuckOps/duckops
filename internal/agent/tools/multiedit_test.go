@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/SecDuckOps/duckops/internal/history"
-	"github.com/SecDuckOps/duckops/internal/permission"
-	"github.com/SecDuckOps/duckops/internal/pubsub"
+	"github.com/SecDuckOps/duckopsinternal/history"
+	"github.com/SecDuckOps/duckopsinternal/permission"
+	"github.com/SecDuckOps/duckopsinternal/pubsub"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,11 +20,13 @@ func (m *mockPermissionService) Request(ctx context.Context, req permission.Crea
 	return true, nil
 }
 
-func (m *mockPermissionService) Grant(req permission.PermissionRequest) {}
+func (m *mockPermissionService) Grant(req permission.PermissionRequest) bool { return true }
 
-func (m *mockPermissionService) Deny(req permission.PermissionRequest) {}
+func (m *mockPermissionService) Deny(req permission.PermissionRequest) bool { return true }
 
-func (m *mockPermissionService) GrantPersistent(req permission.PermissionRequest) {}
+func (m *mockPermissionService) GrantPersistent(req permission.PermissionRequest) bool {
+	return true
+}
 
 func (m *mockPermissionService) AutoApproveSession(sessionID string) {}
 

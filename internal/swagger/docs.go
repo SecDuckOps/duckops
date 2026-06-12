@@ -10,12 +10,12 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {
-            "name": "SecDuckOps",
-            "url": "https://duckops.dev"
+            "name": "Charm",
+            "url": "https://charm.sh"
         },
         "license": {
             "name": "MIT",
-            "url": "https://github.com/SecDuckOps/duckops/blob/main/LICENSE"
+            "url": "https://github.com/SecDuckOps/duckopsblob/main/LICENSE"
         },
         "version": "{{.Version}}"
     },
@@ -1418,6 +1418,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/workspaces/{id}/mcp/docker/disable": {
+            "post": {
+                "tags": [
+                    "mcp"
+                ],
+                "summary": "Disable Docker MCP",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Workspace ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/proto.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/proto.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/workspaces/{id}/mcp/docker/enable": {
+            "post": {
+                "tags": [
+                    "mcp"
+                ],
+                "summary": "Enable Docker MCP",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Workspace ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/proto.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/proto.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/workspaces/{id}/mcp/get-prompt": {
             "post": {
                 "consumes": [
@@ -2618,6 +2686,23 @@ const docTemplate = `{
                 }
             }
         },
+        "config.HookConfig": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "description": "Shell command to execute.",
+                    "type": "string"
+                },
+                "matcher": {
+                    "description": "Regex pattern tested against the tool name. Empty means match all.",
+                    "type": "string"
+                },
+                "timeout": {
+                    "description": "Timeout in seconds. Default 30.",
+                    "type": "integer"
+                }
+            }
+        },
         "config.LSPConfig": {
             "type": "object",
             "properties": {
@@ -2691,6 +2776,12 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "enabled_tools": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "env": {
                     "type": "object",
                     "additionalProperties": {
@@ -2698,7 +2789,7 @@ const docTemplate = `{
                     }
                 },
                 "headers": {
-                    "description": "TODO: maybe make it possible to get the value from the env",
+                    "description": "Headers are HTTP headers for HTTP/SSE MCP servers. Values run\nthrough shell expansion at MCP startup, so $VAR and $(cmd)\nwork. A header whose value resolves to the empty string (unset\nbare $VAR under lenient nounset, $(echo), or literal \"\") is\nomitted from the outgoing request rather than sent as\n\"Header:\".",
                     "type": "object",
                     "additionalProperties": {
                         "type": "string"
@@ -2881,6 +2972,15 @@ const docTemplate = `{
                 "$schema": {
                     "type": "string"
                 },
+                "hooks": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/config.HookConfig"
+                        }
+                    }
+                },
                 "lsp": {
                     "$ref": "#/definitions/config.LSPs"
                 },
@@ -2939,7 +3039,7 @@ const docTemplate = `{
                     }
                 },
                 "data_directory": {
-                    "description": "Relative to the cwd",
+                    "description": "DataDirectory is where duckops keeps per-project state such as\nthe SQLite database and workspace overrides. Relative paths are\nresolved against the working directory; absolute paths are used\nverbatim. After defaulting the stored value is always absolute.",
                     "type": "string"
                 },
                 "debug": {
@@ -2962,6 +3062,12 @@ const docTemplate = `{
                 },
                 "disable_provider_auto_update": {
                     "type": "boolean"
+                },
+                "disabled_skills": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "disabled_tools": {
                     "type": "array",
@@ -3033,6 +3139,17 @@ const docTemplate = `{
                 "StateError",
                 "StateStopped",
                 "StateDisabled"
+            ]
+        },
+        "proto.APIKeyKind": {
+            "type": "string",
+            "enum": [
+                "string",
+                "oauth"
+            ],
+            "x-enum-varnames": [
+                "APIKeyKindString",
+                "APIKeyKindOAuth"
             ]
         },
         "proto.AgentInfo": {
@@ -3155,7 +3272,15 @@ const docTemplate = `{
         "proto.ConfigProviderKeyRequest": {
             "type": "object",
             "properties": {
-                "api_key": {},
+                "api_key": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "kind": {
+                    "$ref": "#/definitions/proto.APIKeyKind"
+                },
                 "provider_id": {
                     "type": "string"
                 },
@@ -3497,6 +3622,9 @@ const docTemplate = `{
         "proto.VersionInfo": {
             "type": "object",
             "properties": {
+                "build_id": {
+                    "type": "string"
+                },
                 "commit": {
                     "type": "string"
                 },
@@ -3538,7 +3666,7 @@ const docTemplate = `{
                 "version": {
                     "type": "string"
                 },
-                "duck": {
+                "yolo": {
                     "type": "boolean"
                 }
             }
@@ -3576,8 +3704,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/v1",
 	Schemes:          []string{},
-	Title:            "DuckOps API",
-	Description:      "DuckOps is a terminal-based AI coding assistant. This API is served over a Unix socket (or Windows named pipe) and provides programmatic access to workspaces, sessions, agents, LSP, MCP, and more.",
+	Title:            "duckops API",
+	Description:      "duckops is a terminal-based AI coding assistant. This API is served over a Unix socket (or Windows named pipe) and provides programmatic access to workspaces, sessions, agents, LSP, MCP, and more.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

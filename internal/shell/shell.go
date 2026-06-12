@@ -34,15 +34,15 @@ const (
 	ShellTypePowerShell
 )
 
-// DuckOpsEnvMarkers returns a fresh slice of the environment variables that
-// DuckOps unconditionally sets on every shell it spawns — both the interactive
+// duckopsEnvMarkers returns a fresh slice of the environment variables that
+// duckops unconditionally sets on every shell it spawns — both the interactive
 // bash tool's [Shell] and the hook runner's [Run] calls. Tools that want to
 // detect "am I being invoked by an AI agent?" can check any of these.
 // Keeping them in one place guarantees the two shell surfaces cannot drift.
 // A fresh slice is returned on every call so callers may append freely.
-func DuckOpsEnvMarkers() []string {
+func duckopsEnvMarkers() []string {
 	return []string{
-		"DUCKOPS=1",
+		"duckops=1",
 		"AGENT=duckops",
 		"AI_AGENT=duckops",
 	}
@@ -94,8 +94,8 @@ func NewShell(opts *Options) *Shell {
 		env = os.Environ()
 	}
 
-	// Allow tools to detect execution by DuckOps.
-	env = append(env, DuckOpsEnvMarkers()...)
+	// Allow tools to detect execution by duckops.
+	env = append(env, duckopsEnvMarkers()...)
 
 	logger := opts.Logger
 	if logger == nil {

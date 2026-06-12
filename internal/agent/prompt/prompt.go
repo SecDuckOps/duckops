@@ -12,10 +12,11 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/home"
-	"github.com/SecDuckOps/duckops/internal/shell"
-	"github.com/SecDuckOps/duckops/internal/skills"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/filepathext"
+	"github.com/SecDuckOps/duckopsinternal/home"
+	"github.com/SecDuckOps/duckopsinternal/shell"
+	"github.com/SecDuckOps/duckopsinternal/skills"
 )
 
 // Prompt represents a template-based prompt generator.
@@ -107,10 +108,7 @@ func processFile(filePath string) *ContextFile {
 
 func processContextPath(p string, store *config.ConfigStore) []ContextFile {
 	var contexts []ContextFile
-	fullPath := p
-	if !filepath.IsAbs(p) {
-		fullPath = filepath.Join(store.WorkingDir(), p)
-	}
+	fullPath := filepathext.SmartJoin(store.WorkingDir(), p)
 	info, err := os.Stat(fullPath)
 	if err != nil {
 		return contexts

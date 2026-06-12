@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckopsinternal/home"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/charlievieth/fastwalk"
-	"github.com/SecDuckOps/duckops/internal/csync"
-	"github.com/SecDuckOps/duckops/internal/home"
 )
 
 type FileInfo struct {
@@ -28,7 +28,7 @@ func SkipHidden(path string) bool {
 	}
 
 	commonIgnoredDirs := map[string]bool{
-		".duckops":           true,
+		".duckops":         true,
 		"node_modules":     true,
 		"vendor":           true,
 		"dist":             true,

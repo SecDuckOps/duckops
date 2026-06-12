@@ -5,15 +5,16 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/filepathext"
-	"github.com/SecDuckOps/duckops/internal/fsext"
-	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/filepathext"
+	"github.com/SecDuckOps/duckopsinternal/fsext"
+	"github.com/SecDuckOps/duckopsinternal/permission"
 )
 
 type LSParams struct {
@@ -52,13 +53,28 @@ const (
 	maxLSFiles = 1000
 )
 
-//go:embed ls.md
-var lsDescription []byte
+//go:embed ls.md.tpl
+var lsDescriptionTmpl []byte
+
+var lsDescriptionTpl = template.Must(
+	template.New("lsDescription").
+		Parse(string(lsDescriptionTmpl)),
+)
+
+type lsDescriptionData struct {
+	MaxFiles int
+}
+
+func lsDescription() string {
+	return renderTemplate(lsDescriptionTpl, lsDescriptionData{
+		MaxFiles: maxLSFiles,
+	})
+}
 
 func NewLsTool(permissions permission.Service, workingDir string, lsConfig config.ToolLs) fantasy.AgentTool {
 	return fantasy.NewAgentTool(
 		LSToolName,
-		FirstLineDescription(lsDescription),
+		lsDescription(),
 		func(ctx context.Context, params LSParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			searchPath, err := fsext.Expand(cmp.Or(params.Path, workingDir))
 			if err != nil {
@@ -86,7 +102,8 @@ func NewLsTool(permissions permission.Service, workingDir string, lsConfig confi
 					return fantasy.ToolResponse{}, fmt.Errorf("session ID is required for accessing directories outside working directory")
 				}
 
-				granted, err := permissions.Request(ctx,
+				granted, err := permissions.Request(
+					ctx,
 					permission.CreatePermissionRequest{
 						SessionID:   sessionID,
 						Path:        absSearchPath,
@@ -114,7 +131,8 @@ func NewLsTool(permissions permission.Service, workingDir string, lsConfig confi
 				fantasy.NewTextResponse(output),
 				metadata,
 			), nil
-		})
+		},
+	)
 }
 
 func ListDirectoryTree(searchPath string, params LSParams, lsConfig config.ToolLs) (string, LSResponseMetadata, error) {

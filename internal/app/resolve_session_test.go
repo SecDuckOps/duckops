@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SecDuckOps/duckops/internal/pubsub"
-	"github.com/SecDuckOps/duckops/internal/session"
+	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckopsinternal/session"
 	"github.com/stretchr/testify/require"
 )
 

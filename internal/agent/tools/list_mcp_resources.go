@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckops/internal/config"
-	"github.com/SecDuckOps/duckops/internal/filepathext"
-	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckopsinternal/filepathext"
+	"github.com/SecDuckOps/duckopsinternal/permission"
 )
 
 type ListMCPResourcesParams struct {
@@ -26,12 +26,12 @@ type ListMCPResourcesPermissionsParams struct {
 const ListMCPResourcesToolName = "list_mcp_resources"
 
 //go:embed list_mcp_resources.md
-var listMCPResourcesDescription []byte
+var listMCPResourcesDescription string
 
 func NewListMCPResourcesTool(cfg *config.ConfigStore, permissions permission.Service) fantasy.AgentTool {
 	return fantasy.NewParallelAgentTool(
 		ListMCPResourcesToolName,
-		FirstLineDescription(listMCPResourcesDescription),
+		listMCPResourcesDescription,
 		func(ctx context.Context, params ListMCPResourcesParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
 			params.MCPName = strings.TrimSpace(params.MCPName)
 			if params.MCPName == "" {
@@ -44,7 +44,8 @@ func NewListMCPResourcesTool(cfg *config.ConfigStore, permissions permission.Ser
 			}
 
 			relPath := filepathext.SmartJoin(cfg.WorkingDir(), params.MCPName)
-			p, err := permissions.Request(ctx,
+			p, err := permissions.Request(
+				ctx,
 				permission.CreatePermissionRequest{
 					SessionID:   sessionID,
 					Path:        relPath,

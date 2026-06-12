@@ -17,9 +17,9 @@ import (
 
 	"charm.land/catwalk/pkg/catwalk"
 	"charm.land/catwalk/pkg/embedded"
-	"github.com/SecDuckOps/duckops/internal/agent/hyper"
-	"github.com/SecDuckOps/duckops/internal/csync"
-	"github.com/SecDuckOps/duckops/internal/home"
+	"github.com/SecDuckOps/duckopsinternal/agent/hyper"
+	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckopsinternal/home"
 	"github.com/charmbracelet/x/etag"
 )
 
@@ -147,6 +147,9 @@ func Providers(cfg *Config) ([]catwalk.Provider, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 		defer cancel()
 
+		var hyperProvider catwalk.Provider
+		var hyperFound bool
+
 		wg.Go(func() {
 			if customProvidersOnly {
 				return
@@ -159,7 +162,7 @@ func Providers(cfg *Config) ([]catwalk.Provider, error) {
 			items, err := catwalkSyncer.Get(ctx)
 			if err != nil {
 				catwalkURL := fmt.Sprintf("%s/v2/providers", cmp.Or(os.Getenv("CATWALK_URL"), defaultCatwalkURL))
-				errs = append(errs, fmt.Errorf("DuckOps was unable to fetch an updated list of providers from %s. Consider setting DUCKOPS_DISABLE_PROVIDER_AUTO_UPDATE=1 to use the embedded providers bundled at the time of this DuckOps release. You can also update providers manually. For more info see duckops update-providers --help.\n\nCause: %w", catwalkURL, err)) //nolint:staticcheck
+				errs = append(errs, fmt.Errorf("duckops was unable to fetch an updated list of providers from %s. Consider setting duckops_DISABLE_PROVIDER_AUTO_UPDATE=1 to use the embedded providers bundled at the time of this duckops release. You can also update providers manually. For more info see duckops update-providers --help.\n\nCause: %w", catwalkURL, err)) //nolint:staticcheck
 				return
 			}
 			providers.Append(items...)
@@ -174,15 +177,20 @@ func Providers(cfg *Config) ([]catwalk.Provider, error) {
 
 			item, err := hyperSyncer.Get(ctx)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("DuckOps was unable to fetch updated information from Hyper: %w", err)) //nolint:staticcheck
+				errs = append(errs, fmt.Errorf("duckops was unable to fetch updated information from Hyper: %w", err)) //nolint:staticcheck
 				return
 			}
-			providers.Append(item)
+			hyperProvider = item
+			hyperFound = true
 		})
 
 		wg.Wait()
 
-		providerList = slices.Collect(providers.Seq())
+		if hyperFound {
+			providerList = append([]catwalk.Provider{hyperProvider}, slices.Collect(providers.Seq())...)
+		} else {
+			providerList = slices.Collect(providers.Seq())
+		}
 		providerErr = errors.Join(errs...)
 	})
 	return providerList, providerErr

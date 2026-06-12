@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/charlievieth/fastwalk"
+	"github.com/SecDuckOps/duckops/internal/home"
 	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"gopkg.in/yaml.v3"
 )
@@ -329,4 +330,88 @@ func Filter(all []*Skill, disabled []string) []*Skill {
 		}
 	}
 	return result
+}
+
+// CatalogEntry represents a skill entry in the skill catalog database/list.
+type CatalogEntry struct {
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Label         string `json:"label"`
+	UserInvocable bool   `json:"user_invocable"`
+}
+
+// Manager holds the pre-discovered skills lists.
+type Manager struct {
+	allSkills    []*Skill
+	activeSkills []*Skill
+}
+
+// NewManager creates a new skills Manager with the given lists of skills.
+func NewManager(all []*Skill, active []*Skill) *Manager {
+	return &Manager{
+		allSkills:    all,
+		activeSkills: active,
+	}
+}
+
+// AllSkills returns all pre-discovered skills.
+func (m *Manager) AllSkills() []*Skill {
+	return m.allSkills
+}
+
+// ActiveSkills returns all active skills.
+func (m *Manager) ActiveSkills() []*Skill {
+	return m.activeSkills
+}
+
+// DiscoveryConfig holds options for the skills discovery process.
+type DiscoveryConfig struct {
+	SkillsPaths    []string
+	DisabledSkills []string
+	Resolver       func(string) (string, error)
+}
+
+// DiscoverFromConfig performs skills discovery based on the provided configuration.
+func DiscoverFromConfig(cfg DiscoveryConfig) (allSkills, activeSkills []*Skill, states []*SkillState) {
+	builtin, builtinStates := DiscoverBuiltinWithStates()
+
+	// Ensure builtin states path starts with "builtin/" for logDiscoveryStats
+	for _, s := range builtinStates {
+		if !strings.HasPrefix(s.Path, "builtin/") {
+			// If it has BuiltinPrefix, replace it with "builtin/"
+			if strings.HasPrefix(s.Path, BuiltinPrefix) {
+				s.Path = "builtin/" + strings.TrimPrefix(s.Path, BuiltinPrefix)
+			} else {
+				s.Path = "builtin/" + s.Path
+			}
+		}
+	}
+
+	discovered := append([]*Skill(nil), builtin...)
+	states = append([]*SkillState(nil), builtinStates...)
+
+	var userStates []*SkillState
+	var userPaths []string
+
+	if len(cfg.SkillsPaths) > 0 {
+		userPaths = make([]string, 0, len(cfg.SkillsPaths))
+		for _, pth := range cfg.SkillsPaths {
+			expanded := home.Long(pth)
+			if strings.HasPrefix(expanded, "$") && cfg.Resolver != nil {
+				if resolved, err := cfg.Resolver(expanded); err == nil {
+					expanded = resolved
+				}
+			}
+			userPaths = append(userPaths, expanded)
+		}
+		var userSkills []*Skill
+		userSkills, userStates = DiscoverWithStates(userPaths)
+		discovered = append(discovered, userSkills...)
+		states = append(states, userStates...)
+	}
+
+	allSkills = Deduplicate(discovered)
+	activeSkills = Filter(allSkills, cfg.DisabledSkills)
+	return allSkills, activeSkills, states
 }

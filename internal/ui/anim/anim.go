@@ -50,9 +50,14 @@ var (
 	defaultLabelColor = color.RGBA{R: 0xcc, G: 0xcc, B: 0xcc, A: 0xff}
 )
 
+// var (
+// 	availableRunes = []rune("0123456789abcdefABCDEF~!@#$£€%^&*()+=_")
+// 	ellipsisFrames = []string{".", "..", "...", ""}
+// )
+
 var (
-	availableRunes = []rune("0123456789abcdefABCDEF~!@#$£€%^&*()+=_")
-	ellipsisFrames = []string{".", "..", "...", ""}
+	availableRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	ellipsisFrames = []string{"⠁", "⠂", "⠄", "⠂"}
 )
 
 // Internal ID management. Used during animating to ensure that frame messages

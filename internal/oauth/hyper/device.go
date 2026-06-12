@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SecDuckOps/duckops/internal/agent/hyper"
-	"github.com/SecDuckOps/duckops/internal/event"
-	"github.com/SecDuckOps/duckops/internal/oauth"
+	"github.com/SecDuckOps/duckopsinternal/agent/hyper"
+	"github.com/SecDuckOps/duckopsinternal/event"
+	"github.com/SecDuckOps/duckopsinternal/oauth"
 )
 
 // DeviceAuthResponse contains the response from the device authorization endpoint.
@@ -77,9 +77,9 @@ func InitiateDeviceAuth(ctx context.Context) (*DeviceAuthResponse, error) {
 
 func deviceName() string {
 	if hostname, err := os.Hostname(); err == nil && hostname != "" {
-		return "DuckOps (" + hostname + ")"
+		return "duckops (" + hostname + ")"
 	}
-	return "DuckOps"
+	return "duckops"
 }
 
 // PollForToken polls the /device/token endpoint until authorization is complete.

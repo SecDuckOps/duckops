@@ -18,13 +18,16 @@ import (
 	"testing"
 
 	"charm.land/catwalk/pkg/catwalk"
-	"github.com/SecDuckOps/duckops/internal/agent/hyper"
-	"github.com/SecDuckOps/duckops/internal/csync"
-	"github.com/SecDuckOps/duckops/internal/env"
-	"github.com/SecDuckOps/duckops/internal/fsext"
-	"github.com/SecDuckOps/duckops/internal/home"
+	"github.com/SecDuckOps/duckopsinternal/agent/hyper"
+	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckopsinternal/env"
+	"github.com/SecDuckOps/duckopsinternal/filepathext"
+	"github.com/SecDuckOps/duckopsinternal/fsext"
+	"github.com/SecDuckOps/duckopsinternal/home"
 	powernapConfig "github.com/charmbracelet/x/powernap/pkg/config"
 	"github.com/qjebbs/go-jsons"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
 const defaultCatwalkURL = "https://catwalk.charm.land"
@@ -32,6 +35,9 @@ const defaultCatwalkURL = "https://catwalk.charm.land"
 // Load loads the configuration from the default paths and returns a
 // ConfigStore that owns both the pure-data Config and all runtime state.
 func Load(workingDir, dataDir string, debug bool) (*ConfigStore, error) {
+	// Migrate deprecated disable_notifications before loading config.
+	migrateDisableNotifications()
+
 	configPaths := lookupConfigs(workingDir)
 
 	cfg, loadedPaths, err := loadFromConfigPaths(configPaths)
@@ -55,6 +61,9 @@ func Load(workingDir, dataDir string, debug bool) (*ConfigStore, error) {
 
 	// Load workspace config last so it has highest priority.
 	if wsData, err := os.ReadFile(store.workspacePath); err == nil && len(wsData) > 0 {
+		if !json.Valid(wsData) {
+			return nil, fmt.Errorf("invalid JSON in config file %s", store.workspacePath)
+		}
 		merged, mergeErr := loadFromBytes(append([][]byte{mustMarshalConfig(cfg)}, wsData))
 		if mergeErr == nil {
 			// Preserve defaults that setDefaults already applied.
@@ -99,16 +108,14 @@ func Load(workingDir, dataDir string, debug bool) (*ConfigStore, error) {
 	valueResolver := NewShellVariableResolver(env)
 	store.resolver = valueResolver
 
-	// Disable auto-reload during initial load to prevent nested calls from
-	// config-modifying operations inside configureProviders.
-	store.autoReloadDisabled = true
-	defer func() { store.autoReloadDisabled = false }()
+	// Hold reloadMu during initial load to prevent configureProviders
+	// from triggering auto-reload via RemoveConfigField.
+	store.reloadMu.Lock()
+	defer store.reloadMu.Unlock()
 
 	if err := cfg.configureProviders(store, env, valueResolver, store.knownProviders); err != nil {
 		return nil, fmt.Errorf("failed to configure providers: %w", err)
 	}
-
-	cfg.SetupDefaultOllama()
 
 	if !cfg.IsConfigured() {
 		slog.Warn("No providers configured")
@@ -136,15 +143,15 @@ func mustMarshalConfig(cfg *Config) []byte {
 	return data
 }
 
-func PushPopDuckOpsEnv() func() {
+func PushPopduckopsEnv() func() {
 	var found []string
 	for _, ev := range os.Environ() {
-		if strings.HasPrefix(ev, "DUCKOPS_") {
+		if strings.HasPrefix(ev, "duckops_") {
 			pair := strings.SplitN(ev, "=", 2)
 			if len(pair) != 2 {
 				continue
 			}
-			found = append(found, strings.TrimPrefix(pair[0], "DUCKOPS_"))
+			found = append(found, strings.TrimPrefix(pair[0], "duckops_"))
 		}
 	}
 	backups := make(map[string]string)
@@ -153,7 +160,7 @@ func PushPopDuckOpsEnv() func() {
 	}
 
 	for _, ev := range found {
-		os.Setenv(ev, os.Getenv("DUCKOPS_"+ev))
+		os.Setenv(ev, os.Getenv("duckops_"+ev))
 	}
 
 	restore := func() {
@@ -166,7 +173,7 @@ func PushPopDuckOpsEnv() func() {
 
 func (c *Config) configureProviders(store *ConfigStore, env env.Env, resolver VariableResolver, knownProviders []catwalk.Provider) error {
 	knownProviderNames := make(map[string]bool)
-	restore := PushPopDuckOpsEnv()
+	restore := PushPopduckopsEnv()
 	defer restore()
 
 	// When disable_default_providers is enabled, skip all default/embedded
@@ -228,8 +235,7 @@ func (c *Config) configureProviders(store *ConfigStore, env env.Env, resolver Va
 		// a failing $(...) aborts the provider load with a clear
 		// message, and a header that resolves to the empty string
 		// (unset bare $VAR under lenient nounset, $(echo), or literal
-		// "") is dropped from the outgoing request. See PLAN.md
-		// Phase 2 design decisions #14 and #18.
+		// "") is dropped from the outgoing request.
 		for k, v := range headers {
 			resolved, err := resolver.ResolveValue(v)
 			if err != nil {
@@ -260,9 +266,11 @@ func (c *Config) configureProviders(store *ConfigStore, env env.Env, resolver Va
 		switch {
 		case p.ID == catwalk.InferenceProviderAnthropic && config.OAuthToken != nil:
 			// Claude Code subscription is not supported anymore. Remove to show onboarding.
-			if !store.reloadInProgress {
-				store.RemoveConfigField(ScopeGlobal, "providers.anthropic")
-			}
+			// RemoveConfigField persists the deletion to disk. The in-memory
+			// state is kept consistent by the Providers.Del call below; any
+			// concurrent reload that races with this write will also see the
+			// removal because it re-reads from disk.
+			store.RemoveConfigField(ScopeGlobal, "providers.anthropic")
 			c.Providers.Del(string(p.ID))
 			continue
 		case p.ID == catwalk.InferenceProviderCopilot && config.OAuthToken != nil:
@@ -296,22 +304,13 @@ func (c *Config) configureProviders(store *ConfigStore, env env.Env, resolver Va
 			}
 			prepared.BaseURL = endpoint
 			prepared.ExtraParams["apiVersion"] = env.Get("AZURE_OPENAI_API_VERSION")
-		case catwalk.InferenceProviderBedrock:
-			if !hasAWSCredentials(env) {
+		case catwalk.InferenceProviderBedrock, catwalk.InferenceProviderBedrockEurope:
+			if p.APIKey == "" && !hasAWSCredentials(env) {
 				if configExists {
 					slog.Warn("Skipping Bedrock provider due to missing AWS credentials")
 					c.Providers.Del(string(p.ID))
 				}
 				continue
-			}
-			prepared.ExtraParams["region"] = env.Get("AWS_REGION")
-			if prepared.ExtraParams["region"] == "" {
-				prepared.ExtraParams["region"] = env.Get("AWS_DEFAULT_REGION")
-			}
-			for _, model := range p.Models {
-				if !strings.HasPrefix(model.ID, "anthropic.") {
-					return fmt.Errorf("bedrock provider only supports anthropic models for now, found: %s", model.ID)
-				}
 			}
 		case catwalk.InferenceProvider("hyper"):
 			if apiKey := env.Get("HYPER_API_KEY"); apiKey != "" {
@@ -388,8 +387,7 @@ func (c *Config) configureProviders(store *ConfigStore, env env.Env, resolver Va
 		}
 
 		// Custom-provider headers share the MCP error contract; see
-		// the known-provider loop above and PLAN.md Phase 2 design
-		// decisions #14 and #18.
+		// the known-provider loop above.
 		for k, v := range providerConfig.ExtraHeaders {
 			resolved, err := resolver.ResolveValue(v)
 			if err != nil {
@@ -422,12 +420,13 @@ func (c *Config) setDefaults(workingDir, dataDir string) {
 	if dataDir != "" {
 		c.Options.DataDirectory = dataDir
 	} else if c.Options.DataDirectory == "" {
-		if path, ok := fsext.LookupClosest(workingDir, defaultDataDirectory); ok {
+		if path, ok := fsext.LookupClosestBounded(workingDir, projectBoundary(workingDir), defaultDataDirectory); ok {
 			c.Options.DataDirectory = path
 		} else {
 			c.Options.DataDirectory = filepath.Join(workingDir, defaultDataDirectory)
 		}
 	}
+	c.Options.DataDirectory = filepath.Clean(filepathext.SmartJoin(workingDir, c.Options.DataDirectory))
 	if c.Providers == nil {
 		c.Providers = csync.NewMap[string, ProviderConfig]()
 	}
@@ -448,7 +447,7 @@ func (c *Config) setDefaults(workingDir, dataDir string) {
 	c.applyLSPDefaults()
 
 	// Add the default context paths if they are not already present
-	c.Options.ContextPaths = append(defaultContextPaths, c.Options.ContextPaths...)
+	c.Options.ContextPaths = append(slices.Clone(defaultContextPaths), c.Options.ContextPaths...)
 	slices.Sort(c.Options.ContextPaths)
 	c.Options.ContextPaths = slices.Compact(c.Options.ContextPaths)
 
@@ -462,11 +461,11 @@ func (c *Config) setDefaults(workingDir, dataDir string) {
 	// Project specific skills dirs.
 	c.Options.SkillsPaths = append(c.Options.SkillsPaths, ProjectSkillsDir(workingDir)...)
 
-	if str, ok := os.LookupEnv("DUCKOPS_DISABLE_PROVIDER_AUTO_UPDATE"); ok {
+	if str, ok := os.LookupEnv("duckops_DISABLE_PROVIDER_AUTO_UPDATE"); ok {
 		c.Options.DisableProviderAutoUpdate, _ = strconv.ParseBool(str)
 	}
 
-	if str, ok := os.LookupEnv("DUCKOPS_DISABLE_DEFAULT_PROVIDERS"); ok {
+	if str, ok := os.LookupEnv("duckops_DISABLE_DEFAULT_PROVIDERS"); ok {
 		c.Options.DisableDefaultProviders, _ = strconv.ParseBool(str)
 	}
 
@@ -487,6 +486,7 @@ func (c *Config) setDefaults(workingDir, dataDir string) {
 			c.Options.Attribution.TrailerStyle = TrailerStyleAssistedBy
 		}
 	}
+
 	c.Options.InitializeAs = cmp.Or(c.Options.InitializeAs, defaultInitializeAs)
 }
 
@@ -545,8 +545,11 @@ func (c *Config) defaultModelSelection(knownProviders []catwalk.Provider) (large
 		}
 		defaultLargeModel := c.GetModel(string(p.ID), p.DefaultLargeModelID)
 		if defaultLargeModel == nil {
-			err = fmt.Errorf("default large model %s not found for provider %s", p.DefaultLargeModelID, p.ID)
-			return largeModel, smallModel, err
+			slog.Warn("Default large model %s not found for provider %s", p.DefaultLargeModelID, p.ID)
+			if len(providerConfig.Models) == 0 {
+				return largeModel, smallModel, fmt.Errorf("default large model %s not found for provider %s", p.DefaultLargeModelID, p.ID)
+			}
+			defaultLargeModel = &providerConfig.Models[0]
 		}
 		largeModel = SelectedModel{
 			Provider:        string(p.ID),
@@ -557,8 +560,11 @@ func (c *Config) defaultModelSelection(knownProviders []catwalk.Provider) (large
 
 		defaultSmallModel := c.GetModel(string(p.ID), p.DefaultSmallModelID)
 		if defaultSmallModel == nil {
-			err = fmt.Errorf("default small model %s not found for provider %s", p.DefaultSmallModelID, p.ID)
-			return largeModel, smallModel, err
+			slog.Warn("Default small model %s not found for provider %s", p.DefaultSmallModelID, p.ID)
+			if len(providerConfig.Models) == 0 {
+				return largeModel, smallModel, fmt.Errorf("default small model %s not found for provider %s", p.DefaultSmallModelID, p.ID)
+			}
+			defaultSmallModel = &providerConfig.Models[0]
 		}
 		smallModel = SelectedModel{
 			Provider:        string(p.ID),
@@ -694,25 +700,46 @@ func configureSelectedModels(store *ConfigStore, knownProviders []catwalk.Provid
 			small.Think = smallModelSelected.Think
 		}
 	}
+
+	// When small isn't explicitly configured and the provider isn't a
+	// known built-in, use the large model as the small model. This
+	// prevents two different models from being requested concurrently
+	// for local/openai-compat providers.
+	if !smallModelConfigured {
+		isKnownProvider := false
+		for _, kp := range knownProviders {
+			if string(kp.ID) == small.Provider {
+				isKnownProvider = true
+				break
+			}
+		}
+		if !isKnownProvider {
+			slog.Warn("Using large model as small model for unknown provider", "provider", large.Provider, "model", large.Model)
+			small = large
+		}
+	}
+
 	c.Models[SelectedModelTypeLarge] = large
 	c.Models[SelectedModelTypeSmall] = small
 	return nil
 }
 
-// lookupConfigs searches config files recursively from CWD up to FS root
+// lookupConfigs searches config files starting at cwd and walking up
+// through the current project. The upward walk stops at the git
+// working tree root when one can be detected, otherwise at cwd itself,
+// so an unrelated duckops.json placed above the project is never picked
+// up. Global user-level config locations are always included
+// regardless of the boundary.
 func lookupConfigs(cwd string) []string {
 	// prepend default config paths
 	configPaths := []string{
 		GlobalConfig(),
 		GlobalConfigData(),
-		// Legacy XDG paths — loaded if they exist for backward compatibility
-		filepath.Join(home.Config(), appName, fmt.Sprintf("%s.json", appName)),
-		filepath.Join(home.Dir(), ".local", "share", appName, fmt.Sprintf("%s.json", appName)),
 	}
 
 	configNames := []string{appName + ".json", "." + appName + ".json"}
 
-	foundConfigs, err := fsext.Lookup(cwd, configNames...)
+	foundConfigs, err := fsext.LookupBounded(cwd, projectBoundary(cwd), configNames...)
 	if err != nil {
 		// returns at least default configs
 		return configPaths
@@ -738,6 +765,9 @@ func loadFromConfigPaths(configPaths []string) (*Config, []string, error) {
 		}
 		if len(data) == 0 {
 			continue
+		}
+		if !json.Valid(data) {
+			return nil, nil, fmt.Errorf("invalid JSON in config file %s", path)
 		}
 		configs = append(configs, data)
 		loaded = append(loaded, path)
@@ -791,22 +821,88 @@ func hasAWSCredentials(env env.Env) bool {
 	if _, err := os.Stat(filepath.Join(home.Dir(), ".aws/credentials")); err == nil && !testing.Testing() {
 		return true
 	}
+	if _, err := os.Stat(filepath.Join(home.Dir(), ".aws/login")); err == nil && !testing.Testing() {
+		return true
+	}
 
 	return false
 }
 
+// migrateDisableNotifications migrates the deprecated disable_notifications
+// field to notification_style. It checks both the user config (~/.config) and
+// data config (~/.local) files. If disable_notifications is true, it sets
+// notification_style to "disabled" in the data file. Regardless of value, it
+// removes disable_notifications from any file that contains it.
+func migrateDisableNotifications() {
+	globalConfig := GlobalConfig()
+	dataConfig := GlobalConfigData()
+
+	var wasDisabled bool
+	filesToClean := []string{}
+
+	for _, path := range []string{globalConfig, dataConfig} {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		if gjson.Get(string(data), "options.disable_notifications").Exists() {
+			filesToClean = append(filesToClean, path)
+			if gjson.Get(string(data), "options.disable_notifications").Bool() {
+				wasDisabled = true
+			}
+		}
+	}
+
+	if len(filesToClean) == 0 {
+		return
+	}
+
+	// If notifications were disabled, persist the equivalent notification_style.
+	if wasDisabled {
+		data, err := os.ReadFile(dataConfig)
+		if err == nil {
+			if !gjson.Get(string(data), "options.notification_style").Exists() {
+				updated, err := sjson.Set(string(data), "options.notification_style", "disabled")
+				if err == nil {
+					if err := atomicWriteFile(dataConfig, []byte(updated), 0o600); err != nil {
+						slog.Warn("Failed to migrate disable_notifications to notification_style", "error", err)
+					} else {
+						slog.Info("Migrated disable_notifications: true to notification_style: disabled")
+					}
+				}
+			}
+		}
+	}
+
+	// Remove disable_notifications from all files that contain it.
+	for _, path := range filesToClean {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		updated, err := sjson.Delete(string(data), "options.disable_notifications")
+		if err != nil {
+			slog.Warn("Failed to remove deprecated disable_notifications field", "path", path, "error", err)
+			continue
+		}
+		if err := atomicWriteFile(path, []byte(updated), 0o600); err != nil {
+			slog.Warn("Failed to write migrated config", "path", path, "error", err)
+		}
+	}
+}
+
 // GlobalConfig returns the global configuration file path for the application.
 func GlobalConfig() string {
-	if duckopsGlobal := os.Getenv("DUCKOPS_GLOBAL_CONFIG"); duckopsGlobal != "" {
+	if duckopsGlobal := os.Getenv("duckops_GLOBAL_CONFIG"); duckopsGlobal != "" {
 		return filepath.Join(duckopsGlobal, fmt.Sprintf("%s.json", appName))
 	}
-	return filepath.Join(home.Dir(), "."+appName, fmt.Sprintf("%s.json", appName))
+	return filepath.Join(home.Config(), appName, fmt.Sprintf("%s.json", appName))
 }
 
 // GlobalCacheDir returns the path to the global cache directory for the
 // application.
 func GlobalCacheDir() string {
-	if duckopsCache := os.Getenv("DUCKOPS_CACHE_DIR"); duckopsCache != "" {
+	if duckopsCache := os.Getenv("duckops_CACHE_DIR"); duckopsCache != "" {
 		return duckopsCache
 	}
 	if xdgCacheHome := os.Getenv("XDG_CACHE_HOME"); xdgCacheHome != "" {
@@ -822,13 +918,33 @@ func GlobalCacheDir() string {
 	return filepath.Join(home.Dir(), ".cache", appName)
 }
 
+// ProjectConfigs returns list of current project configs paths.
+func ProjectConfigs(cwd string) []string {
+	return lookupConfigs(cwd)
+}
+
 // GlobalConfigData returns the path to the main data directory for the application.
 // this config is used when the app overrides configurations instead of updating the global config.
 func GlobalConfigData() string {
-	if duckopsData := os.Getenv("DUCKOPS_GLOBAL_DATA"); duckopsData != "" {
+	if duckopsData := os.Getenv("duckops_GLOBAL_DATA"); duckopsData != "" {
 		return filepath.Join(duckopsData, fmt.Sprintf("%s.json", appName))
 	}
-	return filepath.Join(home.Dir(), "."+appName, fmt.Sprintf("%s.json", appName))
+	if xdgDataHome := os.Getenv("XDG_DATA_HOME"); xdgDataHome != "" {
+		return filepath.Join(xdgDataHome, appName, fmt.Sprintf("%s.json", appName))
+	}
+
+	// return the path to the main data directory
+	// for windows, it should be in `%LOCALAPPDATA%/duckops/`
+	// for linux and macOS, it should be in `$HOME/.local/share/duckops/`
+	if runtime.GOOS == "windows" {
+		localAppData := cmp.Or(
+			os.Getenv("LOCALAPPDATA"),
+			filepath.Join(os.Getenv("USERPROFILE"), "AppData", "Local"),
+		)
+		return filepath.Join(localAppData, appName, fmt.Sprintf("%s.json", appName))
+	}
+
+	return filepath.Join(home.Dir(), ".local", "share", appName, fmt.Sprintf("%s.json", appName))
 }
 
 // GlobalWorkspaceDir returns the path to the global server workspace
@@ -855,17 +971,62 @@ func isInsideWorktree() bool {
 	return err == nil && strings.TrimSpace(string(bts)) == "true"
 }
 
+// worktreeRoot returns the absolute path of the git working tree root for
+// dir, or the empty string if dir is not inside a working tree (bare
+// repositories, missing git binary, plain directories, or any other
+// failure mode). Linked worktrees and submodules each report their own
+// top-level, which is what callers want when bounding lookups.
+func worktreeRoot(dir string) string {
+	cmd := exec.CommandContext(
+		context.Background(),
+		"git", "rev-parse", "--show-toplevel",
+	)
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	root := strings.TrimSpace(string(out))
+	if root == "" {
+		return ""
+	}
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return ""
+	}
+	return abs
+}
+
+// projectBoundary returns the directory at which an upward configuration
+// search rooted at dir should stop. It is the git working tree root when
+// one can be detected, otherwise dir itself. Returning dir as a
+// fallback keeps duckops from silently adopting state files placed above
+// the current project.
+func projectBoundary(dir string) string {
+	if root := worktreeRoot(dir); root != "" {
+		return root
+	}
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return dir
+	}
+	return abs
+}
+
 // GlobalSkillsDirs returns the default directories for Agent Skills.
 // Skills in these directories are auto-discovered and their files can be read
 // without permission prompts.
 func GlobalSkillsDirs() []string {
-	if duckopsSkills := os.Getenv("DUCKOPS_SKILLS_DIR"); duckopsSkills != "" {
+	if duckopsSkills := os.Getenv("duckops_SKILLS_DIR"); duckopsSkills != "" {
 		return []string{duckopsSkills}
 	}
 
 	paths := []string{
 		filepath.Join(home.Config(), appName, "skills"),
 		filepath.Join(home.Config(), "agents", "skills"),
+		// Per the Agent Skills spec, scan ~/.agents/skills
+		filepath.Join(home.Dir(), ".agents", "skills"),
+		filepath.Join(home.Dir(), ".claude", "skills"),
 	}
 
 	// On Windows, also load from app data on top of `$HOME/.config/duckops`.
@@ -885,15 +1046,37 @@ func GlobalSkillsDirs() []string {
 	return paths
 }
 
-// ProjectSkillsDir returns the default project directories for which DuckOps
-// will look for skills.
+// projectSkillSubdirs lists the conventional subdirectories where
+// project-level skills are discovered. Shared across working-dir and
+// git-root lookups to prevent drift when a new convention is added.
+var projectSkillSubdirs = []string{
+	".agents/skills",
+	".duckops/skills",
+	".claude/skills",
+	".cursor/skills",
+}
+
+// ProjectSkillsDir returns the default project directories for which duckops
+// will look for skills. In addition to the working directory, it also
+// checks the git working tree root so that monorepo-level skills are
+// discovered when the user is inside a subdirectory.
+// Working-directory paths come first so local skills take precedence
+// over monorepo-level ones.
 func ProjectSkillsDir(workingDir string) []string {
-	return []string{
-		filepath.Join(workingDir, ".agents/skills"),
-		filepath.Join(workingDir, ".duckops/skills"),
-		filepath.Join(workingDir, ".claude/skills"),
-		filepath.Join(workingDir, ".cursor/skills"),
+	dirs := make([]string, 0, len(projectSkillSubdirs)*2)
+	for _, sub := range projectSkillSubdirs {
+		dirs = append(dirs, filepath.Join(workingDir, sub))
 	}
+
+	// When the working directory is inside a git repository, also look at
+	// the repository root so monorepo-level .agents/skills are found.
+	if root := worktreeRoot(workingDir); root != "" && root != workingDir {
+		for _, sub := range projectSkillSubdirs {
+			dirs = append(dirs, filepath.Join(root, sub))
+		}
+	}
+
+	return dirs
 }
 
 func isAppleTerminal() bool { return os.Getenv("TERM_PROGRAM") == "Apple_Terminal" }
