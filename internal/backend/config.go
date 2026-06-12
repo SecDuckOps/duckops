@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/SecDuckOps/duckopsinternal/agent"
-	mcptools "github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckopsinternal/commands"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/oauth"
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
-	"github.com/SecDuckOps/duckopsinternal/skills"
+	"github.com/SecDuckOps/duckops/internal/agent"
+	mcptools "github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckops/internal/commands"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/oauth"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/skills"
 )
 
 // publishConfigChanged publishes a ConfigChanged event on the workspace's

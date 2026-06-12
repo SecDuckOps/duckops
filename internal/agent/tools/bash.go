@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/fsext"
-	"github.com/SecDuckOps/duckopsinternal/permission"
-	"github.com/SecDuckOps/duckopsinternal/shell"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/fsext"
+	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/shell"
 )
 
 type BashParams struct {

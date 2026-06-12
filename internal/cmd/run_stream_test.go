@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"github.com/stretchr/testify/require"
 )
 

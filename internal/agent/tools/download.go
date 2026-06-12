@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/filepathext"
-	"github.com/SecDuckOps/duckopsinternal/permission"
+	"github.com/SecDuckOps/duckops/internal/filepathext"
+	"github.com/SecDuckOps/duckops/internal/permission"
 )
 
 type DownloadParams struct {

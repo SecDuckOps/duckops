@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/csync"
-	"github.com/SecDuckOps/duckopsinternal/home"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/home"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/charlievieth/fastwalk"
 )

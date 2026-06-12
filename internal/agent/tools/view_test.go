@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/filetracker"
-	"github.com/SecDuckOps/duckopsinternal/permission"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/filetracker"
+	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"github.com/stretchr/testify/require"
 )
 

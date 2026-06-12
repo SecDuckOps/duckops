@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/SecDuckOps/duckopsinternal/agent/notify"
-	"github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckopsinternal/app"
-	"github.com/SecDuckOps/duckopsinternal/backend"
-	"github.com/SecDuckOps/duckopsinternal/history"
-	"github.com/SecDuckOps/duckopsinternal/message"
-	"github.com/SecDuckOps/duckopsinternal/permission"
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
-	"github.com/SecDuckOps/duckopsinternal/session"
-	"github.com/SecDuckOps/duckopsinternal/skills"
+	"github.com/SecDuckOps/duckops/internal/agent/notify"
+	"github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckops/internal/app"
+	"github.com/SecDuckOps/duckops/internal/backend"
+	"github.com/SecDuckOps/duckops/internal/history"
+	"github.com/SecDuckOps/duckops/internal/message"
+	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/session"
+	"github.com/SecDuckOps/duckops/internal/skills"
 )
 
 // wrapEvent converts a raw tea.Msg (a pubsub.Event[T] from the app

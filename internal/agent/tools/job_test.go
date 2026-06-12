@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/shell"
+	"github.com/SecDuckOps/duckops/internal/shell"
 	"github.com/stretchr/testify/require"
 )
 

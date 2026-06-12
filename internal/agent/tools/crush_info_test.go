@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"charm.land/catwalk/pkg/catwalk"
-	"github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/csync"
-	"github.com/SecDuckOps/duckopsinternal/lsp"
-	"github.com/SecDuckOps/duckopsinternal/skills"
+	"github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/lsp"
+	"github.com/SecDuckOps/duckops/internal/skills"
 	"github.com/stretchr/testify/require"
 )
 

@@ -13,14 +13,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/app"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/csync"
-	"github.com/SecDuckOps/duckopsinternal/db"
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/skills"
-	"github.com/SecDuckOps/duckopsinternal/ui/util"
-	"github.com/SecDuckOps/duckopsinternal/version"
+	"github.com/SecDuckOps/duckops/internal/app"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/db"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/skills"
+	"github.com/SecDuckOps/duckops/internal/ui/util"
+	"github.com/SecDuckOps/duckops/internal/version"
 	"github.com/google/uuid"
 )
 

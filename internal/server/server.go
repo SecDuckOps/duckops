@@ -13,9 +13,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/SecDuckOps/duckopsinternal/backend"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	_ "github.com/SecDuckOps/duckopsinternal/swagger"
+	"github.com/SecDuckOps/duckops/internal/backend"
+	"github.com/SecDuckOps/duckops/internal/config"
+	_ "github.com/SecDuckOps/duckops/internal/swagger"
 	httpswagger "github.com/swaggo/http-swagger/v2"
 )
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/env"
-	"github.com/SecDuckOps/duckopsinternal/shell"
+	"github.com/SecDuckOps/duckops/internal/env"
+	"github.com/SecDuckOps/duckops/internal/shell"
 )
 
 // resolveTimeout bounds how long a single ResolveValue call may spend

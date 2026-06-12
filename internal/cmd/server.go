@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/config"
-	duckopslog "github.com/SecDuckOps/duckopsinternal/log"
-	"github.com/SecDuckOps/duckopsinternal/server"
+	"github.com/SecDuckOps/duckops/internal/config"
+	duckopslog "github.com/SecDuckOps/duckops/internal/log"
+	"github.com/SecDuckOps/duckops/internal/server"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 )

@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/SecDuckOps/duckopsinternal/fsext"
+	"github.com/SecDuckOps/duckops/internal/fsext"
 )
 
 const (

@@ -8,8 +8,8 @@ import (
 	"os/signal"
 
 	"charm.land/lipgloss/v2"
-	"github.com/SecDuckOps/duckopsinternal/client"
-	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckops/internal/client"
+	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/spf13/cobra"
 )

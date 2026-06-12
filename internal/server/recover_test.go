@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/proto"
+	"github.com/SecDuckOps/duckops/internal/proto"
 	"github.com/stretchr/testify/require"
 )
 

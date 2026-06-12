@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/agent/notify"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/agent/notify"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"github.com/stretchr/testify/require"
 )
 

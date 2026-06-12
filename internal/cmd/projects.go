@@ -6,7 +6,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/table"
-	"github.com/SecDuckOps/duckopsinternal/projects"
+	"github.com/SecDuckOps/duckops/internal/projects"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 )

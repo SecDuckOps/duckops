@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/event"
+	"github.com/SecDuckOps/duckops/internal/event"
 	"github.com/charmbracelet/x/term"
 	"gopkg.in/natefinch/lumberjack.v2"
 )

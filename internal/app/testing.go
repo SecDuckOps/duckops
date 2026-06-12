@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/SecDuckOps/duckopsinternal/agent/notify"
-	"github.com/SecDuckOps/duckopsinternal/permission"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/agent/notify"
+	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 )
 
 // NewForTest constructs a minimal [App] suitable for in-process tests

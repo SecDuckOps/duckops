@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/skills"
+	"github.com/SecDuckOps/duckops/internal/skills"
 	"github.com/stretchr/testify/require"
 )
 

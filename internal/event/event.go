@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/version"
+	"github.com/SecDuckOps/duckops/internal/version"
 	"github.com/posthog/posthog-go"
 )
 

@@ -9,11 +9,11 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/SecDuckOps/duckopsinternal/backend"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
-	"github.com/SecDuckOps/duckopsinternal/skills"
+	"github.com/SecDuckOps/duckops/internal/backend"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/skills"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )

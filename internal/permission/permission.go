@@ -8,8 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/SecDuckOps/duckopsinternal/csync"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"github.com/google/uuid"
 )
 

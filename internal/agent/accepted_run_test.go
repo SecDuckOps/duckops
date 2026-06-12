@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/message"
+	"github.com/SecDuckOps/duckops/internal/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

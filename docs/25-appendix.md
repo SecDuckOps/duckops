@@ -164,7 +164,7 @@ internal/cli/
 
 ```json
 {
-  "$schema": "https://github.com/SecDuckOps/duckops/config.schema.json",
+  "$schema": "https://github.com/SecDuckOps/duckops/internalconfig.schema.json",
   "models": {
     "large": { "provider": "openai", "model": "gpt-4o" },
     "small": { "provider": "openai", "model": "gpt-4o-mini" },

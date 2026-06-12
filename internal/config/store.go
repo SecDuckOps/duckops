@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"charm.land/catwalk/pkg/catwalk"
-	hyperp "github.com/SecDuckOps/duckopsinternal/agent/hyper"
-	"github.com/SecDuckOps/duckopsinternal/env"
-	"github.com/SecDuckOps/duckopsinternal/lock"
-	"github.com/SecDuckOps/duckopsinternal/oauth"
-	"github.com/SecDuckOps/duckopsinternal/oauth/copilot"
-	"github.com/SecDuckOps/duckopsinternal/oauth/hyper"
+	hyperp "github.com/SecDuckOps/duckops/internal/agent/hyper"
+	"github.com/SecDuckOps/duckops/internal/env"
+	"github.com/SecDuckOps/duckops/internal/lock"
+	"github.com/SecDuckOps/duckops/internal/oauth"
+	"github.com/SecDuckOps/duckops/internal/oauth/copilot"
+	"github.com/SecDuckOps/duckops/internal/oauth/hyper"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )

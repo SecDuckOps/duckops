@@ -3,9 +3,9 @@ package backend
 import (
 	"context"
 
-	"github.com/SecDuckOps/duckopsinternal/message"
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/session"
+	"github.com/SecDuckOps/duckops/internal/message"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/session"
 )
 
 // CreateSession creates a new session in the given workspace.

@@ -5,10 +5,10 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	mcptools "github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckopsinternal/app"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	mcptools "github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckops/internal/app"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 )
 
 // SubscribeEvents returns a per-caller event channel for a workspace.

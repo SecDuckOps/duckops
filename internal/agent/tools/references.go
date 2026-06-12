@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/lsp"
+	"github.com/SecDuckOps/duckops/internal/lsp"
 	"github.com/charmbracelet/x/powernap/pkg/lsp/protocol"
 )
 

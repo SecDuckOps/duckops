@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/backend"
-	"github.com/SecDuckOps/duckopsinternal/proto"
+	"github.com/SecDuckOps/duckops/internal/backend"
+	"github.com/SecDuckOps/duckops/internal/proto"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )

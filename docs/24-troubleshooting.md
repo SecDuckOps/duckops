@@ -333,7 +333,7 @@ duckops help [command]
 duckops version
 
 # GitHub Issues
-# https://github.com/SecDuckOps/duckops/issues
+# https://github.com/SecDuckOps/duckops/internalissues
 
 # Community Discord
 # https://discord.gg/duckops

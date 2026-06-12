@@ -14,7 +14,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/SecDuckOps/duckopsinternal/filepathext"
+	"github.com/SecDuckOps/duckops/internal/filepathext"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"

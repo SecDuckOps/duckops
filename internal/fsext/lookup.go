@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/SecDuckOps/duckopsinternal/home"
+	"github.com/SecDuckOps/duckops/internal/home"
 )
 
 // Lookup searches for a target files or directories starting from dir

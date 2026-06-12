@@ -14,7 +14,7 @@ import (
 	"charm.land/fantasy"
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/SecDuckOps/duckopsinternal/permission"
+	"github.com/SecDuckOps/duckops/internal/permission"
 )
 
 const (

@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/SecDuckOps/duckopsinternal/agent"
-	"github.com/SecDuckOps/duckopsinternal/agent/notify"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/agent"
+	"github.com/SecDuckOps/duckops/internal/agent/notify"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 )
 
 // SendMessage validates and accepts a prompt for the workspace's agent,

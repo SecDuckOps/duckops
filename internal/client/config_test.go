@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/oauth"
-	"github.com/SecDuckOps/duckopsinternal/proto"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/oauth"
+	"github.com/SecDuckOps/duckops/internal/proto"
 	"github.com/stretchr/testify/require"
 )
 

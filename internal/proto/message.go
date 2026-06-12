@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"charm.land/catwalk/pkg/catwalk"
-	"github.com/SecDuckOps/duckopsinternal/message"
+	"github.com/SecDuckOps/duckops/internal/message"
 )
 
 // CreateMessageParams represents parameters for creating a message.

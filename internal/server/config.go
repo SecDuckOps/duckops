@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/SecDuckOps/duckopsinternal/proto"
+	"github.com/SecDuckOps/duckops/internal/proto"
 )
 
 // handlePostWorkspaceConfigSet sets a configuration field.

@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"charm.land/catwalk/pkg/catwalk"
-	"github.com/SecDuckOps/duckopsinternal/csync"
-	"github.com/SecDuckOps/duckopsinternal/oauth"
-	"github.com/SecDuckOps/duckopsinternal/oauth/copilot"
+	"github.com/SecDuckOps/duckops/internalinternal/csync"
+	"github.com/SecDuckOps/duckops/internalinternal/oauth"
+	"github.com/SecDuckOps/duckops/internalinternal/oauth/copilot"
 	"github.com/invopop/jsonschema"
 )
 

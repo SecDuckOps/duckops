@@ -10,15 +10,15 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/catwalk/pkg/catwalk"
-	mcptools "github.com/SecDuckOps/duckopsinternal/agent/tools/mcp"
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/history"
-	"github.com/SecDuckOps/duckopsinternal/lsp"
-	"github.com/SecDuckOps/duckopsinternal/message"
-	"github.com/SecDuckOps/duckopsinternal/oauth"
-	"github.com/SecDuckOps/duckopsinternal/permission"
-	"github.com/SecDuckOps/duckopsinternal/session"
-	"github.com/SecDuckOps/duckopsinternal/skills"
+	mcptools "github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/history"
+	"github.com/SecDuckOps/duckops/internal/lsp"
+	"github.com/SecDuckOps/duckops/internal/message"
+	"github.com/SecDuckOps/duckops/internal/oauth"
+	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/session"
+	"github.com/SecDuckOps/duckops/internal/skills"
 )
 
 // LSPClientInfo holds information about an LSP client's state. This is

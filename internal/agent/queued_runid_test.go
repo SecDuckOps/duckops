@@ -9,9 +9,9 @@ import (
 
 	"charm.land/catwalk/pkg/catwalk"
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/agent/notify"
-	"github.com/SecDuckOps/duckopsinternal/message"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/agent/notify"
+	"github.com/SecDuckOps/duckops/internal/message"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"github.com/stretchr/testify/require"
 )
 

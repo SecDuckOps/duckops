@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/agent/hyper"
-	"github.com/SecDuckOps/duckopsinternal/event"
-	"github.com/SecDuckOps/duckopsinternal/oauth"
+	"github.com/SecDuckOps/duckops/internal/agent/hyper"
+	"github.com/SecDuckOps/duckops/internal/event"
+	"github.com/SecDuckOps/duckops/internal/oauth"
 )
 
 // DeviceAuthResponse contains the response from the device authorization endpoint.

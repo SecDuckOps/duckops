@@ -7,9 +7,9 @@ import (
 	"log/slog"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/agent/tools"
-	"github.com/SecDuckOps/duckopsinternal/hooks"
-	"github.com/SecDuckOps/duckopsinternal/permission"
+	"github.com/SecDuckOps/duckops/internal/agent/tools"
+	"github.com/SecDuckOps/duckops/internal/hooks"
+	"github.com/SecDuckOps/duckops/internal/permission"
 	"github.com/tidwall/sjson"
 )
 

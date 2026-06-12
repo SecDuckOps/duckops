@@ -92,7 +92,7 @@
 | Resource | URL |
 |----------|-----|
 | DuckOps GitHub | https://github.com/SecDuckOps/duckops |
-| DuckOps Issues | https://github.com/SecDuckOps/duckops/issues |
+| DuckOps Issues | https://github.com/SecDuckOps/duckops/internalissues |
 | DuckOps Discord | https://discord.gg/duckops |
 | DuckOps Documentation | https://docs.duckops.dev |
 

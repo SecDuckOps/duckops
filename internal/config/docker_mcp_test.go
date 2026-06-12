@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/env"
+	"github.com/SecDuckOps/duckops/internal/env"
 	"github.com/stretchr/testify/require"
 )
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/invopop/jsonschema"
 	"github.com/stretchr/testify/require"
 )

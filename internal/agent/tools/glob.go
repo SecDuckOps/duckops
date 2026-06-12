@@ -14,8 +14,8 @@ import (
 	"strings"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/filepathext"
-	"github.com/SecDuckOps/duckopsinternal/fsext"
+	"github.com/SecDuckOps/duckops/internal/filepathext"
+	"github.com/SecDuckOps/duckops/internal/fsext"
 )
 
 const GlobToolName = "glob"

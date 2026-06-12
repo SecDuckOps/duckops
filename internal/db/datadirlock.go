@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/lock"
-	"github.com/SecDuckOps/duckopsinternal/version"
+	"github.com/SecDuckOps/duckops/internal/lock"
+	"github.com/SecDuckOps/duckops/internal/version"
 )
 
 // ErrDataDirLocked is returned by Connect when the data directory is

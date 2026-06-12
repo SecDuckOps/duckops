@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckops/internal/csync"
 )
 
 const (

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/SecDuckOps/duckopsinternal/db"
-	"github.com/SecDuckOps/duckopsinternal/event"
-	"github.com/SecDuckOps/duckopsinternal/pubsub"
+	"github.com/SecDuckOps/duckops/internal/db"
+	"github.com/SecDuckOps/duckops/internal/event"
+	"github.com/SecDuckOps/duckops/internal/pubsub"
 	"github.com/google/uuid"
 	"github.com/zeebo/xxh3"
 )

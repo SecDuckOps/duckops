@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2/tree"
-	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )

@@ -6,7 +6,7 @@
 //
 // @contact.name	SecDuckOps
 // @license.name	MIT
-// @license.url	https://github.com/SecDuckOps/duckops/blob/main/
+// @license.url	https://github.com/SecDuckOps/duckops/internalblob/main/
 // @BasePath		/v1
 package main
 

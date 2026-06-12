@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/db"
-	"github.com/SecDuckOps/duckopsinternal/event"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/db"
+	"github.com/SecDuckOps/duckops/internal/event"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )

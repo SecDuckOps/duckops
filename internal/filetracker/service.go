@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/db"
+	"github.com/SecDuckOps/duckops/internal/db"
 )
 
 // Service defines the interface for tracking file reads in sessions.

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/env"
+	"github.com/SecDuckOps/duckops/internal/env"
 	"github.com/stretchr/testify/require"
 )
 

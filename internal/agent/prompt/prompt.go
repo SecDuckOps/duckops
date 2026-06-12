@@ -12,11 +12,11 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/filepathext"
-	"github.com/SecDuckOps/duckopsinternal/home"
-	"github.com/SecDuckOps/duckopsinternal/shell"
-	"github.com/SecDuckOps/duckopsinternal/skills"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/filepathext"
+	"github.com/SecDuckOps/duckops/internal/home"
+	"github.com/SecDuckOps/duckops/internal/shell"
+	"github.com/SecDuckOps/duckops/internal/skills"
 )
 
 // Prompt represents a template-based prompt generator.

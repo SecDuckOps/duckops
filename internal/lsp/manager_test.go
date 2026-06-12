@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/csync"
+	"github.com/SecDuckOps/duckops/internal/csync"
 	"github.com/stretchr/testify/require"
 )
 

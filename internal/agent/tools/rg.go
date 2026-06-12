@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/log"
+	"github.com/SecDuckOps/duckops/internal/log"
 )
 
 var getRg = sync.OnceValue(func() string {

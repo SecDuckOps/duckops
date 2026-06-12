@@ -9,12 +9,12 @@ import (
 	"testing"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/agent"
-	"github.com/SecDuckOps/duckopsinternal/app"
-	"github.com/SecDuckOps/duckopsinternal/backend"
-	"github.com/SecDuckOps/duckopsinternal/message"
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/session"
+	"github.com/SecDuckOps/duckops/internal/agent"
+	"github.com/SecDuckOps/duckops/internal/app"
+	"github.com/SecDuckOps/duckops/internal/backend"
+	"github.com/SecDuckOps/duckops/internal/message"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/session"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )

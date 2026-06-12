@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/csync"
-	"github.com/SecDuckOps/duckopsinternal/proto"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/proto"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/projects"
+	"github.com/SecDuckOps/duckops/internal/projects"
 	"github.com/stretchr/testify/require"
 )
 

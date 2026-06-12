@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/lock"
+	"github.com/SecDuckOps/duckops/internal/lock"
 	"github.com/stretchr/testify/require"
 )
 

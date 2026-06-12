@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/csync"
-	"github.com/SecDuckOps/duckopsinternal/oauth"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/oauth"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 )

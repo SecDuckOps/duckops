@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/agent"
-	"github.com/SecDuckOps/duckopsinternal/agent/agenttest"
-	"github.com/SecDuckOps/duckopsinternal/db"
-	"github.com/SecDuckOps/duckopsinternal/message"
-	"github.com/SecDuckOps/duckopsinternal/proto"
-	"github.com/SecDuckOps/duckopsinternal/session"
+	"github.com/SecDuckOps/duckops/internal/agent"
+	"github.com/SecDuckOps/duckops/internal/agent/agenttest"
+	"github.com/SecDuckOps/duckops/internal/db"
+	"github.com/SecDuckOps/duckops/internal/message"
+	"github.com/SecDuckOps/duckops/internal/proto"
+	"github.com/SecDuckOps/duckops/internal/session"
 	"github.com/stretchr/testify/require"
 )
 

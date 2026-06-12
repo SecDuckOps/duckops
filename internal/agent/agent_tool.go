@@ -7,9 +7,9 @@ import (
 
 	"charm.land/fantasy"
 
-	"github.com/SecDuckOps/duckopsinternal/agent/prompt"
-	"github.com/SecDuckOps/duckopsinternal/agent/tools"
-	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckops/internal/agent/prompt"
+	"github.com/SecDuckOps/duckops/internal/agent/tools"
+	"github.com/SecDuckOps/duckops/internal/config"
 )
 
 //go:embed templates/agent_tool.md

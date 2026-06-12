@@ -1,8 +1,8 @@
 package backend
 
 import (
-	"github.com/SecDuckOps/duckopsinternal/permission"
-	"github.com/SecDuckOps/duckopsinternal/proto"
+	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/proto"
 )
 
 // GrantPermission grants, denies, or persistently grants a permission

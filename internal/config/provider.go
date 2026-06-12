@@ -17,9 +17,9 @@ import (
 
 	"charm.land/catwalk/pkg/catwalk"
 	"charm.land/catwalk/pkg/embedded"
-	"github.com/SecDuckOps/duckopsinternal/agent/hyper"
-	"github.com/SecDuckOps/duckopsinternal/csync"
-	"github.com/SecDuckOps/duckopsinternal/home"
+	"github.com/SecDuckOps/duckops/internal/agent/hyper"
+	"github.com/SecDuckOps/duckops/internal/csync"
+	"github.com/SecDuckOps/duckops/internal/home"
 	"github.com/charmbracelet/x/etag"
 )
 

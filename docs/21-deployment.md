@@ -14,7 +14,7 @@ The simplest deployment. Run `duckops` directly on the developer machine.
 
 ```bash
 # Install
-curl -fsSL https://github.com/SecDuckOps/duckops/releases/latest/download/duckops-linux-amd64 -o /usr/local/bin/duckops
+curl -fsSL https://github.com/SecDuckOps/duckops/internalreleases/latest/download/duckops-linux-amd64 -o /usr/local/bin/duckops
 chmod +x /usr/local/bin/duckops
 
 # Run with TUI
@@ -116,12 +116,12 @@ spec:
 
 ```bash
 # Linux AMD64
-curl -LO https://github.com/SecDuckOps/duckops/releases/latest/download/duckops-linux-amd64.tar.gz
+curl -LO https://github.com/SecDuckOps/duckops/internalreleases/latest/download/duckops-linux-amd64.tar.gz
 tar xzf duckops-linux-amd64.tar.gz
 sudo mv duckops /usr/local/bin/
 
 # macOS ARM64
-curl -LO https://github.com/SecDuckOps/duckops/releases/latest/download/duckops-darwin-arm64.tar.gz
+curl -LO https://github.com/SecDuckOps/duckops/internalreleases/latest/download/duckops-darwin-arm64.tar.gz
 tar xzf duckops-darwin-arm64.tar.gz
 sudo mv duckops /usr/local/bin/
 ```
@@ -296,7 +296,7 @@ duckops
 sqlite3 ~/.duckops/data/duckops.db ".backup /tmp/duckops-pre-upgrade.db"
 
 # 2. Download new binary
-curl -LO https://github.com/SecDuckOps/duckops/releases/latest/download/duckops-linux-amd64.tar.gz
+curl -LO https://github.com/SecDuckOps/duckops/internalreleases/latest/download/duckops-linux-amd64.tar.gz
 
 # 3. Replace binary
 sudo mv duckops /usr/local/bin/

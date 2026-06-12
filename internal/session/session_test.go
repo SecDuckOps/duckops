@@ -3,7 +3,7 @@ package session
 import (
 	"testing"
 
-	"github.com/SecDuckOps/duckopsinternal/db"
+	"github.com/SecDuckOps/duckops/internal/db"
 	"github.com/stretchr/testify/require"
 )
 

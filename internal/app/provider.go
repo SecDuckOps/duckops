@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckops/internal/config"
 	xstrings "github.com/charmbracelet/x/exp/strings"
 )
 

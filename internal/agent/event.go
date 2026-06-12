@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/event"
+	"github.com/SecDuckOps/duckops/internal/event"
 )
 
 func (a *sessionAgent) eventPromptSent(sessionID string) {

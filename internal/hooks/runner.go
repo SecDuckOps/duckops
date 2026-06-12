@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/config"
-	"github.com/SecDuckOps/duckopsinternal/shell"
+	"github.com/SecDuckOps/duckops/internal/config"
+	"github.com/SecDuckOps/duckops/internal/shell"
 )
 
 // abandonGrace is how long runOne waits after ctx cancellation for the

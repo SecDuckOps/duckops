@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SecDuckOps/duckopsinternal/oauth"
+	"github.com/SecDuckOps/duckops/internal/oauth"
 )
 
 const (

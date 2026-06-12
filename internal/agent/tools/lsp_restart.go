@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/lsp"
+	"github.com/SecDuckOps/duckops/internal/lsp"
 )
 
 const LSPRestartToolName = "lsp_restart"

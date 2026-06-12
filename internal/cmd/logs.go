@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"charm.land/log/v2"
-	"github.com/SecDuckOps/duckopsinternal/config"
+	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/charmbracelet/colorprofile"
 	"github.com/charmbracelet/x/term"
 	"github.com/nxadm/tail"

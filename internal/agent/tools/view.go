@@ -17,11 +17,11 @@ import (
 	"unicode/utf8"
 
 	"charm.land/fantasy"
-	"github.com/SecDuckOps/duckopsinternal/filepathext"
-	"github.com/SecDuckOps/duckopsinternal/filetracker"
-	"github.com/SecDuckOps/duckopsinternal/lsp"
-	"github.com/SecDuckOps/duckopsinternal/permission"
-	"github.com/SecDuckOps/duckopsinternal/skills"
+	"github.com/SecDuckOps/duckops/internal/filepathext"
+	"github.com/SecDuckOps/duckops/internal/filetracker"
+	"github.com/SecDuckOps/duckops/internal/lsp"
+	"github.com/SecDuckOps/duckops/internal/permission"
+	"github.com/SecDuckOps/duckops/internal/skills"
 )
 
 //go:embed view.md.tpl
