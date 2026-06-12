@@ -43,7 +43,7 @@ graph TB
 | `--host` | `-h` | bool | false | Client/server mode (connect to daemon) |
 | `--session` | `-s` | string | - | Session ID (resume or create) |
 | `--continue` | `-C` | bool | false | Continue from last session |
-| `--yolo` | `-y` | bool | false | Approve all permission requests |
+| `--duck` | `-y` | bool | false | Approve all permission requests |
 
 ### 13.2.3 Command Details
 

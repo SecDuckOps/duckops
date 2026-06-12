@@ -259,7 +259,7 @@ flowchart LR
 
 ### Permission Model
 - **Interactive Mode**: Every destructive tool call (bash, write, edit) requires explicit user approval via TUI prompt
-- **YOLO Mode** (`--yolo`/`-y`): Auto-approves all permissions (for automation/CI)
+- **YOLO Mode** (`--duck`/`-y`): Auto-approves all permissions (for automation/CI)
 - **Allowlists**: `permissions.allowed_tools` in config pre-approves specific tools
 - **Hooks**: Pre-tool-use hooks can programmatically allow/deny tool calls
 

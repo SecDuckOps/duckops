@@ -92,8 +92,8 @@ cat README.md | duckops run "make this more glamorous" > GLAMOROUS_README.md
 # Run with debug logging in a specific directory
 duckops --debug --cwd /path/to/project
 
-# Run in yolo mode (auto-accept all permissions; use with care)
-duckops --yolo
+# Run in duck mode (auto-accept all permissions; use with care)
+duckops --duck
 
 # Run with custom data directory
 duckops --data-dir /path/to/custom/.duckops
