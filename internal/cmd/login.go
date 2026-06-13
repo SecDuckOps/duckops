@@ -232,9 +232,8 @@ func loginCopilot(c *client.Client, wsID string, force bool) error {
 func loginDuckOps(force bool) error {
 	ctx := getLoginContext()
 
-	store, err := config.Load(config.GlobalWorkspaceDir(), "", false)
-	if err == nil && store != nil && !force {
-		if pc, ok := store.Config().Providers.Get("duckops"); ok && pc.APIKey != "" {
+	if !force {
+		if existing, _ := duckopsAPIKey(); existing != "" {
 			fmt.Println("You are already logged in to DuckOps.")
 			fmt.Println("Use --force to re-authenticate.")
 			return nil

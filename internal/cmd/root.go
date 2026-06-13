@@ -37,6 +37,7 @@ import (
 	"github.com/SecDuckOps/duckops/internal/skills"
 	"github.com/SecDuckOps/duckops/internal/ui/common"
 	ui "github.com/SecDuckOps/duckops/internal/ui/model"
+	"github.com/SecDuckOps/duckops/internal/platform"
 	"github.com/SecDuckOps/duckops/internal/version"
 	"github.com/SecDuckOps/duckops/internal/workspace"
 	"github.com/charmbracelet/colorprofile"
@@ -112,6 +113,8 @@ duckops --continue
 		if err := requireDuckOpsLogin(); err != nil {
 			return err
 		}
+
+		startAutoSync()
 
 		ws, cleanup, err := setupWorkspaceWithProgressBar(cmd)
 		if err != nil {
@@ -240,6 +243,29 @@ func setupWorkspaceWithProgressBar(cmd *cobra.Command) (workspace.Workspace, fun
 
 // requireDuckOpsLogin checks that the user is authenticated with the
 // DuckOps Platform before opening the TUI.
+func startAutoSync() {
+	apiKey, err := duckopsAPIKey()
+	if err != nil {
+		return
+	}
+
+	hostname, _ := os.Hostname()
+	if hostname == "" {
+		hostname = "unknown"
+	}
+
+	duckopsDir := filepath.Dir(config.GlobalConfig())
+	client := platform.NewClient(apiKey,
+		platform.WithQueueDir(duckopsDir),
+	)
+
+	syncer := platform.NewSyncer(client, hostname, version.Version)
+	syncer.SetCapabilities([]string{"scan_results", "pipeline_events"})
+	syncer.Start(context.Background())
+
+	slog.Info("auto-sync started", "hostname", hostname, "version", version.Version)
+}
+
 func requireDuckOpsLogin() error {
 	data, err := os.ReadFile(config.GlobalConfigData())
 	if err != nil {

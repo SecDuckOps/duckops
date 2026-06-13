@@ -12,6 +12,7 @@ import (
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/platform"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/gjson"
 )
 
 var syncCmd = &cobra.Command{
@@ -225,19 +226,14 @@ func replayItem(client *platform.Client, item platform.QueueItem) error {
 }
 
 func platformClient() (*platform.Client, error) {
-	cfg, err := config.Load(config.GlobalWorkspaceDir(), "", false)
+	apiKey, err := duckopsAPIKey()
 	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
-	}
-
-	pc, ok := cfg.Config().Providers.Get("duckops")
-	if !ok || pc.APIKey == "" {
-		return nil, errors.New("not logged in to DuckOps Platform\nRun 'duckops login' first")
+		return nil, err
 	}
 
 	duckopsDir := filepath.Dir(config.GlobalConfig())
 
-	client := platform.NewClient(pc.APIKey,
+	client := platform.NewClient(apiKey,
 		platform.WithLogger(func(format string, args ...any) {
 			fmt.Fprintf(os.Stderr, format+"\n", args...)
 		}),
@@ -245,6 +241,23 @@ func platformClient() (*platform.Client, error) {
 	)
 
 	return client, nil
+}
+
+func duckopsAPIKey() (string, error) {
+	data, err := os.ReadFile(config.GlobalConfigData())
+	if err != nil {
+		return "", errors.New("not logged in to DuckOps Platform\nRun 'duckops login' first")
+	}
+
+	apiKey := gjson.Get(string(data), "duckops_api_key").String()
+	if apiKey == "" {
+		apiKey = gjson.Get(string(data), "providers.duckops.api_key").String()
+	}
+	if apiKey == "" {
+		return "", errors.New("not logged in to DuckOps Platform\nRun 'duckops login' first")
+	}
+
+	return apiKey, nil
 }
 
 
