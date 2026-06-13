@@ -93,6 +93,23 @@ type BulkFindingsRequest struct {
 	Findings []FindingPayload `json:"findings"`
 }
 
+type SessionPayload struct {
+	SessionID        string `json:"session_id"`
+	ParentSessionID  string `json:"parent_session_id,omitempty"`
+	Title            string `json:"title"`
+	MessageCount     int64  `json:"message_count"`
+	PromptTokens     int64  `json:"prompt_tokens"`
+	CompletionTokens int64  `json:"completion_tokens"`
+	Cost             float64 `json:"cost"`
+	SummaryMessageID string `json:"summary_message_id,omitempty"`
+	CreatedAt        string `json:"created_at"`
+	UpdatedAt        string `json:"updated_at"`
+}
+
+type BulkSessionsRequest struct {
+	Sessions []SessionPayload `json:"sessions"`
+}
+
 type ServerInfoResponse struct {
 	Status string `json:"status"`
 	Data   struct {

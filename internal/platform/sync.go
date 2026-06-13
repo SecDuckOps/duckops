@@ -194,6 +194,8 @@ func (s *Syncer) replayItem(ctx context.Context, item QueueItem) error {
 		target = &[]FindingPayload{}
 	case "pipeline_event":
 		target = &PipelineEventPayload{}
+	case "session", "bulk_sessions":
+		target = &[]SessionPayload{}
 	case "heartbeat":
 		target = &HeartbeatRequest{}
 	case "agent_register":
@@ -222,11 +224,28 @@ func (s *Syncer) replayItem(ctx context.Context, item QueueItem) error {
 		return s.client.UploadFindingsBulk(ctx, *target.(*[]FindingPayload))
 	case "pipeline_event":
 		return s.client.UploadPipelineEvent(ctx, *target.(*PipelineEventPayload))
+	case "session":
+		return s.client.UploadSession(ctx, *target.(*SessionPayload))
+	case "bulk_sessions":
+		return s.client.UploadSessionsBulk(ctx, *target.(*[]SessionPayload))
 	case "heartbeat":
 		return s.client.Heartbeat(ctx, *target.(*HeartbeatRequest))
 	case "agent_register":
 		return s.client.RegisterAgent(ctx, *target.(*AgentRegistration))
 	}
+	return nil
+}
+
+func (s *Syncer) SyncSessions(ctx context.Context, sessions []SessionPayload) error {
+	if len(sessions) == 0 {
+		return nil
+	}
+
+	if err := s.client.UploadSessionsBulk(ctx, sessions); err != nil {
+		return err
+	}
+
+	s.client.log("synced %d sessions", len(sessions))
 	return nil
 }
 

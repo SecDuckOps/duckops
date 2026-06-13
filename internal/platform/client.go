@@ -321,6 +321,26 @@ func (c *Client) UploadFindingsBulk(ctx context.Context, findings []FindingPaylo
 	return nil
 }
 
+func (c *Client) UploadSession(ctx context.Context, session SessionPayload) error {
+	_, err := c.do(ctx, http.MethodPost, "/sessions", session)
+	if err != nil {
+		return c.handleQueue("session", session, err)
+	}
+	return nil
+}
+
+func (c *Client) UploadSessionsBulk(ctx context.Context, sessions []SessionPayload) error {
+	if len(sessions) == 0 {
+		return nil
+	}
+	req := BulkSessionsRequest{Sessions: sessions}
+	_, err := c.do(ctx, http.MethodPost, "/bulk/sessions", req)
+	if err != nil {
+		return c.handleQueue("bulk_sessions", sessions, err)
+	}
+	return nil
+}
+
 func (c *Client) SetAgentID(id string) {
 	c.agentID = id
 }

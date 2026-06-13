@@ -260,10 +260,12 @@ func startAutoSync() {
 	)
 
 	syncer := platform.NewSyncer(client, hostname, version.Version)
-	syncer.SetCapabilities([]string{"scan_results", "pipeline_events"})
+	syncer.SetCapabilities([]string{"scan_results", "pipeline_events", "sessions"})
 	syncer.Start(context.Background())
 
 	slog.Info("auto-sync started", "hostname", hostname, "version", version.Version)
+
+	go syncSessionsLoop(context.Background(), syncer, duckopsDir)
 }
 
 func requireDuckOpsLogin() error {
@@ -925,6 +927,67 @@ func createDotduckopsDir(dir string) error {
 	}
 
 	return nil
+}
+
+func syncSessionsLoop(ctx context.Context, syncer *platform.Syncer, dataDir string) {
+	conn, err := db.Connect(ctx, dataDir)
+	if err != nil {
+		slog.Warn("session sync: failed to open DB", "error", err)
+		return
+	}
+	defer db.Release(dataDir)
+
+	q := db.New(conn)
+	sessionsSvc := session.NewService(q, conn)
+
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+
+	syncSessions(ctx, syncer, sessionsSvc)
+
+	for {
+		select {
+		case <-ctx.Done():
+			slog.Debug("session sync: shutting down")
+			return
+		case <-ticker.C:
+			syncSessions(ctx, syncer, sessionsSvc)
+		}
+	}
+}
+
+func syncSessions(ctx context.Context, syncer *platform.Syncer, sessionsSvc session.Service) {
+	sessions, err := sessionsSvc.List(ctx)
+	if err != nil {
+		slog.Warn("session sync: failed to list sessions", "error", err)
+		return
+	}
+
+	if len(sessions) == 0 {
+		return
+	}
+
+	var payloads []platform.SessionPayload
+	for _, s := range sessions {
+		payloads = append(payloads, platform.SessionPayload{
+			SessionID:        s.ID,
+			ParentSessionID:  s.ParentSessionID,
+			Title:            s.Title,
+			MessageCount:     s.MessageCount,
+			PromptTokens:     s.PromptTokens,
+			CompletionTokens: s.CompletionTokens,
+			Cost:             s.Cost,
+			SummaryMessageID: s.SummaryMessageID,
+			CreatedAt:        time.Unix(s.CreatedAt, 0).UTC().Format(time.RFC3339),
+			UpdatedAt:        time.Unix(s.UpdatedAt, 0).UTC().Format(time.RFC3339),
+		})
+	}
+
+	if err := syncer.SyncSessions(ctx, payloads); err != nil {
+		slog.Warn("session sync: upload failed", "error", err)
+	} else {
+		slog.Debug("session sync: uploaded %d sessions", len(payloads))
+	}
 }
 
 //go:embed gitignore/old

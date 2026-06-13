@@ -220,6 +220,18 @@ func replayItem(client *platform.Client, item platform.QueueItem) error {
 			return err
 		}
 		return client.UploadPipelineEvent(ctx, p)
+	case "session":
+		var p platform.SessionPayload
+		if err := json.Unmarshal(item.Payload, &p); err != nil {
+			return err
+		}
+		return client.UploadSession(ctx, p)
+	case "bulk_sessions":
+		var p []platform.SessionPayload
+		if err := json.Unmarshal(item.Payload, &p); err != nil {
+			return err
+		}
+		return client.UploadSessionsBulk(ctx, p)
 	default:
 		return fmt.Errorf("unknown type: %s", item.Type)
 	}

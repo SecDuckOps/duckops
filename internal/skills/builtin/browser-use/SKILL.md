@@ -214,7 +214,34 @@ browser-use config unset cloud_connect_timeout     # Remove a value
 browser-use doctor                                 # Shows config + diagnostics
 browser-use setup                                  # Interactive post-install setup
 ```
+### Browser Automation
 
+Use `browser-use` when the task requires:
+- Visiting websites
+- Logging into web apps
+- Filling forms
+- Clicking buttons and navigating pages
+- Extracting data from dynamic websites
+- Taking screenshots
+- Working with authenticated sessions
+
+Workflow:
+1. Open the target URL.
+2. Inspect page state.
+3. Interact with elements using their indices.
+4. Verify results.
+5. Extract required information.
+
+Preferred commands:
+- browser-use open <url>
+- browser-use state
+- browser-use click <index>
+- browser-use input <index> "<text>"
+- browser-use screenshot
+- browser-use get text <index>
+
+Always inspect the page state before interacting unless the element index is already known.
+Use browser profiles when authentication is required.
 Config stored in `~/.browser-use/config.json`.
 
 ## Global Options

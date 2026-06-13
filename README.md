@@ -9,7 +9,7 @@
 
 > A terminal-first AI DevSecOps AI for software development and security assessments.
 
-![alt text](1781360224593278849.png)
+![alt text](/doc/1781360224593278849.png)
 
 ## Overview
 
@@ -145,6 +145,54 @@ Edit `~/.duckops/duckops.json`:
       "settings": {
         "staticcheck": true
       }
+    }
+  }
+}
+```
+
+### Local Models
+
+Local models via OpenAI-compatible API:
+
+**Ollama**
+
+```json
+{
+  "providers": {
+    "ollama": {
+      "name": "Ollama",
+      "base_url": "http://localhost:11434/v1/",
+      "type": "openai-compat",
+      "models": [
+        {
+          "name": "Qwen 3 30B",
+          "id": "qwen3:30b",
+          "context_window": 256000,
+          "default_max_tokens": 20000
+        }
+      ]
+    }
+  }
+}
+```
+
+**LM Studio**
+
+```json
+{
+  "providers": {
+    "lmstudio": {
+      "name": "LM Studio",
+      "base_url": "http://localhost:1234/v1/",
+      "type": "openai-compat",
+      "models": [
+        {
+          "name": "Qwen 3 30B",
+          "id": "qwen/qwen3-30b-a3b-2507",
+          "context_window": 256000,
+          "default_max_tokens": 20000
+        }
+      ]
     }
   }
 }
