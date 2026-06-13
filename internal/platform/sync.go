@@ -58,6 +58,9 @@ func (s *Syncer) SetCapabilities(caps []string) {
 func (s *Syncer) agentRegistrationLoop(ctx context.Context) {
 	defer s.wg.Done()
 
+	// Stable agent ID: hostname-based, generated once per Syncer lifetime
+	agentID := fmt.Sprintf("%s-%d", s.hostname, time.Now().UnixNano())
+
 	// Retry registration until it succeeds
 	for {
 		select {
@@ -67,7 +70,7 @@ func (s *Syncer) agentRegistrationLoop(ctx context.Context) {
 		}
 
 		reg := AgentRegistration{
-			AgentID:      fmt.Sprintf("%s-%d", s.hostname, time.Now().UnixNano()),
+			AgentID:      agentID,
 			Hostname:     s.hostname,
 			Version:      s.version,
 			Platform:     runtime.GOOS + "/" + runtime.GOARCH,
