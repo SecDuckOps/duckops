@@ -134,6 +134,10 @@ func renderHeaderDetails(
 		parts = append(parts, formattedPercentage)
 	}
 
+	if email := com.Config().DuckOpsUserEmail; email != "" {
+		parts = append(parts, t.Header.Percentage.Render("@"+email))
+	}
+
 	if com.IsHyper() && hyperCredits != nil {
 		hc := t.Header.Hypercredit.Render(styles.HypercreditIcon) + " " + t.Header.Percentage.Render(common.FormatCredits(*hyperCredits))
 		parts = append(parts, hc)

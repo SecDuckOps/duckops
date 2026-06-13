@@ -10,8 +10,8 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {
-            "name": "Charm",
-            "url": "https://charm.sh"
+            "name": "DuckOps Team",
+            "url": "https://dev.secduckops.com"
         },
         "license": {
             "name": "MIT",

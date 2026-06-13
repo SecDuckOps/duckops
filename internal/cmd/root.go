@@ -40,6 +40,7 @@ import (
 	"github.com/SecDuckOps/duckops/internal/version"
 	"github.com/SecDuckOps/duckops/internal/workspace"
 	"github.com/charmbracelet/colorprofile"
+	"github.com/tidwall/gjson"
 	uv "github.com/charmbracelet/ultraviolet"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/charmtone"
@@ -107,6 +108,10 @@ duckops --continue
 	RunE: func(cmd *cobra.Command, args []string) error {
 		sessionID, _ := cmd.Flags().GetString("session")
 		continueLast, _ := cmd.Flags().GetBool("continue")
+
+		if err := requireDuckOpsLogin(); err != nil {
+			return err
+		}
 
 		ws, cleanup, err := setupWorkspaceWithProgressBar(cmd)
 		if err != nil {
@@ -231,6 +236,44 @@ func setupWorkspaceWithProgressBar(cmd *cobra.Command) (workspace.Workspace, fun
 	}
 
 	return ws, cleanup, err
+}
+
+// requireDuckOpsLogin checks that the user is authenticated with the
+// DuckOps Platform before opening the TUI.
+func requireDuckOpsLogin() error {
+	data, err := os.ReadFile(config.GlobalConfigData())
+	if err != nil {
+		return loginRequiredError()
+	}
+
+	// Check new key first, then fall back to legacy providers.duckops.api_key
+	apiKey := gjson.Get(string(data), "duckops_api_key").String()
+	if apiKey == "" {
+		apiKey = gjson.Get(string(data), "providers.duckops.api_key").String()
+	}
+	if apiKey == "" {
+		return loginRequiredError()
+	}
+
+	email := gjson.Get(string(data), "duckops_user_email").String()
+	if email != "" {
+		fmt.Fprintf(os.Stderr, "Logged in as %s\n", email)
+	}
+
+	return nil
+}
+
+func loginRequiredError() error {
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, lipgloss.NewStyle().Foreground(lipgloss.Color("220")).Render("  🦆 DuckOps Platform Login Required"))
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "  Run the following command to authenticate:")
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, lipgloss.NewStyle().Foreground(lipgloss.Color("39")).Render("    duckops login"))
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "  This will open your browser to generate a Personal Access Token.")
+	fmt.Fprintln(os.Stderr, "")
+	return errors.New("not logged in")
 }
 
 // setupWorkspace returns a Workspace and cleanup function. When

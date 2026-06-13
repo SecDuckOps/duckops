@@ -598,6 +598,8 @@ type Config struct {
 
 	Hooks map[string][]HookConfig `json:"hooks,omitempty" jsonschema:"description=User-defined shell commands that fire on hook events (e.g. PreToolUse)"`
 
+	DuckOpsUserEmail string `json:"duckops_user_email,omitempty"`
+
 	Agents map[string]Agent `json:"-"`
 }
 

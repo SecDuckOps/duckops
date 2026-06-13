@@ -31,6 +31,7 @@ func defaultSandboxConfig(port int) containerConfig {
 	imageName := os.Getenv("DUCKOPS_SANDBOX_IMAGE")
 	if imageName == "" {
 		imageName = "duckops-sandbox:latest"
+	
 	}
 	cwd, _ := os.Getwd()
 	return containerConfig{
