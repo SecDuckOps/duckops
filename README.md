@@ -9,25 +9,7 @@
 
 > A terminal-first AI DevSecOps AI for software development and security assessments.
 
-```
-                            _
-                           (__)
-                          / \__
-                         (o_o)
-                        _( ~ )_                   _
-                       (__d_d__)                (_)
-                        \  ^  /                   |
-                         \ _ /      ~ duckops     |
-      _______________    / _ \___________________|___
-     |  ___________  |   / / \ \                  |
-     | |           | |  / /   \ \                 |
-     | |           | | / /_____\ \                |
-     | |           | | |_________| |          _  __| | ___
-     | |           | |             |         | |/ _  |/ _ \
-     | |___________| |             |         | | (_) | (_) |
-     |_______________|             |         |_|\___/ \___/
-                                  _|_______________
-```
+![alt text](1781360224593278849.png)
 
 ## Overview
 
@@ -68,6 +50,7 @@ DuckOps is an AI-powered terminal assistant that combines intelligent conversati
 - LSP Integration (Go, with extensible architecture)
 - Hooks System for pre/post execution customization
 - Skills Framework for custom capabilities
+- **DuckOps Platform**: Agent registration, heartbeat, scan result sync, offline queue (`~/.duckops/queue/`)
 
 ## Quick Start
 
@@ -166,6 +149,23 @@ Edit `~/.duckops/duckops.json`:
   }
 }
 ```
+
+## DuckOps Platform
+
+The CLI integrates with the DuckOps Platform server for centralized scan result management.
+
+```bash
+# Authenticate with the platform
+duckops login
+
+# Sync scan results to the platform
+duckops sync --results --tool semgrep --watch
+
+# Or start the daemon for automatic sync
+duckops daemon
+```
+
+The TUI requires platform login — your email is shown in the header bar when authenticated.
 
 ## Usage
 
