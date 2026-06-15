@@ -1,29 +1,29 @@
-//go:build ignore
-
 package tools
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
 	"slices"
 	"strings"
 
 	"charm.land/fantasy"
+
 	"github.com/SecDuckOps/duckops/internal/agent/tools/mcp"
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/lsp"
 	"github.com/SecDuckOps/duckops/internal/skills"
+
+	_ "embed"
 )
 
-const duckopsInfoToolName = "duckops_info"
+const DuckInfoToolName = "duck_info"
 
-//go:embed duckops_info.md
-var duckopsInfoDescription string
+//go:embed duck_info.md
+var duckInfoDescription []byte
 
-type duckopsInfoParams struct{}
+type DuckInfoParams struct{}
 
-func NewduckopsInfoTool(
+func NewDuckInfoTool(
 	cfg *config.ConfigStore,
 	lspManager *lsp.Manager,
 	allSkills []*skills.Skill,
@@ -31,15 +31,14 @@ func NewduckopsInfoTool(
 	skillTracker *skills.Tracker,
 ) fantasy.AgentTool {
 	return fantasy.NewAgentTool(
-		duckopsInfoToolName,
-		duckopsInfoDescription,
-		func(ctx context.Context, _ duckopsInfoParams, _ fantasy.ToolCall) (fantasy.ToolResponse, error) {
-			return fantasy.NewTextResponse(buildduckopsInfo(cfg, lspManager, allSkills, activeSkills, skillTracker)), nil
-		},
-	)
+		DuckInfoToolName,
+		string(duckInfoDescription),
+		func(ctx context.Context, _ DuckInfoParams, _ fantasy.ToolCall) (fantasy.ToolResponse, error) {
+			return fantasy.NewTextResponse(buildDuckInfo(cfg, lspManager, allSkills, activeSkills, skillTracker)), nil
+		})
 }
 
-func buildduckopsInfo(cfg *config.ConfigStore, lspManager *lsp.Manager, allSkills []*skills.Skill, activeSkills []*skills.Skill, skillTracker *skills.Tracker) string {
+func buildDuckInfo(cfg *config.ConfigStore, lspManager *lsp.Manager, allSkills []*skills.Skill, activeSkills []*skills.Skill, skillTracker *skills.Tracker) string {
 	var b strings.Builder
 
 	writeConfigFiles(&b, cfg)
@@ -361,7 +360,7 @@ func writePermissions(b *strings.Builder, cfg *config.ConfigStore) {
 	}
 	b.WriteString("[permissions]\n")
 	if overrides.SkipPermissionRequests {
-		b.WriteString("mode = yolo\n")
+		b.WriteString("mode = duck\n")
 	}
 	if c.Permissions != nil && len(c.Permissions.AllowedTools) > 0 {
 		sorted := slices.Clone(c.Permissions.AllowedTools)

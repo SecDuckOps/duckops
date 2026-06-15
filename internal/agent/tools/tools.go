@@ -5,6 +5,7 @@ import (
 	"context"
 	"html/template"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"charm.land/fantasy"
@@ -110,4 +111,13 @@ func renderTemplate(tmpl *template.Template, data any) string {
 		panic("failed to execute tool description template: " + err.Error())
 	}
 	return out.String()
+}
+
+// FirstLineDescription returns the first line of the given byte slice as a string.
+func FirstLineDescription(data []byte) string {
+	s := string(data)
+	if idx := strings.Index(s, "\n"); idx != -1 {
+		return strings.TrimSpace(s[:idx])
+	}
+	return strings.TrimSpace(s)
 }

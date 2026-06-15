@@ -19,9 +19,9 @@ import (
 	"github.com/SecDuckOps/duckops/internal/oauth/hyper"
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/charmbracelet/x/term"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 var loginCmd = &cobra.Command{
@@ -57,8 +57,10 @@ duckops login -f copilot
 
 		if provider == "duckops" {
 			force, _ := cmd.Flags().GetBool("force")
-			return loginDuckOps(force)
+			pat, _ := cmd.Flags().GetString("token")
+			return loginDuckOps(force, pat)
 		}
+
 
 		c, ws, cleanup, err := connectToServer(cmd)
 		if err != nil {
@@ -85,7 +87,9 @@ duckops login -f copilot
 }
 
 func init() {
-	loginCmd.Flags().BoolP("force", "f", false, "Force re-authentication even if already logged in")
+    loginCmd.Flags().BoolP("force", "f", false, "Force re-authentication even if already logged in")
+    loginCmd.Flags().StringP("token", "t", "", "Personal Access Token")
+    loginCmd.Flags().Bool("pat-only", false, "Skip email/password flow and use PAT directly")
 }
 
 func loginHyper(c *client.Client, wsID string, force bool) error {
@@ -229,7 +233,7 @@ func loginCopilot(c *client.Client, wsID string, force bool) error {
 	return nil
 }
 
-func loginDuckOps(force bool) error {
+func loginDuckOps(force bool, pat string) error {
 	ctx := getLoginContext()
 
 	if !force {
@@ -240,39 +244,56 @@ func loginDuckOps(force bool) error {
 		}
 	}
 
-	serverHost := cmp.Or(os.Getenv("DUCKOPS_SERVER_HOST"), "127.0.0.1")
+	serverHost := cmp.Or(os.Getenv("DUCKOPS_SERVER_HOST"), "192.168.1.70")
 	serverPort := cmp.Or(os.Getenv("DUCKOPS_SERVER_PORT"), "8080")
 	serverURL := fmt.Sprintf("http://%s:%s", serverHost, serverPort)
 
-	dashboardURL := cmp.Or(os.Getenv("DUCKOPS_DASHBOARD_URL"), serverURL+"/login")
+	dashHost := cmp.Or(os.Getenv("DUCKOPS_DASHBOARD_HOST"), "localhost")
+	dashPort := cmp.Or(os.Getenv("DUCKOPS_DASHBOARD_PORT"), "3000")
 
-	fmt.Println("Open the following URL in your browser to login and generate a Personal Access Token:")
-	fmt.Println()
-	fmt.Println(lipgloss.NewStyle().Hyperlink(dashboardURL, "id=duckops-login").Render(dashboardURL))
-	fmt.Println()
+	var patToken string
 
-	if err := browser.OpenURL(dashboardURL); err == nil {
-		fmt.Println("If the browser did not open, copy and paste the URL above.")
+	if pat != "" {
+		patToken = strings.TrimSpace(pat)
+	} else {
+		dashURL := fmt.Sprintf("http://%s:%s/settings/tokens", dashHost, dashPort)
+		fmt.Println("Opening browser to generate a Personal Access Token...")
+		fmt.Println()
+		fmt.Println("If the browser does not open, visit:")
+		fmt.Println()
+		fmt.Println(lipgloss.NewStyle().Hyperlink(dashURL, "id=duckops-login").Render(dashURL))
+		fmt.Println()
+		fmt.Println("Sign in and generate a token, then paste it below.")
+		fmt.Println()
+
+		if err := browser.OpenURL(dashURL); err != nil {
+			fmt.Println("Could not open the browser. Please open the URL manually.")
+		}
+
+		fmt.Print("Paste your Personal Access Token: ")
+		inputBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Println()
+		if err != nil {
+			return fmt.Errorf("failed to read token: %w", err)
+		}
+		patToken = strings.TrimSpace(string(inputBytes))
 	}
-	fmt.Println()
 
-	fmt.Print("After logging in, paste your Personal Access Token here: ")
-	patBytes, err := term.ReadPassword(os.Stdin.Fd())
-	if err != nil {
-		return fmt.Errorf("failed to read token: %w", err)
-	}
-	pat := string(patBytes)
-	fmt.Println()
-
-	if !strings.HasPrefix(pat, "duck_pat_") {
+	if !strings.HasPrefix(patToken, "duck_pat_") {
 		return fmt.Errorf("invalid token format: must start with 'duck_pat_'")
+	}
+
+	if pat == "" {
+		fmt.Println("Token generated successfully!")
+		fmt.Println()
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, serverURL+"/api/v1/agents/ping", nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+pat)
+	req.Header.Set("Authorization", "Bearer "+patToken)
+
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -304,7 +325,7 @@ func loginDuckOps(force bool) error {
 		return fmt.Errorf("failed to open config: %w", err)
 	}
 
-	if err := st.SetConfigField(config.ScopeGlobal, "duckops_api_key", pat); err != nil {
+	if err := st.SetConfigField(config.ScopeGlobal, "duckops_api_key", patToken); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
 	if userEmail != "" {

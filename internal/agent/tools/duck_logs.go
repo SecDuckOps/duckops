@@ -1,5 +1,3 @@
-//go:build ignore
-
 package tools
 
 import (
@@ -7,7 +5,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io"
 	"os"
 	"path/filepath"
@@ -19,27 +16,10 @@ import (
 	"charm.land/fantasy"
 )
 
-const duckopsLogsToolName = "duckops_logs"
+const DuckLogsToolName = "duck_logs"
 
-//go:embed duckops_logs.md.tpl
-var duckopsLogsDescriptionTmpl []byte
-
-var duckopsLogsDescriptionTpl = template.Must(
-	template.New("duckopsLogsDescription").
-		Parse(string(duckopsLogsDescriptionTmpl)),
-)
-
-type duckopsLogsDescriptionData struct {
-	DefaultLines int
-	MaxLines     int
-}
-
-func duckopsLogsDescription() string {
-	return renderTemplate(duckopsLogsDescriptionTpl, duckopsLogsDescriptionData{
-		DefaultLines: defaultLogLines,
-		MaxLines:     maxLogLines,
-	})
-}
+//go:embed duck_logs.md
+var duckLogsDescription []byte
 
 // Max line size to prevent memory issues with very long log lines (1 MB).
 const maxLogLineSize = 1024 * 1024
@@ -71,23 +51,23 @@ var sensitiveKeys = []string{
 	"credential",
 }
 
-type duckopsLogsParams struct {
+type DuckLogsParams struct {
 	Lines int `json:"lines,omitempty" description:"Number of recent log entries to return (default 50, max 100)"`
 }
 
-func NewduckopsLogsTool(logFile string) fantasy.AgentTool {
+func NewDuckLogsTool(logFile string) fantasy.AgentTool {
 	return fantasy.NewAgentTool(
-		duckopsLogsToolName,
-		duckopsLogsDescription(),
-		func(ctx context.Context, params duckopsLogsParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
-			result := runduckopsLogs(logFile, params)
+		DuckLogsToolName,
+		string(duckLogsDescription),
+		func(ctx context.Context, params DuckLogsParams, call fantasy.ToolCall) (fantasy.ToolResponse, error) {
+			result := runDuckLogs(logFile, params)
 			return fantasy.NewTextResponse(result), nil
 		},
 	)
 }
 
-// runduckopsLogs reads and formats the last N log entries from the given file.
-func runduckopsLogs(logFile string, params duckopsLogsParams) string {
+// runDuckLogs reads and formats the last N log entries from the given file.
+func runDuckLogs(logFile string, params DuckLogsParams) string {
 	// Validate and clamp the lines parameter.
 	lines := params.Lines
 	if lines <= 0 {
