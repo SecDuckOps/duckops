@@ -114,7 +114,7 @@ docker run --rm --name duckops-security \
 Call the sandbox directly:
 
 ```bash
-curl -s http://127.0.0.1:48081/scan \
+curl -s http://192.168.1.14:48081/scan \
   -H 'Authorization: Bearer duckops-local-token' \
   -H 'Content-Type: application/json' \
   -d "{\"agent_id\":\"manual\",\"path\":\"/workspace/$(basename "$PWD")\"}"

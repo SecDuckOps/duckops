@@ -1458,6 +1458,9 @@ func (m *UI) handleDialogMsg(msg tea.Msg) tea.Cmd {
 		})
 		m.dialog.CloseDialog(dialog.CommandsID)
 	case dialog.ActionQuit:
+		if m.hasSession() && m.com.Workspace.AgentIsReady() {
+			m.com.Workspace.AgentCancel(m.session.ID)
+		}
 		cmds = append(cmds, tea.Quit)
 	case dialog.ActionEnableDockerMCP:
 		m.dialog.CloseDialog(dialog.CommandsID)

@@ -1891,13 +1891,13 @@ func (a *sessionAgent) CancelAll() {
 		a.Cancel(key) // key is sessionID
 	}
 
-	timeout := time.After(5 * time.Second)
+	timeout := time.After(1500 * time.Millisecond)
 	for a.IsBusy() {
 		select {
 		case <-timeout:
 			return
 		default:
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }

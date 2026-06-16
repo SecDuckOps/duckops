@@ -219,7 +219,7 @@ export OPENAI_API_KEY="sk-..."
 
 ```bash
 # Bind to localhost only (server mode)
-duckops server --bind 127.0.0.1
+duckops server --bind 192.168.1.14
 
 # Enable API key authentication for remote clients
 duckops server --api-key "sk-xxxx"

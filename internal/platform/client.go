@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultBaseURL    = "http://127.0.0.1:8080/api/v1"
+	defaultBaseURL    = "http://192.168.1.14:8000/api/v1"
 	defaultTimeout    = 30 * time.Second
 	maxRetries        = 5
 	baseBackoff       = 500 * time.Millisecond
@@ -366,10 +366,10 @@ type TriggerScanResponse struct {
 	Status string `json:"status"`
 	Data   struct {
 		Scan struct {
-			UUID    string `json:"uuid"`
-			ScanID  string `json:"scan_id"`
-			Type    string `json:"type"`
-			Status  string `json:"status"`
+			UUID   string `json:"uuid"`
+			ScanID string `json:"scan_id"`
+			Type   string `json:"type"`
+			Status string `json:"status"`
 		} `json:"scan"`
 	} `json:"data"`
 }
@@ -383,7 +383,7 @@ type UpdateScanPayload struct {
 }
 
 type UploadResultsPayload struct {
-	Findings       []FindingPayload       `json:"findings,omitempty"`
+	Findings        []FindingPayload       `json:"findings,omitempty"`
 	Vulnerabilities []VulnerabilityPayload `json:"vulnerabilities,omitempty"`
 }
 
@@ -391,9 +391,9 @@ type UpdateScanResponse struct {
 	Status string `json:"status"`
 	Data   struct {
 		Scan struct {
-			UUID    string `json:"uuid"`
-			ScanID  string `json:"scan_id"`
-			Status  string `json:"status"`
+			UUID   string `json:"uuid"`
+			ScanID string `json:"scan_id"`
+			Status string `json:"status"`
 		} `json:"scan"`
 	} `json:"data"`
 }

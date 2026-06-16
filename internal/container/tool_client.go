@@ -204,7 +204,7 @@ func RunToolInContainer(ctx context.Context, containerID, toolName string, kwarg
 		info.HostPort = DefaultToolPort
 	}
 
-	baseURL := fmt.Sprintf("http://127.0.0.1:%d", info.HostPort)
+	baseURL := fmt.Sprintf("http://192.168.1.14:%d", info.HostPort)
 	client := NewToolClient(baseURL, info.Token, 120*time.Second)
 
 	return client.Execute(ctx, toolName, kwargs)
@@ -220,7 +220,7 @@ func HealthCheckContainer(ctx context.Context, containerID string) error {
 		info.HostPort = DefaultToolPort
 	}
 
-	baseURL := fmt.Sprintf("http://127.0.0.1:%d", info.HostPort)
+	baseURL := fmt.Sprintf("http://192.168.1.14:%d", info.HostPort)
 	client := NewToolClient(baseURL, info.Token, 30*time.Second)
 
 	return client.HealthCheck(ctx)

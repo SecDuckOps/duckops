@@ -245,7 +245,7 @@ func loginDuckOps(force bool, pat string) error {
 	}
 
 	serverHost := cmp.Or(os.Getenv("DUCKOPS_SERVER_HOST"), "192.168.1.14")
-	serverPort := cmp.Or(os.Getenv("DUCKOPS_SERVER_PORT"), "8080")
+	serverPort := cmp.Or(os.Getenv("DUCKOPS_SERVER_PORT"), "8000")
 	serverURL := fmt.Sprintf("http://%s:%s", serverHost, serverPort)
 
 	dashHost := cmp.Or(os.Getenv("DUCKOPS_DASHBOARD_HOST"), "localhost")

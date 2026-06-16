@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	mcpToolServerCmd.Flags().StringVar(&mcpToolServerEndpoint, "endpoint", getenvDefault("DUCKOPS_TOOL_SERVER_URL", "http://127.0.0.1:48081"), "DuckOps tool-server URL")
+	mcpToolServerCmd.Flags().StringVar(&mcpToolServerEndpoint, "endpoint", getenvDefault("DUCKOPS_TOOL_SERVER_URL", "http://192.168.1.14:48081"), "DuckOps tool-server URL")
 	mcpToolServerCmd.Flags().StringVar(&mcpToolServerToken, "token", firstNonEmpty(os.Getenv("DUCKOPS_TOOL_SERVER_TOKEN"), os.Getenv("TOOL_SERVER_TOKEN")), "Bearer token for DuckOps tool-server")
 	mcpToolServerCmd.Flags().StringVar(&mcpToolServerWorkspace, "workspace", getenvDefault("DUCKOPS_CONTAINER_WORKSPACE", "/workspace"), "Workspace path inside the DuckOps sandbox container")
 	mcpToolServerCmd.Flags().IntVar(&mcpToolServerTimeout, "timeout", 180, "HTTP request timeout in seconds")

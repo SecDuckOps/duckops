@@ -49,13 +49,13 @@ Common patterns:
 - Headless crawl with local Chrome:
   `katana -u https://target.tld -hl -sc -nos -xhr -j -o crawl/katana_headless.jsonl`
 - Headless crawl through proxy:
-  `katana -u https://target.tld -hl -sc -ho proxy-server=http://127.0.0.1:48080 -j -o crawl/katana_proxy.jsonl`
+  `katana -u https://target.tld -hl -sc -ho proxy-server=http://192.168.1.14:48080 -j -o crawl/katana_proxy.jsonl`
 
 Critical correctness rules:
 - `-kf` must be followed by one of `all`, `robotstxt`, or `sitemapxml`.
 - Use documented `-hl` for headless mode.
-- `-proxy` expects a single proxy URL string (for example `http://127.0.0.1:8080`).
-- `-ho` expects comma-separated Chrome options (example: `-ho --disable-gpu,proxy-server=http://127.0.0.1:8080`).
+- `-proxy` expects a single proxy URL string (for example `http://192.168.1.14:8080`).
+- `-ho` expects comma-separated Chrome options (example: `-ho --disable-gpu,proxy-server=http://192.168.1.14:8080`).
 - For `-kf`, keep depth at least `-d 3` so known files are fully covered.
 - If writing to a file, ensure parent directory exists before `-o`.
 

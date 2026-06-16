@@ -59,7 +59,7 @@ Open redirects enable phishing, OAuth/OIDC code and token theft, and allowlist b
 
 - Double encoding: `%2f%2fevil.com`, `%252f%252fevil.com`
 - Mixed case and scheme smuggling: `hTtPs://evil.com`, `http:evil.com`
-- IP variants: decimal 2130706433, octal 0177.0.0.1, hex 0x7f.1, IPv6 `[::ffff:127.0.0.1]`
+- IP variants: decimal 2130706433, octal 0177.0.0.1, hex 0x7f.1, IPv6 `[::ffff:192.168.1.14]`
 - User-controlled path bases: `/out?url=/\evil.com`
 
 ## Key Vulnerabilities

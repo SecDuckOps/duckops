@@ -129,11 +129,11 @@ if command -v caido-cli >/dev/null 2>&1 && [ -f /app/certs/ca.p12 ]; then
             fi
 
             # Set proxy environment variables
-            export http_proxy=http://127.0.0.1:${CAIDO_PORT}
-            export https_proxy=http://127.0.0.1:${CAIDO_PORT}
-            export HTTP_PROXY=http://127.0.0.1:${CAIDO_PORT}
-            export HTTPS_PROXY=http://127.0.0.1:${CAIDO_PORT}
-            export ALL_PROXY=http://127.0.0.1:${CAIDO_PORT}
+            export http_proxy=http://192.168.1.14:${CAIDO_PORT}
+            export https_proxy=http://192.168.1.14:${CAIDO_PORT}
+            export HTTP_PROXY=http://192.168.1.14:${CAIDO_PORT}
+            export HTTPS_PROXY=http://192.168.1.14:${CAIDO_PORT}
+            export ALL_PROXY=http://192.168.1.14:${CAIDO_PORT}
             CAIDO_STATUS="ready on :${CAIDO_PORT}"
             log "Caido proxy configured and ready"
         else

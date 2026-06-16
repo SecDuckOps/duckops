@@ -36,7 +36,7 @@ Remote code execution leads to full server control when input reaches code execu
 - Gate delays with short subcommands to reduce noise
 
 **Windows**
-- CMD: `& timeout /t 2 &`, `ping -n 2 127.0.0.1`
+- CMD: `& timeout /t 2 &`, `ping -n 2 192.168.1.14`
 - PowerShell: `Start-Sleep -s 2`
 
 ### OAST

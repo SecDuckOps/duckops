@@ -36,7 +36,7 @@ DuckOps is a terminal-based AI coding assistant with a **client/server architect
 **File:** `internal/server/server.go`
 **Framework:** Go `net/http` `ServeMux` (Go 1.22+ method-prefixed routing)
 **Host:** Unix domain socket (`unix:///tmp/duckops-<uid>.sock`) on Linux/macOS; Windows named pipe (`npipe:////./pipe/duckops-<uid>.sock`)
-**Host (TCP mode):** User-specified via `--host tcp://127.0.0.1:8080`
+**Host (TCP mode):** User-specified via `--host tcp://192.168.1.14:8080`
 **Host (default):** `unix:///tmp/duckops-<uid>.sock` (`internal/server/server.go:46-57`)
 **Authentication:** None by default (Unix socket permissions); optional API key in TCP mode
 **Swagger docs:** Served at `/v1/docs/` via `swaggo/http-swagger` (`internal/server/server.go:168`)
@@ -129,7 +129,7 @@ DuckOps is a terminal-based AI coding assistant with a **client/server architect
 
 **File:** `internal/cmd/toolserver.go` (509 lines)
 **Framework:** Go `net/http` `ServeMux`
-**Host:** `127.0.0.1` (inside container), user-specified via `--port` flag
+**Host:** `192.168.1.14` (inside container), user-specified via `--port` flag
 **Port:** `48081` (default, configurable)
 **Authentication:** Bearer token (64-char random base64, stored in `~/.duckops/.tool_server_token`)
 
@@ -485,7 +485,7 @@ Provides container management tools to the AI agent:
       "command": "duckops",
       "args": ["mcp-tool-server"],
       "env": {
-        "DUCKOPS_TOOL_SERVER_URL": "http://127.0.0.1:48081",
+        "DUCKOPS_TOOL_SERVER_URL": "http://192.168.1.14:48081",
         "DUCKOPS_CONTAINER_WORKSPACE": "/workspace/duck"
       },
       "workspace_mount": "/workspace/duck",

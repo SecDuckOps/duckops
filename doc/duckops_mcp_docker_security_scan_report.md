@@ -7,7 +7,7 @@ Connect an AI agent to the existing DuckOps security tooling through MCP, while 
 ```text
 AI Agent
   -> MCP stdio server: duckops mcp-tool-server
-  -> HTTP sandbox bridge: http://127.0.0.1:48081
+  -> HTTP sandbox bridge: http://192.168.1.14:48081
   -> Docker container: duckops:latest
   -> Security tools: bandit, gosec, semgrep, trivy, gitleaks, trufflehog
 ```
@@ -75,13 +75,13 @@ Authorization: Bearer duckops-local-token
 Endpoint:
 
 ```text
-POST http://127.0.0.1:48081/scan
+POST http://192.168.1.14:48081/scan
 ```
 
 Example:
 
 ```bash
-curl -s http://127.0.0.1:48081/scan \
+curl -s http://192.168.1.14:48081/scan \
   -H 'Authorization: Bearer duckops-local-token' \
   -H 'Content-Type: application/json' \
   -d "{\"agent_id\":\"manual\",\"path\":\"/workspace/$(basename "$PWD")\"}"
@@ -139,13 +139,13 @@ Response shape:
 Endpoint:
 
 ```text
-POST http://127.0.0.1:48081/execute
+POST http://192.168.1.14:48081/execute
 ```
 
 Example:
 
 ```bash
-curl -s http://127.0.0.1:48081/execute \
+curl -s http://192.168.1.14:48081/execute \
   -H 'Authorization: Bearer duckops-local-token' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -197,7 +197,7 @@ duckops_execute_tool
 Environment variables:
 
 ```bash
-DUCKOPS_TOOL_SERVER_URL=http://127.0.0.1:48081
+DUCKOPS_TOOL_SERVER_URL=http://192.168.1.14:48081
 DUCKOPS_TOOL_SERVER_TOKEN=duckops-local-token
 ```
 
@@ -219,7 +219,7 @@ Current config:
       "command": "duckops",
       "args": ["mcp-tool-server"],
       "env": {
-        "DUCKOPS_TOOL_SERVER_URL": "http://127.0.0.1:48081",
+        "DUCKOPS_TOOL_SERVER_URL": "http://192.168.1.14:48081",
         "DUCKOPS_TOOL_SERVER_TOKEN": "duckops-local-token",
         "DUCKOPS_CONTAINER_WORKSPACE": "/workspace/duck"
       },
@@ -270,7 +270,7 @@ docker run --rm --name duckops-security \
 
 The DuckOps project config has an MCP entry called duckops-security pointing to:
 
-DUCKOPS_TOOL_SERVER_URL=http://127.0.0.1:48081
+DUCKOPS_TOOL_SERVER_URL=http://192.168.1.14:48081
 DUCKOPS_TOOL_SERVER_TOKEN=duckops-local-token
 
 Please review the architecture and suggest improvements for:

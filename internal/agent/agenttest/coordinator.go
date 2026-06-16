@@ -50,7 +50,7 @@ func NewCoordinator(
 		ID:      providerID,
 		Name:    "Test",
 		Type:    openaicompat.Name,
-		BaseURL: "http://127.0.0.1:0/v1",
+		BaseURL: "http://192.168.1.14:0/v1",
 		APIKey:  "test",
 		Models:  []catwalk.Model{{ID: modelID, DefaultMaxTokens: 4096}},
 	})
