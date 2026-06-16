@@ -1,0 +1,41 @@
+# Gitleaks configuration for DuckOps
+# https://github.com/gitleaks/gitleaks
+
+title = "DuckOps secret scanning config"
+
+[extend]
+# useDefaultConfig = true will extend the base gitleaks config with the rules below
+useDefaultConfig = true
+
+[[rules]]
+id = "duckops-api-token"
+description = "DuckOps API token in code"
+regex = '''(?i)duckops(_token|_api_key|_secret|_key)\s*[=:].{0,20}['"][A-Za-z0-9+/=]{20,}['"]'''
+tags = ["duckops", "api-token"]
+
+[[rules]]
+id = "tool-server-token"
+description = "DuackOps tool server token"
+regex = '''(?i)tool_server_token\s*[=:].{0,20}['"][A-Za-z0-9+/=]{20,}['"]'''
+tags = ["duckops", "tool-server"]
+
+[[rules]]
+id = "caido-token"
+description = "Caido API token"
+regex = '''(?i)caido_api_token\s*[=:].{0,20}['"][A-Za-z0-9+/=]{20,}['"]'''
+tags = ["caido", "api-token"]
+
+[allowlist]
+description = "Allowlisted files and paths"
+paths = [
+  # Test files may contain fake tokens
+  '''.*_test\.go''',
+  '''.*testdata/.*''',
+  # Embedded SBOM files
+  '''.*\.spdx\.json''',
+  # Documentation examples
+  '''docs/.*''',
+  '''doc/.*''',
+  # Go vendor/module cache
+  '''go\.sum''',
+]

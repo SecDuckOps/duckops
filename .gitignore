@@ -62,3 +62,10 @@ duckops
 
 .duckopsduckops-test
 duckops-test
+
+# Security scan artifacts
+*.sarif
+coverage.out
+*.spdx.json
+*.spdx
+gitleaks-report.*

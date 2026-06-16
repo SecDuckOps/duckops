@@ -1,0 +1,105 @@
+version: 2
+
+project_name: duckops
+
+env:
+  - GOFLAGS=-trimpath
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - go mod verify
+    - go generate ./...
+    - go vet ./...
+
+builds:
+  - main: .
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .Date }}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+      - goos: darwin
+        goarch: arm
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - AGENTS.md
+      - LICENSE
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+sbom:
+  - documents:
+      - artifacts: archive
+        output: '{{ .ArtifactName }}.spdx.json'
+        format: spdx-json
+    cmd: syft
+    args:
+      - source: .
+      - output: spdx-json
+
+signs:
+  - cmd: cosign
+    args:
+      - sign-blob
+      - --output-signature=${artifact}.sig
+      - --output-certificate=${artifact}.pem
+      - ${artifact}
+    artifacts: checksum
+    output: true
+
+dockers:
+  - image_templates:
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:latest
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.description=DuckOps - AI-powered security testing assistant
+      - --label=org.opencontainers.image.url=https://github.com/SecDuckOps/duckops
+      - --label=org.opencontainers.image.source=https://github.com/SecDuckOps/duckops
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ .Date }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=MIT
+
+release:
+  prerelease: auto
+  header: |
+    ## DuckOps {{ .Version }} ({{ .Date }})
+
+    ### Changes
+  footer: |
+    **Full Changelog**: https://github.com/SecDuckOps/duckops/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+      - Merge pull request
+      - Merge branch

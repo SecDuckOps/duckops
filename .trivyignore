@@ -1,0 +1,10 @@
+# Trivy ignore file for DuckOps
+# Format: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/
+
+# Temporarily accepted risks (with reason and expiry)
+
+# Example: Known false positive in Go stdlib
+# CVE-2025-0001:
+#   path: "**/go.sum"
+#   statement: "False positive in Go standard library dependency"
+#   expiry: "2025-12-31"
