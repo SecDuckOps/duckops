@@ -18,6 +18,11 @@ type HeartbeatRequest struct {
 	Status         string   `json:"status"`
 }
 
+type DisconnectRequest struct {
+	AgentID string `json:"agent_id"`
+	Status  string `json:"status,omitempty"`
+}
+
 type ScanPayload struct {
 	WorkspaceID string `json:"workspace_id,omitempty"`
 	ProjectID   string `json:"project_id,omitempty"`

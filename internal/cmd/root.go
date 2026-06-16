@@ -114,7 +114,10 @@ duckops --continue
 			return err
 		}
 
-		startAutoSync()
+		syncer := startAutoSync()
+		if syncer != nil {
+			defer syncer.StopWithDisconnect(cmd.Context())
+		}
 
 		ws, cleanup, err := setupWorkspaceWithProgressBar(cmd)
 		if err != nil {
@@ -241,12 +244,10 @@ func setupWorkspaceWithProgressBar(cmd *cobra.Command) (workspace.Workspace, fun
 	return ws, cleanup, err
 }
 
-// requireDuckOpsLogin checks that the user is authenticated with the
-// DuckOps Platform before opening the TUI.
-func startAutoSync() {
+func startAutoSync() *platform.Syncer {
 	apiKey, err := duckopsAPIKey()
 	if err != nil {
-		return
+		return nil
 	}
 
 	hostname, _ := os.Hostname()
@@ -261,34 +262,60 @@ func startAutoSync() {
 
 	syncer := platform.NewSyncer(client, hostname, version.Version)
 	syncer.SetCapabilities([]string{"scan_results", "pipeline_events", "sessions"})
+	syncer.SetSystemMetrics(platform.DefaultSystemMetrics)
 	syncer.Start(context.Background())
 
 	slog.Info("auto-sync started", "hostname", hostname, "version", version.Version)
 
 	go syncSessionsLoop(context.Background(), syncer, duckopsDir)
+
+	return syncer
 }
 
 func requireDuckOpsLogin() error {
-	data, err := os.ReadFile(config.GlobalConfigData())
-	if err != nil {
-		return loginRequiredError()
-	}
+	apiKey, email := readDuckOpsAuth()
 
-	// Check new key first, then fall back to legacy providers.duckops.api_key
-	apiKey := gjson.Get(string(data), "duckops_api_key").String()
-	if apiKey == "" {
-		apiKey = gjson.Get(string(data), "providers.duckops.api_key").String()
-	}
 	if apiKey == "" {
 		return loginRequiredError()
 	}
 
-	email := gjson.Get(string(data), "duckops_user_email").String()
 	if email != "" {
 		fmt.Fprintf(os.Stderr, "Logged in as %s\n", email)
 	}
 
 	return nil
+}
+
+// readDuckOpsAuth reads duckops authentication credentials from
+// auth.json first, then falls back to duckops.json.
+func readDuckOpsAuth() (apiKey, email string) {
+	// Check auth.json first
+	if data, err := os.ReadFile(config.GlobalAuthConfig()); err == nil {
+		apiKey = gjson.Get(string(data), "duckops.key").String()
+		if apiKey == "" {
+			apiKey = gjson.Get(string(data), "duckops.api_key").String()
+		}
+		if apiKey != "" {
+			email = gjson.Get(string(data), "duckops.email").String()
+			return
+		}
+	}
+
+	// Fall back to duckops.json
+	data, err := os.ReadFile(config.GlobalConfigData())
+	if err != nil {
+		return
+	}
+
+	apiKey = gjson.Get(string(data), "duckops_api_key").String()
+	if apiKey == "" {
+		apiKey = gjson.Get(string(data), "providers.duckops.api_key").String()
+	}
+	if apiKey != "" {
+		email = gjson.Get(string(data), "duckops_user_email").String()
+	}
+
+	return
 }
 
 func loginRequiredError() error {

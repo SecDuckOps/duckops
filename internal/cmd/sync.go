@@ -12,7 +12,6 @@ import (
 	"github.com/SecDuckOps/duckops/internal/config"
 	"github.com/SecDuckOps/duckops/internal/platform"
 	"github.com/spf13/cobra"
-	"github.com/tidwall/gjson"
 )
 
 var syncCmd = &cobra.Command{
@@ -256,19 +255,10 @@ func platformClient() (*platform.Client, error) {
 }
 
 func duckopsAPIKey() (string, error) {
-	data, err := os.ReadFile(config.GlobalConfigData())
-	if err != nil {
-		return "", errors.New("not logged in to DuckOps Platform\nRun 'duckops login' first")
-	}
-
-	apiKey := gjson.Get(string(data), "duckops_api_key").String()
-	if apiKey == "" {
-		apiKey = gjson.Get(string(data), "providers.duckops.api_key").String()
-	}
+	apiKey, _ := readDuckOpsAuth()
 	if apiKey == "" {
 		return "", errors.New("not logged in to DuckOps Platform\nRun 'duckops login' first")
 	}
-
 	return apiKey, nil
 }
 

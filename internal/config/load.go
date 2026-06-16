@@ -724,6 +724,74 @@ func configureSelectedModels(store *ConfigStore, knownProviders []catwalk.Provid
 	return nil
 }
 
+// GlobalAuthConfig returns the path to the auth config file.
+func GlobalAuthConfig() string {
+	return filepath.Join(home.Dir(), fmt.Sprintf(".%s", appName), "auth.json")
+}
+
+// authTransform transforms the auth.json provider-centric format into
+// the config-compatible format (providers.<id>.api_key, duckops_api_key, etc).
+func authTransform(data []byte) ([]byte, error) {
+	var auth map[string]json.RawMessage
+	if err := json.Unmarshal(data, &auth); err != nil {
+		return nil, err
+	}
+
+	type authEntry struct {
+		Type   string          `json:"type"`
+		Key    string          `json:"key"`
+		APIKey string          `json:"api_key"`
+		Email  string          `json:"email"`
+		OAuth  json.RawMessage `json:"oauth"`
+	}
+
+	result := make(map[string]any)
+	providers := make(map[string]any)
+
+	for id, raw := range auth {
+		var entry authEntry
+		if err := json.Unmarshal(raw, &entry); err != nil {
+			return nil, fmt.Errorf("invalid auth entry for %q: %w", id, err)
+		}
+
+		apiKey := entry.Key
+		if apiKey == "" {
+			apiKey = entry.APIKey
+		}
+
+		if id == "duckops" {
+			if apiKey != "" {
+				result["duckops_api_key"] = apiKey
+			}
+			if entry.Email != "" {
+				result["duckops_user_email"] = entry.Email
+			}
+		}
+
+		p := make(map[string]any)
+		if apiKey != "" {
+			p["api_key"] = apiKey
+		}
+		if len(entry.OAuth) > 0 {
+			p["oauth"] = entry.OAuth
+		}
+		if len(p) > 0 {
+			providers[id] = p
+		}
+	}
+
+	if len(providers) > 0 {
+		result["providers"] = providers
+	}
+
+	return json.Marshal(result)
+}
+
+// isAuthConfigPath returns true if the given path is an auth config file.
+func isAuthConfigPath(path string) bool {
+	return filepath.Base(path) == "auth.json"
+}
+
 // lookupConfigs searches config files starting at cwd and walking up
 // through the current project. The upward walk stops at the git
 // working tree root when one can be detected, otherwise at cwd itself,
@@ -731,8 +799,8 @@ func configureSelectedModels(store *ConfigStore, knownProviders []catwalk.Provid
 // up. Global user-level config locations are always included
 // regardless of the boundary.
 func lookupConfigs(cwd string) []string {
-	// prepend default config paths
-	configPaths := []string{GlobalConfig(), GlobalConfigData()}
+	// prepend default config paths (auth first so duckops.json overrides)
+	configPaths := []string{GlobalAuthConfig(), GlobalConfig(), GlobalConfigData()}
 	configPaths = uniquePaths(configPaths...)
 
 	configNames := []string{appName + ".json", "." + appName + ".json"}
@@ -763,6 +831,12 @@ func loadFromConfigPaths(configPaths []string) (*Config, []string, error) {
 		}
 		if len(data) == 0 {
 			continue
+		}
+		if isAuthConfigPath(path) {
+			data, err = authTransform(data)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to transform auth config %s: %w", path, err)
+			}
 		}
 		if !json.Valid(data) {
 			return nil, nil, fmt.Errorf("invalid JSON in config file %s", path)

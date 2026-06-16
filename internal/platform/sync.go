@@ -9,14 +9,18 @@ import (
 	"time"
 )
 
-type Syncer struct {
-	client *Client
-	done   chan struct{}
-	wg     sync.WaitGroup
+// SystemMetricsFunc returns current CPU and memory usage for heartbeats.
+type SystemMetricsFunc func() (cpu float64, memoryUsed float64, err error)
 
-	hostname   string
-	version    string
-	capabilities []string
+type Syncer struct {
+	client        *Client
+	done          chan struct{}
+	wg            sync.WaitGroup
+
+	hostname      string
+	version       string
+	capabilities  []string
+	systemMetrics SystemMetricsFunc
 
 	mu        sync.RWMutex
 	status    string
@@ -33,6 +37,14 @@ func NewSyncer(client *Client, hostname, version string) *Syncer {
 	}
 }
 
+func (s *Syncer) SetSystemMetrics(fn SystemMetricsFunc) {
+	s.systemMetrics = fn
+}
+
+func (s *Syncer) Client() *Client {
+	return s.client
+}
+
 func (s *Syncer) Start(ctx context.Context) {
 	s.wg.Add(3)
 	go s.agentRegistrationLoop(ctx)
@@ -41,6 +53,17 @@ func (s *Syncer) Start(ctx context.Context) {
 }
 
 func (s *Syncer) Stop() {
+	s.StopWithDisconnect(context.Background())
+}
+
+func (s *Syncer) StopWithDisconnect(ctx context.Context) {
+	agentID := s.client.AgentID()
+	if agentID != "" {
+		s.client.log("sending disconnect signal for agent %s", agentID)
+		if err := s.client.DisconnectAgent(ctx, agentID); err != nil {
+			s.client.log("disconnect signal failed: %v", err)
+		}
+	}
 	close(s.done)
 	s.wg.Wait()
 }
@@ -110,6 +133,13 @@ func (s *Syncer) sendHeartbeat(ctx context.Context) {
 	hb := HeartbeatRequest{
 		AgentID: s.client.AgentID(),
 		Status:  "online",
+	}
+
+	if s.systemMetrics != nil {
+		if cpu, mem, err := s.systemMetrics(); err == nil {
+			hb.CPU = cpu
+			hb.Memory = mem
+		}
 	}
 
 	if err := s.client.Heartbeat(ctx, hb); err != nil {
@@ -200,12 +230,13 @@ func (s *Syncer) replayItem(ctx context.Context, item QueueItem) error {
 		target = &HeartbeatRequest{}
 	case "agent_register":
 		target = &AgentRegistration{}
+	case "agent_disconnect":
+		target = &DisconnectRequest{}
 	default:
 		return nil
 	}
 
 	if err := json.Unmarshal(item.Payload, target); err != nil {
-		// Skip corrupt items
 		return nil
 	}
 
@@ -232,6 +263,9 @@ func (s *Syncer) replayItem(ctx context.Context, item QueueItem) error {
 		return s.client.Heartbeat(ctx, *target.(*HeartbeatRequest))
 	case "agent_register":
 		return s.client.RegisterAgent(ctx, *target.(*AgentRegistration))
+	case "agent_disconnect":
+		req := target.(*DisconnectRequest)
+		return s.client.DisconnectAgent(ctx, req.AgentID)
 	}
 	return nil
 }
@@ -300,6 +334,11 @@ func (s *Syncer) SyncScanResults(ctx context.Context, tool string, raw json.RawM
 
 	s.client.log("synced %d findings and %d vulns from %s", len(findings), len(vulns), tool)
 	return nil
+}
+
+func (s *Syncer) RunScans(ctx context.Context, config ScanRunConfig) error {
+	runner := NewScannerRunner(s.client, config)
+	return runner.RunAll(ctx)
 }
 
 func (s *Syncer) SyncPipelineEvent(ctx context.Context, event PipelineEventPayload) error {

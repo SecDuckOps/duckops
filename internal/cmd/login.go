@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -61,7 +62,6 @@ duckops login -f copilot
 			return loginDuckOps(force, pat)
 		}
 
-
 		c, ws, cleanup, err := connectToServer(cmd)
 		if err != nil {
 			return err
@@ -87,9 +87,9 @@ duckops login -f copilot
 }
 
 func init() {
-    loginCmd.Flags().BoolP("force", "f", false, "Force re-authentication even if already logged in")
-    loginCmd.Flags().StringP("token", "t", "", "Personal Access Token")
-    loginCmd.Flags().Bool("pat-only", false, "Skip email/password flow and use PAT directly")
+	loginCmd.Flags().BoolP("force", "f", false, "Force re-authentication even if already logged in")
+	loginCmd.Flags().StringP("token", "t", "", "Personal Access Token")
+	loginCmd.Flags().Bool("pat-only", false, "Skip email/password flow and use PAT directly")
 }
 
 func loginHyper(c *client.Client, wsID string, force bool) error {
@@ -244,7 +244,7 @@ func loginDuckOps(force bool, pat string) error {
 		}
 	}
 
-	serverHost := cmp.Or(os.Getenv("DUCKOPS_SERVER_HOST"), "192.168.1.70")
+	serverHost := cmp.Or(os.Getenv("DUCKOPS_SERVER_HOST"), "192.168.1.14")
 	serverPort := cmp.Or(os.Getenv("DUCKOPS_SERVER_PORT"), "8080")
 	serverURL := fmt.Sprintf("http://%s:%s", serverHost, serverPort)
 
@@ -294,7 +294,6 @@ func loginDuckOps(force bool, pat string) error {
 	}
 	req.Header.Set("Authorization", "Bearer "+patToken)
 
-
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to connect to DuckOps server at %s: %w", serverURL, err)
@@ -319,17 +318,15 @@ func loginDuckOps(force bool, pat string) error {
 		userEmail = pingResp.Data.User.Email
 	}
 
-	// Save PAT directly to config file without requiring daemon
-	st, err := config.Load(config.GlobalWorkspaceDir(), "", false)
-	if err != nil {
-		return fmt.Errorf("failed to open config: %w", err)
-	}
-
-	if err := st.SetConfigField(config.ScopeGlobal, "duckops_api_key", patToken); err != nil {
+	// Save PAT to auth.json
+	if err := writeDuckOpsAuth(patToken, userEmail); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
-	if userEmail != "" {
-		_ = st.SetConfigField(config.ScopeGlobal, "duckops_user_email", userEmail)
+
+	// Clean up legacy auth fields from duckops.json
+	if st, err := config.Load(config.GlobalWorkspaceDir(), "", false); err == nil {
+		_ = st.RemoveConfigField(config.ScopeGlobal, "duckops_api_key")
+		_ = st.RemoveConfigField(config.ScopeGlobal, "duckops_user_email")
 	}
 
 	fmt.Println()
@@ -349,4 +346,43 @@ func getLoginContext() context.Context {
 
 func waitEnter() {
 	_, _ = fmt.Scanln()
+}
+
+// writeDuckOpsAuth writes duckops authentication credentials to auth.json
+// in the provider-centric format.
+func writeDuckOpsAuth(patToken, userEmail string) error {
+	authPath := config.GlobalAuthConfig()
+
+	// Read existing auth.json or start fresh
+	var auth map[string]any
+	if data, err := os.ReadFile(authPath); err == nil {
+		json.Unmarshal(data, &auth)
+	}
+	if auth == nil {
+		auth = make(map[string]any)
+	}
+
+	duckopsEntry := map[string]any{
+		"type": "api",
+		"key":  patToken,
+	}
+	if userEmail != "" {
+		duckopsEntry["email"] = userEmail
+	}
+	auth["duckops"] = duckopsEntry
+
+	data, err := json.MarshalIndent(auth, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal auth config: %w", err)
+	}
+	data = append(data, '\n')
+
+	if err := os.MkdirAll(filepath.Dir(authPath), 0o700); err != nil {
+		return fmt.Errorf("failed to create auth config directory: %w", err)
+	}
+	if err := os.WriteFile(authPath, data, 0o600); err != nil {
+		return fmt.Errorf("failed to write auth config: %w", err)
+	}
+
+	return nil
 }
