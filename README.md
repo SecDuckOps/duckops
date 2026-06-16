@@ -1,7 +1,13 @@
 
 <div align="center">
 
-# 🦆 DuckOps
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="doc/Logo.png">
+  <source media="(prefers-color-scheme: light)" srcset="doc/Logo.png">
+  <img alt="DuckOps Logo" src="doc/Logo.png" width="180">
+</picture>
+
+# DuckOps
 
 **Terminal-First AI DevSecOps Assistant — Intelligent Software Development & Security Assessments**
 
