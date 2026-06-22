@@ -9,7 +9,7 @@ RUN go mod download
 COPY . /src/duck
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/duckops ./main.go
 
-FROM alpine:3.20 AS go-tool-builder
+FROM alpine:3.24 AS go-tool-builder
 
 RUN apk add --no-cache curl unzip
 
