@@ -1,4 +1,4 @@
-FROM golang:1.26-bookworm AS server-builder
+FROM golang:1.27-bookworm AS server-builder
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
